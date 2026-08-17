@@ -150,7 +150,8 @@ export default function KeywordSearch() {
     }
 
     const tabCode = REVERSE_TAB_MAP[activeTab] || 'keyword';
-    const finalQuery = activeVal.trim() || 'Kavin';
+    const finalQuery = activeVal.trim();
+    if (!finalQuery) return;
 
     // Direct Navigation to Full 3-Pane Workspace Page
     navigate(`/search/results?q=${encodeURIComponent(finalQuery)}&tab=${tabCode}`);
@@ -297,7 +298,8 @@ export default function KeywordSearch() {
                 <form 
                   onSubmit={(e) => {
                     e.preventDefault();
-                    const searchVal = partyKeyword.trim() || 'Kavin';
+                    const searchVal = partyKeyword.trim();
+                    if (!searchVal) return;
                     const finalQuery = partyCourt ? `${partyCourt}: ${searchVal}` : searchVal;
                     navigate(`/search/results?q=${encodeURIComponent(finalQuery)}&tab=party`);
                   }} 
@@ -341,7 +343,8 @@ export default function KeywordSearch() {
                 <form 
                   onSubmit={(e) => {
                     e.preventDefault();
-                    const searchVal = famousCaseKeyword.trim() || 'Kavin';
+                    const searchVal = famousCaseKeyword.trim();
+                    if (!searchVal) return;
                     navigate(`/search/results?q=${encodeURIComponent(searchVal)}&tab=party`);
                   }} 
                   className="flex items-center gap-1.5"

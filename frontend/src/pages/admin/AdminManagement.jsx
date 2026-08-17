@@ -3,9 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Plus, Lock, Trash2, X, AlertTriangle, CheckCircle2, Eye, EyeOff, Key } from 'lucide-react';
 
 const INITIAL_MOCK_ADMINS = [
-  { id: '1', name: 'Main Admin', username: 'mainadmin', role: 'MAIN_ADMIN', password: 'mainpassword123' },
-  { id: '2', name: 'John Admin', username: 'johnadmin', role: 'EXTRA_ADMIN', password: 'johnpassword123' },
-  { id: '3', name: 'Kumar Admin', username: 'kumaradmin', role: 'EXTRA_ADMIN', password: 'kumarpassword123' }
+  { id: '1', name: 'Main Admin', username: 'mainadmin', role: 'MAIN_ADMIN', password: 'mainpassword123' }
 ];
 
 export default function AdminManagement() {
@@ -18,7 +16,12 @@ export default function AdminManagement() {
   const [adminsList, setAdminsList] = useState(() => {
     try {
       const saved = localStorage.getItem('digi_mock_admins');
-      return saved ? JSON.parse(saved) : INITIAL_MOCK_ADMINS;
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        const filtered = parsed.filter(a => a.username !== 'johnadmin' && a.username !== 'kumaradmin');
+        return filtered.length > 0 ? filtered : INITIAL_MOCK_ADMINS;
+      }
+      return INITIAL_MOCK_ADMINS;
     } catch (e) {
       return INITIAL_MOCK_ADMINS;
     }
