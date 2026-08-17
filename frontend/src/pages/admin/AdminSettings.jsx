@@ -54,6 +54,40 @@ export default function AdminSettings() {
     reader.readAsDataURL(file);
   };
 
+  const handleDeleteFounder1 = () => {
+    setSettings(prev => ({
+      ...prev,
+      aboutPage: {
+        ...(prev.aboutPage || MOCK_LAWYER_SETTINGS.aboutPage),
+        founder1Name: '',
+        founder1Title: '',
+        founder1Court: '',
+        founder1Experience: '',
+        founder1BarNo: '',
+        founder1Bio: '',
+        founder1Image: ''
+      }
+    }));
+    showToast('Founder #1 details deleted!');
+  };
+
+  const handleDeleteFounder2 = () => {
+    setSettings(prev => ({
+      ...prev,
+      aboutPage: {
+        ...(prev.aboutPage || MOCK_LAWYER_SETTINGS.aboutPage),
+        founder2Name: '',
+        founder2Title: '',
+        founder2Court: '',
+        founder2Experience: '',
+        founder2BarNo: '',
+        founder2Bio: '',
+        founder2Image: ''
+      }
+    }));
+    showToast('Founder #2 details deleted!');
+  };
+
   // Team Members CRUD
   const handleTeamMemberChange = (index, field, val) => {
     const currentMembers = [...(settings.aboutPage?.teamMembers || MOCK_LAWYER_SETTINGS.aboutPage.teamMembers)];
@@ -301,11 +335,22 @@ export default function AdminSettings() {
               <div className="p-5 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wider">Founder / Senior Partner #1</h4>
-                  {about.founder1Image && (
-                    <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                      Photo Attached
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {about.founder1Image && (
+                      <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                        Photo Attached
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleDeleteFounder1}
+                      className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-md transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold shrink-0"
+                      title="Delete Advocate Details"
+                    >
+                      <Trash2 size={13} />
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -406,11 +451,22 @@ export default function AdminSettings() {
               <div className="p-5 bg-slate-50 border border-slate-200 rounded-xl space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="font-extrabold text-slate-800 text-xs uppercase tracking-wider">Founder / Partner #2</h4>
-                  {about.founder2Image && (
-                    <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                      Photo Attached
-                    </span>
-                  )}
+                  <div className="flex items-center gap-2">
+                    {about.founder2Image && (
+                      <span className="text-[10px] text-emerald-600 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                        Photo Attached
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleDeleteFounder2}
+                      className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-md transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold shrink-0"
+                      title="Delete Advocate Details"
+                    >
+                      <Trash2 size={13} />
+                      <span>Delete</span>
+                    </button>
+                  </div>
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
