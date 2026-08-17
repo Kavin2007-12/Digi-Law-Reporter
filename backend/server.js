@@ -9,6 +9,7 @@ import authRoutes from './routes/authRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import publicRoutes from './routes/publicRoutes.js';
+import caseRoutes from './routes/caseRoutes.js';
 
 // Import Utils
 import logger from './utils/logger.js';
@@ -40,6 +41,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/public', publicRoutes);
+app.use('/api/cases', caseRoutes);
 
 // Start Server
 app.listen(PORT, () => {
