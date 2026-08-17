@@ -6,12 +6,20 @@ dotenv.config();
 
 const { Pool } = pkg;
 
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-  max: 20, // Max number of connections in the pool (useful for lakhs of records)
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 2000,
-});
+const poolConfig = process.env.DATABASE_URL
+  ? { connectionString: process.env.DATABASE_URL, max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 2000 }
+  : {
+      user: process.env.DB_USER || 'postgres',
+      host: process.env.DB_HOST || 'localhost',
+      database: process.env.DB_NAME || 'digi_law_reporter',
+      password: process.env.DB_PASSWORD || 'postgres',
+      port: parseInt(process.env.DB_PORT || '5432', 10),
+      max: 20,
+      idleTimeoutMillis: 30000,
+      connectionTimeoutMillis: 2000
+    };
+
+const pool = new Pool(poolConfig);
 
 pool.on('connect', () => {
   logger.debug('New connection established with PostgreSQL database.');
