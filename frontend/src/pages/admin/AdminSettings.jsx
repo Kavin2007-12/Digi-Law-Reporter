@@ -344,11 +344,10 @@ export default function AdminSettings() {
                     <button
                       type="button"
                       onClick={handleDeleteFounder1}
-                      className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-md transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold shrink-0"
+                      className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg transition-colors cursor-pointer shrink-0"
                       title="Delete Advocate Details"
                     >
-                      <Trash2 size={13} />
-                      <span>Delete</span>
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
@@ -460,11 +459,10 @@ export default function AdminSettings() {
                     <button
                       type="button"
                       onClick={handleDeleteFounder2}
-                      className="px-2.5 py-1 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-md transition-colors cursor-pointer flex items-center gap-1 text-xs font-bold shrink-0"
+                      className="p-1.5 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 rounded-lg transition-colors cursor-pointer shrink-0"
                       title="Delete Advocate Details"
                     >
-                      <Trash2 size={13} />
-                      <span>Delete</span>
+                      <Trash2 size={14} />
                     </button>
                   </div>
                 </div>
