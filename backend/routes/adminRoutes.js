@@ -1,5 +1,5 @@
 import express from 'express';
-import { adminLogin, uploadJudgment, getUsers, createAdmin, getAdmins, checkCitation } from '../controllers/adminController.js';
+import { adminLogin, uploadJudgment, getUsers, createAdmin, getAdmins, checkCitation, updateAdminPassword, deleteAdmin } from '../controllers/adminController.js';
 import upload from '../middleware/uploadMiddleware.js';
 import { verifyToken, requireRole } from '../middleware/authMiddleware.js';
 
@@ -22,11 +22,13 @@ router.post('/judgments',
   uploadJudgment
 );
 
-// Admin Management (Strictly SUPER_ADMIN only)
-router.get('/admins', verifyToken, requireRole(['SUPER_ADMIN']), getAdmins);
-router.post('/admins', verifyToken, requireRole(['SUPER_ADMIN']), createAdmin);
+// Admin Management (Strictly SUPER_ADMIN & MAIN_ADMIN)
+router.get('/admins', verifyToken, requireRole(['SUPER_ADMIN', 'MAIN_ADMIN']), getAdmins);
+router.post('/admins', verifyToken, requireRole(['SUPER_ADMIN', 'MAIN_ADMIN']), createAdmin);
+router.put('/admins/:id/password', verifyToken, requireRole(['SUPER_ADMIN', 'MAIN_ADMIN']), updateAdminPassword);
+router.delete('/admins/:id', verifyToken, requireRole(['SUPER_ADMIN', 'MAIN_ADMIN']), deleteAdmin);
 
 // User Management (Allowed for SUPER_ADMIN and ADMIN)
-router.get('/users', verifyToken, requireRole(['SUPER_ADMIN', 'ADMIN']), getUsers);
+router.get('/users', verifyToken, requireRole(['SUPER_ADMIN', 'ADMIN', 'MAIN_ADMIN']), getUsers);
 
 export default router;

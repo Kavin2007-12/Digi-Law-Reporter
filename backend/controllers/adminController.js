@@ -191,3 +191,45 @@ export const checkCitation = async (req, res) => {
     res.status(500).json({ status: 'error', message: 'Database error while checking citation' });
   }
 };
+
+export const updateAdminPassword = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { password } = req.body;
+
+    if (!password) {
+      return res.status(400).json({ status: 'error', message: 'New password is required' });
+    }
+
+    const password_hash = await bcrypt.hash(password, 10);
+    const updated = await userRepository.updatePassword(id, password_hash);
+
+    res.json({
+      status: 'success',
+      message: 'Admin password updated successfully',
+      data: updated
+    });
+  } catch (error) {
+    logger.error(`Admin update password error for ID ${req.params.id}`, error);
+    res.status(500).json({ status: 'error', message: 'Database error updating password' });
+  }
+};
+
+export const deleteAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const deleted = await userRepository.deleteAdmin(id);
+
+    if (!deleted) {
+      return res.status(400).json({ status: 'error', message: 'Cannot delete Main Admin or account not found' });
+    }
+
+    res.json({
+      status: 'success',
+      message: 'Extra Admin removed successfully'
+    });
+  } catch (error) {
+    logger.error(`Admin delete error for ID ${req.params.id}`, error);
+    res.status(500).json({ status: 'error', message: 'Database error removing admin' });
+  }
+};

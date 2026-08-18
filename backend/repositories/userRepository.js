@@ -90,6 +90,28 @@ class UserRepository {
       logger.error(`UserRepository.updateLastLogin failed for id: ${id}`, error);
     }
   }
+
+  async updatePassword(id, password_hash) {
+    try {
+      const sql = 'UPDATE admins SET password_hash = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING id, name, username, role';
+      const { rows } = await query(sql, [password_hash, id]);
+      return rows[0] || null;
+    } catch (error) {
+      logger.error(`UserRepository.updatePassword failed for id: ${id}`, error);
+      throw error;
+    }
+  }
+
+  async deleteAdmin(id) {
+    try {
+      const sql = "DELETE FROM admins WHERE id = $1 AND role != 'MAIN_ADMIN' RETURNING id, username";
+      const { rows } = await query(sql, [id]);
+      return rows[0] || null;
+    } catch (error) {
+      logger.error(`UserRepository.deleteAdmin failed for id: ${id}`, error);
+      throw error;
+    }
+  }
 }
 
 export default new UserRepository();
