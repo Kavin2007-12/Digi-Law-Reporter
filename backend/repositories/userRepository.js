@@ -58,7 +58,7 @@ class UserRepository {
 
   async getAllUsers() {
     try {
-      const sql = "SELECT id, name, mobile, email, role, created_at FROM users WHERE role = 'USER' ORDER BY created_at DESC";
+      const sql = "SELECT id, name, mobile, email, status, joined_date, last_login, created_at FROM users ORDER BY created_at DESC";
       const { rows } = await query(sql);
       return rows;
     } catch (error) {

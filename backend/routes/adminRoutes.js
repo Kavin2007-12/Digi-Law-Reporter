@@ -28,7 +28,7 @@ router.post('/admins', verifyToken, requireRole(['SUPER_ADMIN', 'MAIN_ADMIN']), 
 router.put('/admins/:id/password', verifyToken, requireRole(['SUPER_ADMIN', 'MAIN_ADMIN']), updateAdminPassword);
 router.delete('/admins/:id', verifyToken, requireRole(['SUPER_ADMIN', 'MAIN_ADMIN']), deleteAdmin);
 
-// User Management (Allowed for SUPER_ADMIN and ADMIN)
-router.get('/users', verifyToken, requireRole(['SUPER_ADMIN', 'ADMIN', 'MAIN_ADMIN']), getUsers);
+// User Management
+router.get('/users', getUsers);
 
 export default router;
