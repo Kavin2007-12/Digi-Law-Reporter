@@ -84,16 +84,18 @@ export default function Header() {
                       </span>
                     </Link>
 
-                    {/* 2. Distinct Search Portal Box */}
-                    <Link 
-                      to="/search" 
-                      className="flex items-center gap-2 bg-blue-100/90 hover:bg-blue-200/90 border border-blue-200/90 text-blue-700 px-3.5 py-1.5 rounded-2xl transition-all shadow-2xs group cursor-pointer"
-                      title="Click to go to Legal Search Portal"
-                    >
-                      <span className="text-blue-700 font-extrabold text-[11px] md:text-xs tracking-wider">
-                        SEARCH PORTAL
-                      </span>
-                    </Link>
+                    {/* 2. Distinct Search Portal Box (Hidden when already on Search Portal) */}
+                    {!location.pathname.startsWith('/search') && (
+                      <Link 
+                        to="/search" 
+                        className="flex items-center gap-2 bg-blue-100/90 hover:bg-blue-200/90 border border-blue-200/90 text-blue-700 px-3.5 py-1.5 rounded-2xl transition-all shadow-2xs group cursor-pointer"
+                        title="Click to go to Legal Search Portal"
+                      >
+                        <span className="text-blue-700 font-extrabold text-[11px] md:text-xs tracking-wider">
+                          SEARCH PORTAL
+                        </span>
+                      </Link>
+                    )}
 
                     {/* Logout Button */}
                     <button 
