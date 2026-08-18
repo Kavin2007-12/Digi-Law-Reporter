@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { ArrowLeft, Upload, FileText, CheckCircle2, X, Plus } from 'lucide-react';
 import { MOCK_CASES } from '../../data/adminMockData';
 import TiptapEditor from '../../components/admin/TiptapEditor';
+import { API_BASE_URL } from '../../config/api';
 
 export default function AdminCaseForm() {
   const { id } = useParams();
@@ -142,8 +143,43 @@ export default function AdminCaseForm() {
     }, 1500);
   };
 
-  const handleSave = (targetStatus) => {
-    showToast(isEditing ? `Case record updated as "${targetStatus}"` : `New case record saved as "${targetStatus}"`);
+  const handleSave = async (targetStatus) => {
+    try {
+      const payload = {
+        caseNumber: formData.caseNumber,
+        title: formData.title,
+        petitioner: formData.petitioner,
+        respondent: formData.respondent,
+        court: formData.court,
+        judgmentDate: formData.judgmentDate,
+        year: formData.year || (formData.judgmentDate ? formData.judgmentDate.substring(0, 4) : '2026'),
+        act: formData.act,
+        section: formData.section,
+        headNote: formData.summary,
+        judgmentText: formData.judgmentText,
+        status: targetStatus,
+        citations: citationsList
+      };
+
+      const url = isEditing ? `${API_BASE_URL}/cases/${id}` : `${API_BASE_URL}/cases`;
+      const method = isEditing ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+
+      if (data.success) {
+        showToast(isEditing ? `Case updated as "${targetStatus}"` : `Case precedent saved as "${targetStatus}"!`);
+      } else {
+        showToast(data.message || 'Error saving case record');
+      }
+    } catch (err) {
+      console.error('Error saving case:', err);
+      showToast('Error connecting to backend API');
+    }
   };
 
   return (
