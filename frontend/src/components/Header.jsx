@@ -66,36 +66,45 @@ export default function Header() {
                </nav>
              )}
 
-             {/* Right Action Buttons: Login & Admin */}
-             {!isAuthPage && (
-               user ? (
-                 <div className="flex items-center gap-2">
-                   {/* Clickable Profile Badge navigating to /search */}
-                   <Link 
-                     to="/search" 
-                     className="flex items-center gap-2.5 bg-slate-100 hover:bg-primary-50 border border-slate-200 hover:border-primary-300 px-3.5 py-2 rounded-xl transition-all shadow-sm group cursor-pointer"
-                     title="Click to go to Legal Search Dashboard"
-                   >
-                     <div className="w-7 h-7 rounded-full bg-primary-600 text-white font-bold text-xs flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                       {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                     </div>
-                     <span className="text-slate-800 group-hover:text-primary-700 font-bold text-xs md:text-sm">
-                       {user.name.split(' ')[0]}
-                     </span>
-                     <span className="bg-primary-100 text-primary-700 text-[10px] font-extrabold px-2 py-0.5 rounded-md hidden sm:inline-block">
-                       SEARCH PORTAL
-                     </span>
-                   </Link>
+              {/* Right Action Buttons: Login & Admin */}
+              {!isAuthPage && (
+                user ? (
+                  <div className="flex items-center gap-3">
+                    {/* 1. Distinct User Profile Box */}
+                    <Link 
+                      to="/search"
+                      className="flex items-center gap-2.5 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200/90 px-3.5 py-1.5 rounded-2xl transition-all shadow-2xs group cursor-pointer"
+                      title={`Logged in as ${user.name || 'User'} - Click to open Search Portal`}
+                    >
+                      <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <span className="text-blue-700 group-hover:text-blue-800 font-bold text-xs md:text-sm capitalize">
+                        {user.name ? user.name.split(' ')[0] : 'User'}
+                      </span>
+                    </Link>
 
-                   <button 
-                     onClick={handleLogout} 
-                     className="text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-lg transition-colors"
-                     title="Logout"
-                   >
-                     <LogOut size={17} />
-                   </button>
-                 </div>
-               ) : (
+                    {/* 2. Distinct Search Portal Box */}
+                    <Link 
+                      to="/search" 
+                      className="flex items-center gap-2 bg-blue-100/90 hover:bg-blue-200/90 border border-blue-200/90 text-blue-700 px-3.5 py-1.5 rounded-2xl transition-all shadow-2xs group cursor-pointer"
+                      title="Click to go to Legal Search Portal"
+                    >
+                      <span className="text-blue-700 font-extrabold text-[11px] md:text-xs tracking-wider">
+                        SEARCH PORTAL
+                      </span>
+                    </Link>
+
+                    {/* Logout Button */}
+                    <button 
+                      onClick={handleLogout} 
+                      className="text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-xl transition-colors ml-0.5"
+                      title="Logout"
+                    >
+                      <LogOut size={17} />
+                    </button>
+                  </div>
+                ) : (
                  <div className="flex items-center space-x-3">
                    <Link 
                      to="/login" 

@@ -218,89 +218,32 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
     showToast(`Downloaded judgment text record successfully`);
   };
 
-  // Sample Cases Data Fallback with Full Comprehensive Text
-  const SAMPLE_CASES = useMemo(() => [
-    {
-      id: "1",
-      title: "Kavin v. P. Sreemani Devi In the Supreme Court of India",
-      case_number: "Civil Appeal Nos. 3132-3133 of 2023",
-      court_name: "Supreme Court of India",
-      judgment_date: "2025-08-22",
-      citation: "2025 SCC OnLine SC 1786",
-      category: "Judgments",
-      petitioner_name: "Kavin",
-      respondent_name: "P. Sreemani Devi and Others",
-      bench: "BEFORE N.V. ANJARIA AND A.S. CHANDURKAR, JJ.",
-      advocates: "Ms. Harsha Tripathi, Adv., Mr. Balaji Srinivasan, AOR, Mr. S. Sabarivasan, Adv., Mr. Vishwaditya Sharma, Adv.",
-      head_note: "Civil & Commercial Dispute Resolution - Application for injunction and quashing of proceedings when transaction is civil in nature. The Supreme Court laid down principles governing interim protection in civil appeals.",
-      content: `In the Supreme Court of India\n(BEFORE N.V. ANJARIA AND A.S. CHANDURKAR, JJ.)\n\nKavin ... Appellant(s);\nVersus\nP. Sreemani Devi and Others ... Respondent(s).\n\nCivil Appeal Nos. 3132-3133 of 2023\nDecided on August 22, 2025\n\nAdvocates who appeared in this case:\nMs. Harsha Tripathi, Adv., Mr. Balaji Srinivasan, AOR, Mr. S. Sabarivasan, Adv., Mr. Vishwaditya Sharma, Adv., Ms. Kanishka Singh, Adv., Mr. Subornadeep Bhattacharjee, Adv., Mr. Rohan Dewan, Adv., Mr. K. Shiva, Adv. and Ms. Aakriti Priya, Adv., for the Appellant(s);\nMr. S. Raj Makesh, Adv., Mr. Nikhil Swami, AOR, Ms. Divya Swami, Adv. and Ms. Prerna Mehta, AOR, for the Respondent(s).\n\nThe Judgment of the Court was delivered by A.S. CHANDURKAR, J.:—\n\n1. The appellant-claimant Kavin is aggrieved by the judgment of the High Court refusing relief under civil proceedings.\n\n2. We have heard the learned counsel appearing for the parties and perused the records of the case thoroughly.\n\n3. The essential facts leading to the present appeal may be summarized as follows: The appellant entered into a commercial development agreement regarding the property in dispute. Disputes arose between the parties concerning performance of contractual obligations.\n\n4. Learned counsel appearing on behalf of the appellant contended that the High Court failed to appreciate the settled legal position that where a dispute is purely civil in nature, summary rejection of interim applications without recording reasons is impermissible.\n\n5. On the other hand, learned counsel for the respondent submitted that the High Court rightly exercised its discretionary jurisdiction and no interference is warranted under Article 136 of the Constitution of India.\n\n6. Having carefully considered the rival submissions, we are of the considered opinion that the High Court erred in ignoring the documentary evidence produced on record.\n\n7. It is well settled that while dealing with applications for interim relief, the Court must consider three cardinal principles: (i) Prima facie case; (ii) Balance of convenience; and (iii) Irreparable injury.\n\n8. In the present case, all three elements weighed heavily in favor of the appellant. Consequently, the impugned judgment of the High Court is set aside.\n\n9. The appeal is accordingly allowed in the above terms with no order as to costs. Pending applications, if any, stand disposed of.`
-    },
-    {
-      id: "2",
-      title: "Kavin Kartik v. Board of Control for Cricket in India",
-      case_number: "Writ Petition No. 5980 of 2025",
-      court_name: "High Court of Bombay",
-      judgment_date: "2025-09-26",
-      citation: "2025 SCC OnLine Bom 3633",
-      category: "Judgments",
-      petitioner_name: "Kavin Kartik",
-      respondent_name: "Board of Control for Cricket in India",
-      bench: "BEFORE G.S. KULKARNI AND JITENDRA JAIN, JJ.",
-      head_note: "Sports Law & Constitutional Writs - Amenability of sports controlling bodies to writ jurisdiction under Article 226 of the Constitution.",
-      content: `IN THE HIGH COURT OF BOMBAY AT MUMBAI\n\nKavin Kartik ... Petitioner\nVERSUS\nBoard of Control for Cricket in India ... Respondent\n\nJUDGMENT\n\n1. The petitioner challenges the selection criteria framed by the respondent board on grounds of arbitrary exercise of administrative powers.\n\n2. The main contention raised by the petitioner Kavin Kartik is that the selection process lacked transparency and violated fundamental fairness guaranteed under Article 14.\n\n3. The respondent board raised a preliminary objection regarding the maintainability of the writ petition, contending that it is not a State under Article 12.\n\n4. We have examined the landmark precedents of the Supreme Court regarding public function test. Where a body discharges public functions of national interest, it is amenable to writ jurisdiction under Article 226.\n\n5. On merits, we find that the respondent board adhered strictly to the guidelines published prior to the commencement of the selection trials.\n\n6. No case of bias or malice in law is demonstrated by the petitioner. Therefore, the writ petition fails and is hereby dismissed.`
-    },
-    {
-      id: "3",
-      title: "CIT v. Milan Kavin Parikh",
-      case_number: "Tax Appeal No. 239 of 2025",
-      court_name: "High Court of Bombay",
-      judgment_date: "2025-11-25",
-      citation: "(2025) 181 taxmann.com 239 (Bombay)",
-      category: "Digest Notes",
-      petitioner_name: "CIT",
-      respondent_name: "Milan Kavin Parikh",
-      bench: "BEFORE K.R. SHRIRAM AND N.T. GATNE, JJ.",
-      head_note: "Income Tax Act - Reassessment under Section 148 and validity of penalty proceedings.",
-      content: `IN THE HIGH COURT OF BOMBAY AT MUMBAI\n\nCIT ... Appellant\nVERSUS\nMilan Kavin Parikh ... Respondent\n\nJUDGMENT\n\n1. The Revenue appeals against the order of the Income Tax Appellate Tribunal granting full exemption on long term capital gains.\n\n2. The assessee Kavin Parikh filed income tax returns declaring capital gains arising from sale of equity shares.\n\n3. The Assessing Officer reopened assessment under Section 148 based on intelligence inputs. However, no tangible material was brought on record to substantiate the allegation of penny stock transactions.\n\n4. The ITAT rightly held that reopening based on mere suspicion without independent verification is invalid in law.\n\n5. We find no substantial question of law arising in this appeal. The tax appeal is accordingly dismissed.`
-    },
-    {
-      id: "4",
-      title: "Kavin Vivek v. State of Tamil Nadu",
-      case_number: "Crl.O.P. No. 8375 of 2016",
-      court_name: "High Court of Madras",
-      judgment_date: "2016-08-05",
-      citation: "2016 SCC OnLine Mad 8375",
-      category: "Judgments",
-      petitioner_name: "Kavin Vivek",
-      respondent_name: "State of Tamil Nadu",
-      head_note: "Criminal Procedure - Quashing of FIR under Section 482 CrPC.",
-      content: `IN THE HIGH COURT OF JUDICATURE AT MADRAS\n\nKavin Vivek ... Petitioner\nVERSUS\nState of Tamil Nadu ... Respondent\n\nORDER\n\n1. This petition is filed under Section 482 CrPC to quash the proceedings in Crime No. 412 of 2016 on the file of the respondent police.\n\n2. The petitioner Kavin Vivek was arrayed as Accused No. 2 based on a commercial contract dispute.\n\n3. It is well settled by the Hon'ble Supreme Court in State of Haryana v. Bhajan Lal that where criminal proceedings are manifestly attended with mala fide, the High Court can exercise inherent powers to quash the FIR.\n\n4. Considering that the parties have amicably settled the dispute, continuation of criminal proceedings would amount to abuse of process of Court.\n\n5. The Criminal Original Petition is accordingly allowed and the FIR in Crime No. 412 of 2016 is quashed.`
-    }
-  ], []);
-
   useEffect(() => {
     const fetchResults = async () => {
       setLoading(true);
       try {
-        if (query) {
-          const res = await fetch(`${import.meta.env.VITE_API_BASE_URL}/search?q=${encodeURIComponent(query)}`);
+        if (query && query.trim()) {
+          const res = await fetch(`http://localhost:5000/api/public/search?keyword=${encodeURIComponent(query.trim())}`);
           const data = await res.json();
-          if (data.status === 'success' && data.data.length > 0) {
+          if (data.success && data.data && data.data.length > 0) {
             setResults(data.data);
             setSelectedCase(data.data[0]);
             setLoading(false);
             return;
           }
         }
-      } catch (err) {}
+      } catch (err) {
+        console.error("Error fetching search results:", err);
+      }
       
-      setResults(SAMPLE_CASES);
-      setSelectedCase(SAMPLE_CASES[0]);
+      // Clean state: No dummy fallback data
+      setResults([]);
+      setSelectedCase(null);
       setLoading(false);
     };
 
     fetchResults();
-  }, [query, SAMPLE_CASES]);
+  }, [query]);
 
   // Compute Categories & Courts
   const categoryCounts = useMemo(() => {
