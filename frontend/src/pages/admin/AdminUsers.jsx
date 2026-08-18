@@ -7,7 +7,7 @@ export default function AdminUsers() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Fetch registered users from backend API
+  // Fetch registered users strictly from backend API
   const fetchUsers = async () => {
     setLoading(true);
     try {
@@ -16,28 +16,19 @@ export default function AdminUsers() {
       if (data.status === 'success' && Array.isArray(data.data)) {
         const formatted = data.data.map(u => ({
           id: u.id,
-          name: u.name || 'Portal User',
-          mobile: u.mobile || '9876543210',
-          joinedDate: u.joined_date ? new Date(u.joined_date).toISOString().split('T')[0] : '2026-01-15',
-          lastLogin: u.last_login ? new Date(u.last_login).toLocaleString('en-IN') : 'Recently active',
+          name: u.name || '',
+          mobile: u.mobile || '',
+          joinedDate: u.joined_date ? new Date(u.joined_date).toISOString().split('T')[0] : '',
+          lastLogin: u.last_login ? new Date(u.last_login).toLocaleString('en-IN') : 'No login record',
           status: u.status || 'Active'
         }));
         setUsersList(formatted);
       } else {
-        // Fallback default sample users from database seed
-        setUsersList([
-          { id: '1', name: 'Adv. Rajesh Sharma', mobile: '9876543210', joinedDate: '2026-01-15', lastLogin: 'Today, 10:15 AM', status: 'Active' },
-          { id: '2', name: 'Adv. Priya Venkatesh', mobile: '9876543211', joinedDate: '2026-02-01', lastLogin: 'Yesterday, 04:20 PM', status: 'Active' },
-          { id: '3', name: 'Adv. Amit Verma', mobile: '9876543212', joinedDate: '2026-02-20', lastLogin: '2026-02-25', status: 'Disabled' }
-        ]);
+        setUsersList([]);
       }
     } catch (err) {
-      console.error('Error fetching users:', err);
-      setUsersList([
-        { id: '1', name: 'Adv. Rajesh Sharma', mobile: '9876543210', joinedDate: '2026-01-15', lastLogin: 'Today, 10:15 AM', status: 'Active' },
-        { id: '2', name: 'Adv. Priya Venkatesh', mobile: '9876543211', joinedDate: '2026-02-01', lastLogin: 'Yesterday, 04:20 PM', status: 'Active' },
-        { id: '3', name: 'Adv. Amit Verma', mobile: '9876543212', joinedDate: '2026-02-20', lastLogin: '2026-02-25', status: 'Disabled' }
-      ]);
+      console.error('Error fetching users from backend:', err);
+      setUsersList([]);
     } finally {
       setLoading(false);
     }
@@ -102,7 +93,7 @@ export default function AdminUsers() {
                 {filteredUsers.length === 0 ? (
                   <tr>
                     <td colSpan="6" className="text-center py-12 text-slate-400 font-semibold text-xs">
-                      No matching user records found in database.
+                      No user records found in database.
                     </td>
                   </tr>
                 ) : (

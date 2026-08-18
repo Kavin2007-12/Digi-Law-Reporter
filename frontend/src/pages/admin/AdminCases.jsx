@@ -56,7 +56,7 @@ export default function AdminCases() {
           status: c.status || 'Published',
           citation: Array.isArray(c.citations) && c.citations.length > 0
             ? `${c.citations[0].year} (${c.citations[0].month}) DLR (${c.citations[0].court}) #${c.citations[0].number}`
-            : '2026 (04) DLR (SC) #123'
+            : (c.case_number || 'N/A')
         }));
         setCasesList(formatted);
       }
