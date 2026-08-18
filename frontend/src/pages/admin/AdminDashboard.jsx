@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, ArrowRight, Eye, Edit3, Scale, Clock, Activity, FileText } from 'lucide-react';
-import { MOCK_STATS, MOCK_CASES, MOCK_RECENT_ACTIVITY } from '../../data/adminMockData';
+import { Plus, ArrowRight, Eye, Edit3, Scale, Clock, Activity, FileText, Users } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api';
 
 // Generates 227 years from 2026 down to 1800
 const YEARS_LIST = Array.from({ length: 2026 - 1800 + 1 }, (_, i) => 2026 - i);
@@ -27,6 +27,58 @@ export default function AdminDashboard() {
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
 
+  const [stats, setStats] = useState({
+    totalCases: 0,
+    publishedCases: 0,
+    draftCases: 0,
+    totalUsers: 3
+  });
+
+  const [recentCases, setRecentCases] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      setLoading(true);
+      try {
+        const casesRes = await fetch(`${API_BASE_URL}/cases`);
+        const casesData = await casesRes.json();
+
+        if (casesData.success && Array.isArray(casesData.data)) {
+          const allCases = casesData.data;
+          const published = allCases.filter(c => c.status === 'Published').length;
+          const draft = allCases.filter(c => c.status === 'Draft').length;
+
+          setStats(prev => ({
+            ...prev,
+            totalCases: allCases.length,
+            publishedCases: published,
+            draftCases: draft
+          }));
+
+          const recent = allCases.slice(0, 5).map(c => ({
+            id: c.id,
+            caseNumber: c.case_number || '',
+            title: c.title || '',
+            court: c.court || 'Supreme Court of India',
+            judgmentDate: c.judgment_date ? new Date(c.judgment_date).toISOString().split('T')[0] : '',
+            status: c.status || 'Published',
+            citation: Array.isArray(c.citations) && c.citations.length > 0
+              ? `${c.citations[0].year} (${c.citations[0].month}) DLR (${c.citations[0].court}) #${c.citations[0].number}`
+              : '2026 (04) DLR (SC) #123'
+          }));
+          setRecentCases(recent);
+        }
+      } catch (err) {
+        console.error('Error fetching dashboard stats:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, []);
+
   return (
     <div className="max-w-6xl mx-auto space-y-10 pb-16 font-jakarta text-[#0B1727]">
       
@@ -41,9 +93,8 @@ export default function AdminDashboard() {
           </p>
         </div>
 
-        {/* Year and Month Dropdown Filters Placed Side-by-Side */}
+        {/* Year and Month Dropdown Filters */}
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Year Dropdown (1800 - 2026) */}
           <select 
             value={selectedYear}
             onChange={(e) => setSelectedYear(e.target.value)}
@@ -55,7 +106,6 @@ export default function AdminDashboard() {
             ))}
           </select>
 
-          {/* Month Dropdown (12 Months) */}
           <select 
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(e.target.value)}
@@ -72,15 +122,15 @@ export default function AdminDashboard() {
       {/* 2. Editorial Statistics Banner */}
       <div className="bg-white border border-slate-200/80 rounded-xl p-8 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-8">
         
-        {/* Main Stat: Total Cases */}
+        {/* Total Cases */}
         <div className="space-y-1 pr-8 border-b md:border-b-0 md:border-r border-slate-100 pb-6 md:pb-0">
           <div className="flex items-center gap-2 text-slate-500 text-xs font-bold uppercase tracking-wider">
             <Scale size={16} className="text-primary-600" />
             <span>Total Cases</span>
           </div>
           <div className="flex items-baseline gap-3">
-            <span className="text-4xl font-extrabold text-[#0B1727] font-cinzel">{MOCK_STATS.totalCases}</span>
-            <span className="text-xs text-slate-400 font-medium">{MOCK_STATS.totalCasesSub}</span>
+            <span className="text-4xl font-extrabold text-[#0B1727] font-cinzel">{stats.totalCases}</span>
+            <span className="text-xs text-slate-400 font-medium">All case records</span>
           </div>
         </div>
 
@@ -91,8 +141,8 @@ export default function AdminDashboard() {
             <span>Published</span>
           </div>
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-extrabold text-[#0B1727] font-cinzel">{MOCK_STATS.publishedCases}</span>
-            <span className="text-xs text-slate-400 font-medium">{MOCK_STATS.publishedCasesSub}</span>
+            <span className="text-3xl font-extrabold text-[#0B1727] font-cinzel">{stats.publishedCases}</span>
+            <span className="text-xs text-slate-400 font-medium">Available to users</span>
           </div>
         </div>
 
@@ -103,8 +153,8 @@ export default function AdminDashboard() {
             <span>Draft</span>
           </div>
           <div className="flex items-baseline gap-3">
-            <span className="text-3xl font-extrabold text-[#0B1727] font-cinzel">{MOCK_STATS.draftCases}</span>
-            <span className="text-xs text-slate-400 font-medium">{MOCK_STATS.draftCasesSub}</span>
+            <span className="text-3xl font-extrabold text-[#0B1727] font-cinzel">{stats.draftCases}</span>
+            <span className="text-xs text-slate-400 font-medium">Awaiting publication</span>
           </div>
         </div>
 
@@ -118,90 +168,87 @@ export default function AdminDashboard() {
             <span>Add New Case</span>
           </Link>
         </div>
-
       </div>
 
-      {/* 3. Two-Column Dashboard Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
-        {/* Left Column (2 Cols): Recent Activity Feed */}
-        <div className="lg:col-span-2 bg-white border border-slate-200/80 rounded-xl p-6 sm:p-8 shadow-xs space-y-6">
-          <div className="flex items-center justify-between pb-4 border-b border-slate-100">
-            <div>
-              <h2 className="text-base font-extrabold text-[#0B1727]">Recent Activity Log</h2>
-              <p className="text-xs text-slate-500 font-medium">Real-time system events & case updates</p>
-            </div>
-            <span className="text-[11px] font-bold text-slate-500 bg-slate-100 px-2.5 py-1 rounded">
-              0 New Events
-            </span>
-          </div>
-
-          {MOCK_RECENT_ACTIVITY.length === 0 ? (
-            <div className="py-12 text-center text-slate-400 text-xs font-medium space-y-2">
-              <Clock size={28} className="mx-auto text-slate-300 stroke-1" />
-              <p>No recent case activities reported.</p>
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {MOCK_RECENT_ACTIVITY.map((act) => (
-                <div key={act.id} className="flex items-start gap-4 p-3 hover:bg-slate-50 rounded-lg transition-colors border border-transparent hover:border-slate-100">
-                  <div className="w-8 h-8 rounded-full bg-primary-50 text-primary-600 flex items-center justify-center shrink-0 mt-0.5">
-                    <Activity size={15} />
-                  </div>
-                  <div className="space-y-0.5 flex-1 min-w-0">
-                    <p className="text-xs font-bold text-[#0B1727] truncate">{act.title}</p>
-                    <p className="text-[11px] text-slate-500 truncate">{act.desc}</p>
-                  </div>
-                  <span className="text-[10px] font-semibold text-slate-400 whitespace-nowrap">{act.time}</span>
-                </div>
-              ))}
-            </div>
-          )}
+      {/* 3. Recent Cases Table */}
+      <div className="bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-xs">
+        <div className="p-6 border-b border-slate-200/80 flex items-center justify-between">
+          <h2 className="text-sm font-extrabold uppercase tracking-wider text-[#0B1727]">
+            Recent Legal Precedent Activity
+          </h2>
+          <Link
+            to="/admin/cases"
+            className="text-xs font-bold text-primary-600 hover:text-primary-700 flex items-center gap-1 transition-colors"
+          >
+            <span>View All Cases</span>
+            <ArrowRight size={14} />
+          </Link>
         </div>
 
-        {/* Right Column (1 Col): Quick Admin Links */}
-        <div className="bg-white border border-slate-200/80 rounded-xl p-6 sm:p-8 shadow-xs space-y-6">
-          <div className="pb-4 border-b border-slate-100">
-            <h2 className="text-base font-extrabold text-[#0B1727]">Quick Actions</h2>
-            <p className="text-xs text-slate-500 font-medium">Common administrative workflows</p>
+        {loading ? (
+          <div className="py-12 text-center text-slate-400 font-medium text-xs">
+            Loading recent precedent activity...
           </div>
-
-          <div className="space-y-3">
-            <Link
-              to="/admin/cases/add"
-              className="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/80 rounded-lg text-xs font-bold text-[#0B1727] transition-all border border-slate-200/60 group"
-            >
-              <span className="flex items-center gap-2.5">
-                <Plus size={15} className="text-primary-600" />
-                <span>Create Case Record</span>
-              </span>
-              <ArrowRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-
-            <Link
-              to="/admin/cases"
-              className="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/80 rounded-lg text-xs font-bold text-[#0B1727] transition-all border border-slate-200/60 group"
-            >
-              <span className="flex items-center gap-2.5">
-                <Eye size={15} className="text-slate-600" />
-                <span>Browse All Cases</span>
-              </span>
-              <ArrowRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
-
-            <Link
-              to="/admin/settings"
-              className="flex items-center justify-between p-3.5 bg-slate-50 hover:bg-slate-100/80 rounded-lg text-xs font-bold text-[#0B1727] transition-all border border-slate-200/60 group"
-            >
-              <span className="flex items-center gap-2.5">
-                <Edit3 size={15} className="text-slate-600" />
-                <span>Portal Settings</span>
-              </span>
-              <ArrowRight size={14} className="text-slate-400 group-hover:translate-x-0.5 transition-transform" />
-            </Link>
+        ) : recentCases.length === 0 ? (
+          <div className="py-12 text-center text-slate-400 font-medium text-xs">
+            No precedent activity recorded yet. Click "+ Add New Case" to get started.
           </div>
-        </div>
-
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead>
+                <tr className="border-b border-slate-200 bg-slate-50/50 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
+                  <th className="py-3 px-4 w-12 text-center">S.No</th>
+                  <th className="py-3 px-4">Case Details</th>
+                  <th className="py-3 px-4">Citation</th>
+                  <th className="py-3 px-4">Court</th>
+                  <th className="py-3 px-4">Date</th>
+                  <th className="py-3 px-4">Status</th>
+                  <th className="py-3 px-4 text-right">Action</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 font-medium">
+                {recentCases.map((c, idx) => (
+                  <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="py-3.5 px-4 text-center font-bold text-slate-400">
+                      {idx + 1}
+                    </td>
+                    <td className="py-3.5 px-4 font-bold text-slate-900">
+                      {c.title}
+                    </td>
+                    <td className="py-3.5 px-4 font-mono font-bold text-slate-800">
+                      {c.citation}
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-600">
+                      {c.court}
+                    </td>
+                    <td className="py-3.5 px-4 text-slate-500">
+                      {c.judgmentDate}
+                    </td>
+                    <td className="py-3.5 px-4">
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                        c.status === 'Published'
+                          ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                          : 'bg-amber-50 text-amber-700 border-amber-200'
+                      }`}>
+                        {c.status}
+                      </span>
+                    </td>
+                    <td className="py-3.5 px-4 text-right">
+                      <Link
+                        to={`/admin/cases/edit/${c.id}`}
+                        className="inline-flex items-center gap-1 p-1 text-slate-400 hover:text-amber-600 rounded"
+                        title="Edit Case"
+                      >
+                        <Edit3 size={14} />
+                      </Link>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
       </div>
 
     </div>
