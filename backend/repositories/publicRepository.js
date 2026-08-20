@@ -44,15 +44,36 @@ export const searchCasesFromDb = async (params) => {
     const values = [];
 
     if (rawTerm) {
-      const cleanTerm = rawTerm.includes(':') ? rawTerm.split(':').pop().trim() : rawTerm;
+      const cleanTerm = rawTerm.includes(':') ? rawTerm.split(':').slice(1).join(':').trim() : rawTerm;
       const lowerRaw = rawTerm.toLowerCase();
 
-      // 1. FIND BY CITATION (tab === 'citation' or starts with citation:)
-      if (tab === 'citation' || lowerRaw.startsWith('citation:')) {
-        const wordTokens = cleanTerm.split(/[\s,()#:]+/).filter(w => w.length > 0);
-        const yearToken = wordTokens.find(w => /^(19|20)\d{2}$/.test(w));
-        const numberToken = wordTokens.find(w => /^\d+$/.test(w) && w !== yearToken && w !== '08' && w !== '8');
+      const wordTokens = cleanTerm.split(/[\s,()#:]+/).filter(w => w.length > 0);
+      const yearToken = wordTokens.find(w => /^(19|20)\d{2}$/.test(w));
+      const numericTokens = wordTokens.filter(w => /^\d+$/.test(w) && w !== yearToken);
 
+      let monthToken = null;
+      let numberToken = null;
+
+      if (numericTokens.length >= 2) {
+        monthToken = numericTokens[0].replace(/^0+/, '');
+        numberToken = numericTokens[1];
+      } else if (numericTokens.length === 1) {
+        const monthInBracketsMatch = cleanTerm.match(/\(\s*(0?[1-9]|1[0-2])\s*\)/);
+        if (monthInBracketsMatch) {
+          monthToken = monthInBracketsMatch[1].replace(/^0+/, '');
+          numberToken = numericTokens[0] !== monthInBracketsMatch[1] ? numericTokens[0] : null;
+        } else {
+          numberToken = numericTokens[0];
+        }
+      }
+
+      const isCitationQuery = tab === 'citation' || 
+                              lowerRaw.startsWith('citation:') ||
+                              Boolean(yearToken && numberToken) ||
+                              Boolean(cleanTerm.toLowerCase().includes('dlr'));
+
+      // 1. FIND BY CITATION
+      if (isCitationQuery) {
         if (yearToken && numberToken) {
           values.push(`%${yearToken}%`);
           const yIdx = values.length;
@@ -60,7 +81,7 @@ export const searchCasesFromDb = async (params) => {
           const nIdx1 = values.length;
           values.push(`%#${numberToken}%`);
           const nIdx2 = values.length;
-          sql += ` AND (citations::text ILIKE $${nIdx1} OR citations::text ILIKE $${nIdx2}) AND (citations::text ILIKE $${yIdx} OR judgment_date::text ILIKE $${yIdx})`;
+          sql += ` AND (citations::text ILIKE $${nIdx1} OR citations::text ILIKE $${nIdx2} OR citations::text ILIKE $${yIdx}) AND (citations::text ILIKE $${yIdx} OR judgment_date::text ILIKE $${yIdx})`;
         } else if (numberToken) {
           values.push(`%"number":"${numberToken}"%`);
           const nIdx1 = values.length;

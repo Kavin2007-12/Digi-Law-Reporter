@@ -243,6 +243,28 @@ class LocalStore {
     }
   }
 
+  // Admin Session methods
+  saveAdminSession(sessionData) {
+    const store = this.read();
+    if (!store.adminSessions) store.adminSessions = [];
+    store.adminSessions = store.adminSessions.filter(s => s.sessionId !== sessionData.sessionId && String(s.adminId) !== String(sessionData.adminId));
+    store.adminSessions.push(sessionData);
+    this.write(store);
+  }
+
+  getAdminSession(sessionId) {
+    const store = this.read();
+    if (!store.adminSessions) return null;
+    return store.adminSessions.find(s => s.sessionId === sessionId) || null;
+  }
+
+  deleteAdminSession(sessionId) {
+    const store = this.read();
+    if (!store.adminSessions) return;
+    store.adminSessions = store.adminSessions.filter(s => s.sessionId !== sessionId);
+    this.write(store);
+  }
+
   ensureMainAdmin({ email, password_hash, role }) {
     const store = this.read();
     if (!store.admins) store.admins = [];
@@ -427,91 +449,106 @@ class LocalStore {
     if (!keyword || !keyword.trim()) return publishedCases;
 
     const rawTerm = keyword.trim();
-    const cleanTerm = rawTerm.includes(':') ? rawTerm.split(':').pop().trim() : rawTerm;
+    const cleanTerm = rawTerm.includes(':') ? rawTerm.split(':').slice(1).join(':').trim() : rawTerm;
     const lowerTerm = cleanTerm.toLowerCase();
     const mode = (tab || 'keyword').toLowerCase().trim();
 
-    // 1. FIND BY CITATION (tab === 'citation' or starts with citation:)
-    if (mode === 'citation' || rawTerm.toLowerCase().startsWith('citation:')) {
-      const wordTokens = cleanTerm.split(/[\s,()#:]+/).filter(w => w.length > 0);
-      const yearToken = wordTokens.find(w => /^(19|20)\d{2}$/.test(w));
-      const numberToken = wordTokens.find(w => /^\d+$/.test(w) && w !== yearToken && w !== '08' && w !== '8');
+    // Tokenize Citation Query
+    const wordTokens = cleanTerm.split(/[\s,()#:]+/).filter(w => w.length > 0);
+    const yearToken = wordTokens.find(w => /^(19|20)\d{2}$/.test(w));
+    const numericTokens = wordTokens.filter(w => /^\d+$/.test(w) && w !== yearToken);
 
+    let monthToken = null;
+    let numberToken = null;
+
+    if (numericTokens.length >= 2) {
+      monthToken = numericTokens[0].replace(/^0+/, '');
+      numberToken = numericTokens[1];
+    } else if (numericTokens.length === 1) {
+      const monthInBracketsMatch = cleanTerm.match(/\(\s*(0?[1-9]|1[0-2])\s*\)/);
+      if (monthInBracketsMatch) {
+        monthToken = monthInBracketsMatch[1].replace(/^0+/, '');
+        numberToken = numericTokens[0] !== monthInBracketsMatch[1] ? numericTokens[0] : null;
+      } else {
+        numberToken = numericTokens[0];
+      }
+    }
+
+    const isCitationQuery = mode === 'citation' || 
+                            rawTerm.toLowerCase().startsWith('citation:') ||
+                            Boolean(yearToken && numberToken) ||
+                            Boolean(cleanTerm.toLowerCase().includes('dlr'));
+
+    // 1. FIND BY CITATION
+    if (isCitationQuery) {
       return publishedCases.filter(c => {
         const cits = Array.isArray(c.citations) ? c.citations : [];
         const citStr = String(c.citation || c.citations_string || '').toLowerCase();
 
         const matchesArray = cits.some(cit => {
-          const citNum = String(cit.number || cit.count || cit.dlrNumber || '').replace(/[^0-9]/g, '');
+          const citNum = String(cit.number || cit.count || cit.dlrNumber || '').replace(/[^0-9a-zA-Z]/g, '').trim().toLowerCase();
           const citYr = String(cit.year || '').trim();
+          const citMo = cit.month ? String(cit.month).trim().replace(/^0+/, '') : '';
 
           const yrMatch = !yearToken || citYr === yearToken || (c.judgment_date && c.judgment_date.startsWith(yearToken));
-          const numMatch = !numberToken || citNum === numberToken;
+          const numMatch = !numberToken || citNum === numberToken.toLowerCase();
+          const moMatch = !monthToken || !citMo || citMo === monthToken;
 
-          return yrMatch && numMatch;
+          return yrMatch && numMatch && moMatch;
         });
 
         const yrInStr = !yearToken || citStr.includes(yearToken) || (c.judgment_date && c.judgment_date.startsWith(yearToken));
-        const numInStr = !numberToken || citStr.includes(`#${numberToken}`) || citStr.endsWith(` ${numberToken}`) || citStr.includes(`(${numberToken})`);
-        const matchesString = yrInStr && numInStr;
+        const numInStr = !numberToken || citStr.includes(`#${numberToken}`) || citStr.endsWith(` ${numberToken}`) || citStr.includes(`(${numberToken})`) || citStr.includes(` ${numberToken} `);
+        let moInStr = true;
+        if (monthToken) {
+          const paddedMo = monthToken.padStart(2, '0');
+          moInStr = citStr.includes(`(${monthToken})`) || citStr.includes(`(${paddedMo})`) || citStr.includes(` ${monthToken} `) || citStr.includes(` ${paddedMo} `);
+        }
+
+        const matchesString = yrInStr && numInStr && moInStr;
 
         return matchesArray || matchesString;
       });
     }
 
-    // 2. FIND BY SECTION / TITLE OR ACT (tab === 'section' or tab === 'act' or tab === 'title')
+    // 2. FIND BY SECTION / TITLE OR ACT
     if (mode === 'section' || mode === 'act' || mode === 'title' || mode === 'section_only') {
       const numMatch = cleanTerm.match(/\d+[a-zA-Z]*/);
-      const sectionNum = numMatch ? numMatch[0].toLowerCase() : lowerTerm;
-
       return publishedCases.filter(c => {
-        const secVal = String(c.section || '').toLowerCase();
-        const titleVal = String(c.title || '').toLowerCase();
-        const actVal = String(c.act || '').toLowerCase();
+        const section = String(c.section || '').toLowerCase();
+        const title = String(c.title || '').toLowerCase();
+        const act = String(c.act || '').toLowerCase();
 
-        const matchDirectSection = secVal.includes(sectionNum);
-        const matchTitle = titleVal.includes(lowerTerm);
-        const matchActTerm = actVal.includes(lowerTerm);
-        const matchActSection = actVal.includes(sectionNum) && (actVal.includes('section') || actVal.includes('sec') || actVal.includes('u/s'));
-
-        return matchDirectSection || matchTitle || matchActTerm || matchActSection;
+        if (section.includes(lowerTerm) || title.includes(lowerTerm) || act.includes(lowerTerm)) return true;
+        if (numMatch && (section.includes(numMatch[0].toLowerCase()) || act.includes(numMatch[0].toLowerCase()))) return true;
+        return false;
       });
     }
 
-    // 3. FIND BY PARTY NAME (tab === 'party')
+    // 3. FIND BY PARTY NAME
     if (mode === 'party') {
       return publishedCases.filter(c => {
-        const petVal = String(c.petitioner || c.petitioner_name || '').toLowerCase();
-        const resVal = String(c.respondent || c.respondent_name || '').toLowerCase();
-        const titleVal = String(c.title || '').toLowerCase();
-        return petVal.includes(lowerTerm) || resVal.includes(lowerTerm) || titleVal.includes(lowerTerm);
+        const pet = String(c.petitioner || c.petitioner_name || '').toLowerCase();
+        const resp = String(c.respondent || c.respondent_name || '').toLowerCase();
+        const title = String(c.title || '').toLowerCase();
+        return pet.includes(lowerTerm) || resp.includes(lowerTerm) || title.includes(lowerTerm);
       });
     }
 
-    // 4. FIND BY TOPIC (tab === 'topic')
-    if (mode === 'topic') {
+    // 4. FIND BY TOPIC / PHRASE
+    if (mode === 'topic' || mode === 'phrase') {
       return publishedCases.filter(c => {
-        const actVal = String(c.act || '').toLowerCase();
-        const headVal = String(c.head_note || c.summary || c.headNote || '').toLowerCase();
-        return actVal.includes(lowerTerm) || headVal.includes(lowerTerm);
+        const headNote = String(c.head_note || c.summary || '').toLowerCase();
+        const text = String(c.judgment_text || c.content || '').toLowerCase();
+        const act = String(c.act || '').toLowerCase();
+        return headNote.includes(lowerTerm) || text.includes(lowerTerm) || act.includes(lowerTerm);
       });
     }
 
-    // 5. WORDS & PHRASES (tab === 'phrase')
-    if (mode === 'phrase') {
-      return publishedCases.filter(c => {
-        const headVal = String(c.head_note || c.summary || c.headNote || '').toLowerCase();
-        const bodyVal = String(c.judgment_text || c.content || c.judgmentText || '').toLowerCase();
-        return headVal.includes(lowerTerm) || bodyVal.includes(lowerTerm);
-      });
-    }
-
-    // 6. KEYWORD SEARCH (tab === 'keyword' or default)
+    // GENERAL KEYWORD SEARCH
     return publishedCases.filter(c => {
-      const titleVal = String(c.title || '').toLowerCase();
-      const headVal = String(c.head_note || c.summary || c.headNote || '').toLowerCase();
-      const bodyVal = String(c.judgment_text || c.content || c.judgmentText || '').toLowerCase();
-      return titleVal.includes(lowerTerm) || headVal.includes(lowerTerm) || bodyVal.includes(lowerTerm);
+      const fullText = `${c.title || ''} ${c.petitioner || ''} ${c.respondent || ''} ${c.case_number || ''} ${c.act || ''} ${c.section || ''} ${c.head_note || ''} ${c.judgment_text || ''} ${c.citation || ''}`.toLowerCase();
+      return fullText.includes(lowerTerm);
     });
   }
 }

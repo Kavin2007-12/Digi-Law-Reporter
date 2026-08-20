@@ -15,6 +15,28 @@ export default function AdminResetPassword() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
+  const [validatingToken, setValidatingToken] = useState(true);
+
+  React.useEffect(() => {
+    if (!token) {
+      setError('This password reset link is invalid or has expired.');
+      setValidatingToken(false);
+      return;
+    }
+
+    fetch(`http://localhost:5000/api/admin/validate-reset-token?token=${encodeURIComponent(token)}`)
+      .then(res => res.json())
+      .then(data => {
+        setValidatingToken(false);
+        if (data.status !== 'success') {
+          setError(data.message || 'This password reset link has expired (valid for 3 minutes only).');
+        }
+      })
+      .catch(() => {
+        setValidatingToken(false);
+        setError('This password reset link is invalid or has expired.');
+      });
+  }, [token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -58,6 +80,17 @@ export default function AdminResetPassword() {
     }
   };
 
+  if (validatingToken) {
+    return (
+      <div className="h-[100dvh] bg-slate-50 flex items-center justify-center p-4 font-sans">
+        <div className="bg-white/90 backdrop-blur-xl p-8 rounded-3xl border border-slate-200 shadow-sm text-center max-w-sm w-full space-y-3">
+          <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+          <p className="text-xs font-bold text-slate-700">Verifying Password Reset Security Link...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="h-[100dvh] bg-slate-50 flex items-center justify-center p-4 relative overflow-hidden font-sans">
       {/* Background Orbs */}
@@ -98,15 +131,27 @@ export default function AdminResetPassword() {
                 Sign In Now <ArrowRight size={18} />
               </button>
             </div>
+          ) : error ? (
+            <div className="p-5 bg-red-50 border border-red-200 rounded-2xl text-red-700 text-xs space-y-3 text-center">
+              <div className="flex flex-col items-center gap-2 font-bold text-red-800">
+                <AlertCircle size={32} className="text-red-600" />
+                <span className="text-sm">Password Reset Link Expired</span>
+              </div>
+              <p className="text-red-600 leading-relaxed text-xs">
+                {error} Password reset links are strictly valid for 3 minutes for security.
+              </p>
+              <div className="pt-2">
+                <button
+                  type="button"
+                  onClick={() => navigate('/admin?forgot=true')}
+                  className="w-full py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-xl text-xs transition-all shadow-md cursor-pointer flex items-center justify-center gap-2"
+                >
+                  Request New Reset Link <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
           ) : (
             <form onSubmit={handleSubmit} className="space-y-4">
-              {error && (
-                <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-medium flex items-center gap-2">
-                  <AlertCircle size={16} className="shrink-0" />
-                  <span>{error}</span>
-                </div>
-              )}
-
               <div>
                 <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                   New Password (min. 8 characters)

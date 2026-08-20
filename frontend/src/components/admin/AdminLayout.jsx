@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, BookOpen, Users, Settings, LogOut, Menu, X, Bell, User, ChevronDown, ChevronRight, Plus, FileText, CheckCircle2, Home, Shield } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import AdminSessionManager from './AdminSessionManager';
 
 export default function AdminLayout() {
   const [isSidebarExpanded, setIsSidebarExpanded] = useState(true);
@@ -438,6 +439,7 @@ export default function AdminLayout() {
 
         {/* Scrollable Main Area */}
         <main className="flex-1 p-4 sm:p-6 md:p-8">
+          <AdminSessionManager />
           <Outlet />
         </main>
 

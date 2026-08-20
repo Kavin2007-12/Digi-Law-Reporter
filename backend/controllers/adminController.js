@@ -4,6 +4,7 @@ import localStore from '../data/localStore.js';
 import logger from '../utils/logger.js';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+import adminSessionService from '../services/adminSessionService.js';
 import dotenv from 'dotenv';
 dotenv.config();
 
@@ -52,19 +53,38 @@ export const adminLogin = async (req, res) => {
     // 3. Role strictly determined by Database record
     const userRole = admin.role === 'MAIN_ADMIN' ? 'MAIN_ADMIN' : 'EXTRA_ADMIN';
 
-    // Sign JWT Token
+    // Create server-side session
+    const sessionInfo = adminSessionService.createSession({
+      id: admin.id,
+      email: admin.email || loginIdentifier,
+      username: admin.username || loginIdentifier,
+      role: userRole
+    });
+
+    // Sign JWT Token with sessionId
     const token = jwt.sign(
-      { id: admin.id, email: admin.email || loginIdentifier, role: userRole },
+      { id: admin.id, email: admin.email || loginIdentifier, role: userRole, sessionId: sessionInfo.sessionId },
       JWT_SECRET,
       { expiresIn: '24h' }
     );
 
-    logger.info(`Admin login successful for ${loginIdentifier} (${userRole})`);
+    // Set secure HttpOnly cookie for session
+    if (res.cookie) {
+      res.cookie('admin_session', sessionInfo.sessionId, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: sessionInfo.durationSeconds * 1000
+      });
+    }
+
+    logger.info(`Admin login successful for ${loginIdentifier} (${userRole}). Session: ${sessionInfo.sessionId.substring(0, 8)}`);
 
     return res.json({
       status: 'success',
       message: 'Login successful',
       token,
+      session: sessionInfo,
       user: {
         id: admin.id,
         name: admin.name || 'Admin User',
@@ -77,6 +97,85 @@ export const adminLogin = async (req, res) => {
   } catch (error) {
     logger.error('Admin login error', error);
     return res.status(500).json({ status: 'error', message: 'Invalid email or password.' });
+  }
+};
+
+/**
+ * Admin Logout Controller
+ * Destroys server-side session and clears authentication cookies
+ */
+export const adminLogout = async (req, res) => {
+  try {
+    const sessionId = req.headers['x-admin-session-id'] || (req.cookies && req.cookies.admin_session) || (req.user && req.user.sessionId);
+    if (sessionId) {
+      adminSessionService.destroySession(sessionId);
+    }
+    if (res.clearCookie) {
+      res.clearCookie('admin_session');
+    }
+    return res.json({ status: 'success', message: 'Admin session logged out successfully.' });
+  } catch (error) {
+    logger.error('Admin logout error', error);
+    if (res.clearCookie) res.clearCookie('admin_session');
+    return res.json({ status: 'success', message: 'Admin session cleared.' });
+  }
+};
+
+/**
+ * Get Server-Side Admin Session Status
+ */
+export const getSessionStatus = async (req, res) => {
+  try {
+    const sessionId = req.headers['x-admin-session-id'] || (req.cookies && req.cookies.admin_session) || (req.user && req.user.sessionId);
+    const session = adminSessionService.getSession(sessionId);
+
+    if (!session) {
+      if (res.clearCookie) res.clearCookie('admin_session');
+      return res.status(401).json({ status: 'error', code: 'SESSION_EXPIRED', message: 'Admin session has expired. Please log in again.' });
+    }
+
+    const remainingMs = Math.max(0, session.expiresAt - Date.now());
+    const warningWindowMs = parseInt(process.env.ADMIN_WARNING_WINDOW || '20', 10) * 1000;
+
+    return res.json({
+      status: 'success',
+      active: true,
+      expiresAt: session.expiresAt,
+      remainingSeconds: Math.floor(remainingMs / 1000),
+      warningWindowSeconds: Math.floor(warningWindowMs / 1000)
+    });
+  } catch (error) {
+    logger.error('Get session status error', error);
+    return res.status(401).json({ status: 'error', code: 'SESSION_EXPIRED', message: 'Invalid session.' });
+  }
+};
+
+/**
+ * Explicit Session Renewal Controller (Called ONLY when admin clicks Continue Session)
+ */
+export const renewAdminSession = async (req, res) => {
+  try {
+    const sessionId = req.headers['x-admin-session-id'] || (req.cookies && req.cookies.admin_session) || (req.user && req.user.sessionId);
+    
+    if (!sessionId) {
+      return res.status(401).json({ status: 'error', code: 'SESSION_EXPIRED', message: 'Session ID missing. Renewal denied.' });
+    }
+
+    const renewalResult = adminSessionService.renewSession(sessionId);
+
+    if (!renewalResult.success) {
+      if (res.clearCookie) res.clearCookie('admin_session');
+      return res.status(401).json({ status: 'error', code: 'SESSION_EXPIRED', message: renewalResult.message });
+    }
+
+    return res.json({
+      status: 'success',
+      message: 'Admin session explicitly renewed.',
+      session: renewalResult
+    });
+  } catch (error) {
+    logger.error('Renew admin session error', error);
+    return res.status(401).json({ status: 'error', code: 'SESSION_EXPIRED', message: 'Failed to renew session.' });
   }
 };
 
@@ -334,7 +433,7 @@ export const adminForgotPassword = async (req, res) => {
 
     const rawToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const expiresAt = new Date(Date.now() + 30 * 60 * 1000); // 30 minutes expiration
+    const expiresAt = new Date(Date.now() + 3 * 60 * 1000); // 3 minutes expiration
 
     // Persist token hash securely
     await userRepository.savePasswordResetToken({
@@ -343,7 +442,16 @@ export const adminForgotPassword = async (req, res) => {
       expiresAt
     });
 
-    const baseUrl = process.env.APP_BASE_URL || process.env.FRONTEND_URL || 'http://localhost:5173';
+    let baseUrl = process.env.FRONTEND_URL || process.env.APP_BASE_URL;
+    if (!baseUrl || baseUrl.includes('localhost')) {
+      const host = req.headers.host || req.get('host');
+      if (host && !host.includes('localhost') && !host.includes('127.0.0.1')) {
+        const protocol = req.protocol === 'https' || req.headers['x-forwarded-proto'] === 'https' ? 'https' : 'http';
+        baseUrl = `${protocol}://${host}`;
+      } else {
+        baseUrl = baseUrl || 'http://localhost:5173';
+      }
+    }
     const resetUrl = `${baseUrl}/admin/reset-password?token=${rawToken}`;
 
     await sendAdminPasswordResetEmail(admin.email || cleanEmail, resetUrl);
@@ -365,8 +473,59 @@ export const adminForgotPassword = async (req, res) => {
 };
 
 /**
+ * Main Admin Validate Reset Token Controller
+ * Pre-checks token validity and 3-minute expiration before rendering password form
+ */
+export const validateResetToken = async (req, res) => {
+  try {
+    const { token } = req.query;
+
+    if (!token || typeof token !== 'string' || !token.trim()) {
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'This password reset link is invalid or has expired.' 
+      });
+    }
+
+    const crypto = await import('crypto');
+    const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
+    const tokenRecord = await userRepository.getPasswordResetToken(tokenHash);
+
+    if (!tokenRecord || tokenRecord.used) {
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'This password reset link is invalid or has expired.' 
+      });
+    }
+
+    const expiresTime = new Date(tokenRecord.expiresAt).getTime();
+    const createdTime = tokenRecord.createdAt ? new Date(tokenRecord.createdAt).getTime() : (expiresTime - 3 * 60 * 1000);
+    const now = Date.now();
+
+    if (now > expiresTime || (now - createdTime) > (3 * 60 * 1000 + 5000)) {
+      return res.status(400).json({ 
+        status: 'error', 
+        message: 'This password reset link has expired (valid for 3 minutes only).' 
+      });
+    }
+
+    return res.json({
+      status: 'success',
+      message: 'Password reset link is valid.'
+    });
+
+  } catch (error) {
+    logger.error('Validate reset token error', error);
+    return res.status(400).json({ 
+      status: 'error', 
+      message: 'This password reset link is invalid or has expired.' 
+    });
+  }
+};
+
+/**
  * Main Admin Reset Password Controller
- * Validates single-use token, checks expiration, hashes new password and updates credentials
+ * Validates single-use token, checks 3-minute expiration, hashes new password and updates credentials
  */
 export const adminResetPassword = async (req, res) => {
   try {
@@ -397,10 +556,14 @@ export const adminResetPassword = async (req, res) => {
       });
     }
 
-    if (new Date(tokenRecord.expiresAt) < new Date()) {
+    const expiresTime = new Date(tokenRecord.expiresAt).getTime();
+    const createdTime = tokenRecord.createdAt ? new Date(tokenRecord.createdAt).getTime() : (expiresTime - 3 * 60 * 1000);
+    const now = Date.now();
+
+    if (now > expiresTime || (now - createdTime) > (3 * 60 * 1000 + 5000)) {
       return res.status(400).json({ 
         status: 'error', 
-        message: 'This password reset link is invalid or has expired.' 
+        message: 'This password reset link has expired (valid for 3 minutes only).' 
       });
     }
 

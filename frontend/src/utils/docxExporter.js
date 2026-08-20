@@ -1,5 +1,5 @@
 import { 
-  Document, Packer, Paragraph, TextRun, AlignmentType, PageNumber, ImageRun, BorderStyle, Table, TableRow, TableCell, WidthType
+  Document, Packer, Paragraph, TextRun, AlignmentType, PageNumber, ImageRun, BorderStyle, Table, TableRow, TableCell, WidthType, ExternalHyperlink
 } from 'docx';
 import QRCode from 'qrcode';
 
@@ -139,6 +139,74 @@ export const downloadCaseAsDOCX = async (caseItem, showToast = () => {}) => {
 
   const rawText = sanitizeText(fullContent);
   const paragraphsList = rawText.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+
+  // Preserves <a href="..."> hyperlinks as native Word ExternalHyperlink elements
+  const parseHtmlToDocxRuns = (paraHtml) => {
+    if (!paraHtml) return [new TextRun({ text: '', size: 21, font: "Georgia", color: "0F172A" })];
+
+    const cleanInput = String(paraHtml)
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'");
+
+    const linkRegex = /<a\s+[^>]*href=["']([^"']+)["'][^>]*>([\s\S]*?)<\/a>/gi;
+    const runs = [];
+    let lastIndex = 0;
+    let match;
+
+    while ((match = linkRegex.exec(cleanInput)) !== null) {
+      const [fullMatch, href, linkText] = match;
+      const matchIndex = match.index;
+
+      if (matchIndex > lastIndex) {
+        const textBefore = cleanInput.substring(lastIndex, matchIndex).replace(/<[^>]*>/g, '');
+        if (textBefore) {
+          runs.push(new TextRun({ text: textBefore, size: 21, font: "Georgia", color: "0F172A" }));
+        }
+      }
+
+      const cleanLinkText = linkText.replace(/<[^>]*>/g, '').trim() || href;
+      runs.push(
+        new ExternalHyperlink({
+          children: [
+            new TextRun({
+              text: cleanLinkText,
+              size: 21,
+              font: "Georgia",
+              color: "2563EB",
+              underline: {},
+              bold: true,
+            }),
+          ],
+          link: href,
+        })
+      );
+
+      lastIndex = matchIndex + fullMatch.length;
+    }
+
+    if (lastIndex < cleanInput.length) {
+      const textAfter = cleanInput.substring(lastIndex).replace(/<[^>]*>/g, '');
+      if (textAfter) {
+        runs.push(new TextRun({ text: textAfter, size: 21, font: "Georgia", color: "0F172A" }));
+      }
+    }
+
+    return runs.length > 0 ? runs : [new TextRun({ text: cleanInput.replace(/<[^>]*>/g, ''), size: 21, font: "Georgia", color: "0F172A" })];
+  };
+
+  const htmlParagraphs = fullContent 
+    ? String(fullContent)
+        .replace(/<\/(p|div|h1|h2|h3|h4|h5|h6|li|blockquote|tr)>/gi, '___PARA_SPLIT___')
+        .split('___PARA_SPLIT___')
+        .map(p => p.trim())
+        .filter(Boolean)
+    : [];
+
+  const bodyParagraphsList = htmlParagraphs.length > 0 ? htmlParagraphs : paragraphsList;
 
   // 4. Build Document Structure
   const doc = new Document({
@@ -324,13 +392,11 @@ export const downloadCaseAsDOCX = async (caseItem, showToast = () => {}) => {
             space: { after: 200 },
           }),
 
-          // Body Paragraphs
-          ...paragraphsList.map(para => new Paragraph({
+          // Body Paragraphs with native Word ExternalHyperlink elements
+          ...bodyParagraphsList.map(paraHtml => new Paragraph({
             alignment: AlignmentType.JUSTIFY,
             space: { after: 180, line: 360 }, // Comfortable line height & spacing
-            children: [
-              new TextRun({ text: para, size: 21, font: "Georgia", color: "0F172A" }),
-            ],
+            children: parseHtmlToDocxRuns(paraHtml),
           })),
         ],
       },
