@@ -195,21 +195,46 @@ export const buildVectorLegalPDF = async (caseItem) => {
   doc.line(margin, yPos, pageWidth - margin, yPos);
   yPos += 0.3;
 
-  // Sanitizer Helper — Converts HTML into clean text while preserving paragraph breaks & decoding entities (&nbsp;)
+  // Sanitizer Helper — Converts HTML into clean text while preserving list numbers (<ol>), bullet points (<ul>), paragraph breaks & decoding entities
   const sanitizeText = (str) => {
     if (!str) return '';
     let text = String(str);
 
-    // 1. Convert block closing tags and line break tags into double newlines for paragraph preservation
+    // 1. Process ordered lists <ol><li>...</li></ol> -> add explicit numbers "1.  ", "2.  "
+    text = text.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (match, listContent) => {
+      let itemIndex = 1;
+      return listContent.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (m, itemText) => {
+        const cleanItem = itemText.replace(/<[^>]*>/g, '').trim();
+        if (!cleanItem) return '';
+        // If item already starts with a number like "1." or "1)", don't duplicate
+        const hasNumber = /^\d+[\.\)]\s*/.test(cleanItem);
+        const prefix = hasNumber ? '' : `${itemIndex}.  `;
+        itemIndex++;
+        return `\n\n${prefix}${cleanItem}`;
+      });
+    });
+
+    // 2. Process unordered lists <ul><li>...</li></ul> -> add bullet point "•  "
+    text = text.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (match, listContent) => {
+      return listContent.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (m, itemText) => {
+        const cleanItem = itemText.replace(/<[^>]*>/g, '').trim();
+        if (!cleanItem) return '';
+        const hasBullet = /^[•\-\*]\s*/.test(cleanItem);
+        const prefix = hasBullet ? '' : `•  `;
+        return `\n\n${prefix}${cleanItem}`;
+      });
+    });
+
+    // 3. Convert block closing tags and line break tags into double newlines for paragraph preservation
     text = text
       .replace(/<\/(p|div|h1|h2|h3|h4|h5|h6|li|blockquote|tr)>/gi, '\n\n')
       .replace(/<br\s*\/?>/gi, '\n')
       .replace(/<hr\s*\/?>/gi, '\n\n');
 
-    // 2. Remove remaining HTML tags
+    // 4. Remove remaining HTML tags
     text = text.replace(/<[^>]*>/g, '');
 
-    // 3. Decode HTML entities (especially &nbsp; and &amp;)
+    // 5. Decode HTML entities (especially &nbsp; and &amp;)
     text = text
       .replace(/&nbsp;/gi, ' ')
       .replace(/&amp;/gi, '&')
@@ -221,21 +246,24 @@ export const buildVectorLegalPDF = async (caseItem) => {
       .replace(/&ndash;/gi, '–')
       .replace(/&mdash;/gi, '—');
 
-    // 4. Remove unwanted watermark / header stamp text
+    // 6. Remove duplicate JUDGMENT / ORDER headers at top of body text
+    text = text
+      .replace(/^(?:\s*<[^>]+>)*\s*(?:J\s*U\s*D\s*G\s*M\s*E\s*N\s*T|JUDGMENT|O\s*R\s*D\s*E\s*R|ORDER)\s*/i, '');
+
+    // 7. Remove unwanted watermark / header stamp text
     text = text
       .replace(/(?:DIGITAL|DIGI)?\s*LAW\s*REPORTER\s*Generated\s*by\s*Digital\s*Law\s*Reporter\s*Date:.*?(?:Page\s*\d+\s*of\s*\d+)/gi, '')
       .replace(/Generated\s*by\s*Digital\s*Law\s*Reporter\s*Date:.*?(?:Page\s*\d+\s*of\s*\d+)/gi, '')
       .replace(/www\.digilawreporter\.in/gi, '')
-      .replace(/DIGI LAW REPORTER \(DLR\)/gi, '')
-      .replace(/^(?:J\s*U\s*D\s*G\s*M\s*E\s*N\s*T|JUDGMENT|O\s*R\s*D\s*E\s*R|ORDER)\s*/i, '');
+      .replace(/DIGI LAW REPORTER \(DLR\)/gi, '');
 
-    // 5. Clean up duplicate horizontal whitespace per line
+    // 8. Clean up duplicate horizontal whitespace per line
     text = text
       .split('\n')
       .map(line => line.replace(/[ \t]+/g, ' ').trim())
       .join('\n');
 
-    // 6. Normalize multiple consecutive newlines to maximum double newlines (\n\n)
+    // 9. Normalize multiple consecutive newlines to maximum double newlines (\n\n)
     text = text.replace(/\n{3,}/g, '\n\n');
 
     return text.trim();

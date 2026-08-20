@@ -92,6 +92,31 @@ export const downloadCaseAsDOCX = async (caseItem, showToast = () => {}) => {
   const sanitizeText = (str) => {
     if (!str) return '';
     let text = String(str);
+
+    // 1. Process ordered lists <ol><li>...</li></ol> -> add explicit numbers "1.  ", "2.  "
+    text = text.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (match, listContent) => {
+      let itemIndex = 1;
+      return listContent.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (m, itemText) => {
+        const cleanItem = itemText.replace(/<[^>]*>/g, '').trim();
+        if (!cleanItem) return '';
+        const hasNumber = /^\d+[\.\)]\s*/.test(cleanItem);
+        const prefix = hasNumber ? '' : `${itemIndex}.  `;
+        itemIndex++;
+        return `\n\n${prefix}${cleanItem}`;
+      });
+    });
+
+    // 2. Process unordered lists <ul><li>...</li></ul> -> add bullet point "•  "
+    text = text.replace(/<ul[^>]*>([\s\S]*?)<\/ul>/gi, (match, listContent) => {
+      return listContent.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (m, itemText) => {
+        const cleanItem = itemText.replace(/<[^>]*>/g, '').trim();
+        if (!cleanItem) return '';
+        const hasBullet = /^[•\-\*]\s*/.test(cleanItem);
+        const prefix = hasBullet ? '' : `•  `;
+        return `\n\n${prefix}${cleanItem}`;
+      });
+    });
+
     text = text
       .replace(/<\/(p|div|h1|h2|h3|h4|h5|h6|li|blockquote|tr)>/gi, '\n\n')
       .replace(/<br\s*\/?>/gi, '\n')
@@ -103,7 +128,8 @@ export const downloadCaseAsDOCX = async (caseItem, showToast = () => {}) => {
       .replace(/&gt;/gi, '>')
       .replace(/&quot;/gi, '"')
       .replace(/&#39;/gi, "'")
-      .replace(/&#x27;/gi, "'");
+      .replace(/&#x27;/gi, "'")
+      .replace(/^(?:\s*<[^>]+>)*\s*(?:J\s*U\s*D\s*G\s*M\s*E\s*N\s*T|JUDGMENT|O\s*R\s*D\s*E\s*R|ORDER)\s*/i, '');
     text = text
       .split('\n')
       .map(line => line.replace(/[ \t]+/g, ' ').trim())

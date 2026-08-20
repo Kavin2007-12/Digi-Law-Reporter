@@ -91,17 +91,23 @@ export default function UniversalLegalDocument({
 
   const renderFormattedBlock = (textString, customStyle = {}, isItalic = false) => {
     if (!textString) return null;
-    const cleanStr = String(textString).trim();
-    const isHtml = /<[a-z][\s\S]*>/i.test(cleanStr);
+    const cleanStr = String(textString).trim()
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'");
 
+    const isHtml = /<[a-z][\s\S]*>/i.test(cleanStr);
     const baseClasses = `text-slate-950 font-lora leading-relaxed text-justify tracking-normal ${isItalic ? 'italic' : 'not-italic'}`;
-    const breakStyle = { breakInside: 'avoid', pageBreakInside: 'avoid' };
+    const breakStyle = { breakInside: 'avoid', pageBreakInside: 'avoid', textAlign: 'justify' };
 
     if (isHtml) {
       return (
         <div 
-          className={`prose prose-slate max-w-none ${baseClasses}`}
-          style={customStyle}
+          className={`prose prose-slate max-w-none ${baseClasses} [&_p]:text-justify [&_p]:leading-relaxed [&_p]:my-3 [&_ol]:list-decimal [&_ol]:pl-7 [&_ol]:my-3 [&_ul]:list-disc [&_ul]:pl-7 [&_ul]:my-3 [&_li]:pl-1 [&_li]:my-1.5 [&_li]:text-justify`}
+          style={{ ...customStyle, textAlign: 'justify' }}
           dangerouslySetInnerHTML={{ __html: highlightText(cleanStr) }}
         />
       );
@@ -114,12 +120,12 @@ export default function UniversalLegalDocument({
       .filter(Boolean);
 
     return (
-      <div className="space-y-3" style={customStyle}>
+      <div className="space-y-4" style={{ ...customStyle, textAlign: 'justify' }}>
         {formattedParagraphs.map((para, idx) => (
           <p 
             key={idx} 
-            className={baseClasses}
-            style={{ ...customStyle, ...breakStyle }}
+            className={`${baseClasses} text-justify`}
+            style={{ ...customStyle, ...breakStyle, textAlign: 'justify' }}
             dangerouslySetInnerHTML={{ __html: highlightText(para) }}
           />
         ))}
