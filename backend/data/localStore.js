@@ -376,11 +376,14 @@ class LocalStore {
     return true;
   }
 
-  checkCitationExists(number, year, excludeId = null) {
+  checkCitationExists(number, year, month = null, excludeId = null) {
     if (!number) return false;
     const cleanNum = String(number).replace(/[^0-9a-zA-Z]/g, '').trim().toLowerCase();
     if (!cleanNum) return false;
+
     const cleanYr = year ? String(year).trim() : null;
+    const cleanMo = month ? String(month).trim().replace(/^0+/, '') : null;
+
     const cases = this.read().cases || [];
 
     return cases.some(c => {
@@ -389,15 +392,32 @@ class LocalStore {
       const cits = Array.isArray(c.citations) ? c.citations : [];
       const matchCit = cits.some(cit => {
         const citNum = String(cit.number || cit.count || cit.dlrNumber || '').replace(/[^0-9a-zA-Z]/g, '').trim().toLowerCase();
-        const numMatch = citNum === cleanNum;
-        const yrMatch = !cleanYr || String(cit.year || '').trim() === cleanYr;
-        return numMatch && yrMatch;
+        const numMatch = (citNum === cleanNum);
+
+        const citYr = cit.year ? String(cit.year).trim() : '';
+        const yrMatch = !cleanYr || citYr === cleanYr;
+
+        let moMatch = true;
+        if (cleanMo) {
+          const citMo = cit.month ? String(cit.month).trim().replace(/^0+/, '') : '';
+          moMatch = !citMo || citMo === cleanMo;
+        }
+
+        return numMatch && yrMatch && moMatch;
       });
 
-      const citStr = String(c.citation || '').toLowerCase();
-      const matchStr = citStr.includes(`#${cleanNum}`) || citStr.includes(` ${cleanNum}`);
+      const citStr = String(c.citation || c.citations_string || '').toLowerCase();
+      const numInStr = citStr.includes(`#${cleanNum}`) || citStr.includes(` ${cleanNum}`) || citStr.includes(`(${cleanNum})`);
+      const yrInStr = !cleanYr || citStr.includes(cleanYr);
+      let moInStr = true;
+      if (cleanMo) {
+        const formattedMoPadded = cleanMo.padStart(2, '0');
+        moInStr = citStr.includes(`(${cleanMo})`) || citStr.includes(`(${formattedMoPadded})`) || citStr.includes(` ${cleanMo} `) || citStr.includes(` ${formattedMoPadded} `);
+      }
 
-      return matchCit || matchStr;
+      const matchString = numInStr && yrInStr && moInStr;
+
+      return matchCit || matchString;
     });
   }
 

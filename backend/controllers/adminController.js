@@ -191,11 +191,11 @@ export const uploadJudgment = async (req, res) => {
 
 export const checkCitation = async (req, res) => {
   try {
-    const { dlrString, number, year } = req.query;
+    const { dlrString, number, year, month } = req.query;
     let exists = false;
 
     if (number) {
-      exists = localStore.checkCitationExists(number, year);
+      exists = localStore.checkCitationExists(number, year, month);
     } else if (dlrString) {
       try {
         exists = await judgmentRepository.checkCitationExists(dlrString);
@@ -203,7 +203,7 @@ export const checkCitation = async (req, res) => {
         exists = false;
       }
       if (!exists) {
-        exists = localStore.checkCitationExists(dlrString, year);
+        exists = localStore.checkCitationExists(dlrString, year, month);
       }
     }
 

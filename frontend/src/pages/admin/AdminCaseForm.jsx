@@ -152,19 +152,21 @@ export default function AdminCaseForm() {
     };
   }, [id, isEditing]);
 
-  // Live duplicate citation check
-  const checkDuplicateCitation = async (num, yr) => {
+  // Live duplicate citation check (checks Number + Year + Month)
+  const checkDuplicateCitation = async (num, yr, mo) => {
     if (!num || !num.trim()) {
       setCitationError('');
       return false;
     }
     const cleanNum = num.trim();
     const cleanYr = yr ? yr.trim() : (formData.year || '2026');
+    const cleanMo = mo ? mo.trim() : (citationInput.month || '');
 
     // 1. Check in current case citations list
     const existsLocally = citationsList.some(c => 
       String(c.number).trim() === cleanNum && 
-      (!c.year || String(c.year).trim() === cleanYr)
+      (!c.year || String(c.year).trim() === cleanYr) &&
+      (!cleanMo || !c.month || String(c.month).trim().replace(/^0+/, '') === cleanMo.replace(/^0+/, ''))
     );
     if (existsLocally) {
       setCitationError(`Citation #${cleanNum} is already added in the list below.`);
@@ -173,10 +175,11 @@ export default function AdminCaseForm() {
 
     // 2. Check in database via backend / localStore
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/judgments/check-citation?number=${encodeURIComponent(cleanNum)}&year=${encodeURIComponent(cleanYr)}`);
+      const res = await fetch(`http://localhost:5000/api/admin/judgments/check-citation?number=${encodeURIComponent(cleanNum)}&year=${encodeURIComponent(cleanYr)}&month=${encodeURIComponent(cleanMo)}`);
       const data = await res.json();
       if (data.exists) {
-        setCitationError(`Citation number #${cleanNum} already exists in the database for year ${cleanYr}! Please enter a different citation number.`);
+        const monthDetail = cleanMo ? ` (Month ${cleanMo})` : '';
+        setCitationError(`Citation number #${cleanNum} already exists in the database for year ${cleanYr}${monthDetail}! Please enter a different citation number.`);
         return true;
       }
     } catch (e) {}
@@ -188,8 +191,8 @@ export default function AdminCaseForm() {
   const handleCitationFieldChange = (field, val) => {
     const updated = { ...citationInput, [field]: val };
     setCitationInput(updated);
-    if (field === 'number' || field === 'year') {
-      checkDuplicateCitation(updated.number, updated.year);
+    if (field === 'number' || field === 'year' || field === 'month') {
+      checkDuplicateCitation(updated.number, updated.year, updated.month);
     }
   };
 
@@ -199,7 +202,7 @@ export default function AdminCaseForm() {
       return;
     }
 
-    const isDup = await checkDuplicateCitation(citationInput.number, citationInput.year);
+    const isDup = await checkDuplicateCitation(citationInput.number, citationInput.year, citationInput.month);
     if (isDup) {
       showToast("Duplicate Citation Number: This citation already exists in the database.");
       return;
