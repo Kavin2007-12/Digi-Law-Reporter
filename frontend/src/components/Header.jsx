@@ -38,7 +38,7 @@ export default function Header() {
                <img 
                  src="/logo/digital_law_reporter.png" 
                  alt="Digital Law Reporter" 
-                 className="h-8 md:h-9 object-contain" 
+                 className="h-10 md:h-12 object-contain" 
                />
              </Link>
            </div>
