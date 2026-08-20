@@ -616,8 +616,8 @@ export default function SearchResults() {
             </div>
           </div>
 
-          {/* Year Range Filter */}
-          <div className="p-3 border-t border-slate-800 bg-slate-950/80 text-[11px] text-slate-400 space-y-2">
+          {/* Year Range Filter - Pushed to Bottom */}
+          <div className="mt-auto p-3 border-t border-slate-800 bg-slate-950/80 text-[11px] text-slate-400 space-y-2">
             <div className="flex justify-between items-center text-xs font-bold text-slate-300">
               <span>Filter Years:</span>
               <span className="text-blue-400 font-mono">{startYear} to {endYear}</span>
