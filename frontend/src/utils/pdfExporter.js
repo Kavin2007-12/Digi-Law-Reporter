@@ -195,17 +195,50 @@ export const buildVectorLegalPDF = async (caseItem) => {
   doc.line(margin, yPos, pageWidth - margin, yPos);
   yPos += 0.3;
 
-  // Sanitizer Helper
+  // Sanitizer Helper — Converts HTML into clean text while preserving paragraph breaks & decoding entities (&nbsp;)
   const sanitizeText = (str) => {
     if (!str) return '';
-    return String(str)
-      .replace(/<[^>]*>/g, '')
+    let text = String(str);
+
+    // 1. Convert block closing tags and line break tags into double newlines for paragraph preservation
+    text = text
+      .replace(/<\/(p|div|h1|h2|h3|h4|h5|h6|li|blockquote|tr)>/gi, '\n\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<hr\s*\/?>/gi, '\n\n');
+
+    // 2. Remove remaining HTML tags
+    text = text.replace(/<[^>]*>/g, '');
+
+    // 3. Decode HTML entities (especially &nbsp; and &amp;)
+    text = text
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'")
+      .replace(/&#x27;/gi, "'")
+      .replace(/&ndash;/gi, '–')
+      .replace(/&mdash;/gi, '—');
+
+    // 4. Remove unwanted watermark / header stamp text
+    text = text
       .replace(/(?:DIGITAL|DIGI)?\s*LAW\s*REPORTER\s*Generated\s*by\s*Digital\s*Law\s*Reporter\s*Date:.*?(?:Page\s*\d+\s*of\s*\d+)/gi, '')
       .replace(/Generated\s*by\s*Digital\s*Law\s*Reporter\s*Date:.*?(?:Page\s*\d+\s*of\s*\d+)/gi, '')
       .replace(/www\.digilawreporter\.in/gi, '')
       .replace(/DIGI LAW REPORTER \(DLR\)/gi, '')
-      .replace(/^(?:J\s*U\s*D\s*G\s*M\s*E\s*N\s*T|JUDGMENT|O\s*R\s*D\s*E\s*R|ORDER)\s*/i, '')
-      .trim();
+      .replace(/^(?:J\s*U\s*D\s*G\s*M\s*E\s*N\s*T|JUDGMENT|O\s*R\s*D\s*E\s*R|ORDER)\s*/i, '');
+
+    // 5. Clean up duplicate horizontal whitespace per line
+    text = text
+      .split('\n')
+      .map(line => line.replace(/[ \t]+/g, ' ').trim())
+      .join('\n');
+
+    // 6. Normalize multiple consecutive newlines to maximum double newlines (\n\n)
+    text = text.replace(/\n{3,}/g, '\n\n');
+
+    return text.trim();
   };
 
   // RENDER HEADNOTE (BOX CONTAINER FORMAT)

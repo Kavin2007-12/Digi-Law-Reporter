@@ -89,7 +89,29 @@ export const downloadCaseAsDOCX = async (caseItem, showToast = () => {}) => {
   const authorJudge = caseItem.author || caseItem.judge || '';
 
   // Clean Body Paragraphs
-  const rawText = String(fullContent).replace(/<[^>]*>/g, '').trim();
+  const sanitizeText = (str) => {
+    if (!str) return '';
+    let text = String(str);
+    text = text
+      .replace(/<\/(p|div|h1|h2|h3|h4|h5|h6|li|blockquote|tr)>/gi, '\n\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<hr\s*\/?>/gi, '\n\n')
+      .replace(/<[^>]*>/g, '')
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'")
+      .replace(/&#x27;/gi, "'");
+    text = text
+      .split('\n')
+      .map(line => line.replace(/[ \t]+/g, ' ').trim())
+      .join('\n');
+    return text.replace(/\n{3,}/g, '\n\n').trim();
+  };
+
+  const rawText = sanitizeText(fullContent);
   const paragraphsList = rawText.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
 
   // 4. Build Document Structure
