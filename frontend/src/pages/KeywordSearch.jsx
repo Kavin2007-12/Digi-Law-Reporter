@@ -92,47 +92,11 @@ export default function KeywordSearch() {
   const [citeNumber, setCiteNumber] = useState('');
   const [citeEquivalent, setCiteEquivalent] = useState('');
 
-const ALL_INDIAN_COURTS_MASTER = [
-  "Supreme Court of India",
-  "Allahabad High Court",
-  "Andhra Pradesh High Court",
-  "Bombay High Court",
-  "Calcutta High Court",
-  "Chhattisgarh High Court",
-  "Delhi High Court",
-  "Gauhati High Court",
-  "Gujarat High Court",
-  "Himachal Pradesh High Court",
-  "High Court of Jammu & Kashmir and Ladakh",
-  "Jharkhand High Court",
-  "Karnataka High Court",
-  "Kerala High Court",
-  "Madhya Pradesh High Court",
-  "Madras High Court",
-  "Manipur High Court",
-  "Meghalaya High Court",
-  "Orissa High Court",
-  "Patna High Court",
-  "Punjab and Haryana High Court",
-  "Rajasthan High Court",
-  "Sikkim High Court",
-  "Telangana High Court",
-  "Tripura High Court",
-  "Uttarakhand High Court",
-  "National Company Law Appellate Tribunal (NCLAT)",
-  "National Green Tribunal (NGT)",
-  "Central Excise & Service Tax Appellate Tribunal (CESTAT)",
-  "Income Tax Appellate Tribunal (ITAT)",
-  "Debt Recovery Appellate Tribunal (DRAT)",
-  "Central Administrative Tribunal (CAT)"
-];
-
   // Find By Party Name State, Dynamic Courts & Dynamic Party Names
   const [partyCourt, setPartyCourt] = useState('');
   const [partyKeyword, setPartyKeyword] = useState('');
   const [topicTerm, setTopicTerm] = useState('');
   const [phraseTerm, setPhraseTerm] = useState('');
-  const [dynamicCourts, setDynamicCourts] = useState(ALL_INDIAN_COURTS_MASTER);
   const [publishedCasesData, setPublishedCasesData] = useState([]);
 
   // Fetch published cases automatically from backend
@@ -143,17 +107,25 @@ const ALL_INDIAN_COURTS_MASTER = [
         const data = await res.json();
         if (data.success && Array.isArray(data.data) && data.data.length > 0) {
           setPublishedCasesData(data.data);
-          const courtsFromDb = data.data
-            .map(c => c.court_name || c.court)
-            .filter(Boolean)
-            .filter(cName => !cName.toLowerCase().includes('ltd') && !cName.toLowerCase().includes('vs'));
-          const combinedCourts = Array.from(new Set([...ALL_INDIAN_COURTS_MASTER, ...courtsFromDb]));
-          setDynamicCourts(combinedCourts);
         }
       } catch (err) {}
     };
     fetchCasesData();
   }, []);
+
+  // Compute Courts dynamically ONLY from case records added by Admin in the database
+  const dynamicCourts = useMemo(() => {
+    if (!Array.isArray(publishedCasesData) || publishedCasesData.length === 0) {
+      return ['Supreme Court of India'];
+    }
+
+    const courtsFromDb = publishedCasesData
+      .map(c => (c.court_name || c.court || '').trim())
+      .filter(Boolean);
+
+    const uniqueCourts = Array.from(new Set(courtsFromDb));
+    return uniqueCourts.length > 0 ? uniqueCourts : ['Supreme Court of India'];
+  }, [publishedCasesData]);
 
   // Compute Party Names (Petitioner & Respondent / Appellant) from database
   const availablePartyNames = useMemo(() => {
