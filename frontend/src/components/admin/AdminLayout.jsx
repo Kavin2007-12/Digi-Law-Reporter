@@ -359,19 +359,8 @@ export default function AdminLayout() {
             </Link>
           </div>
 
-          {/* Right: Back to Home, Notifications & Admin User Profile */}
+          {/* Right: Notifications & Admin User Profile */}
           <div className="flex items-center gap-3">
-            
-            <Link 
-              to="/"
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-100 hover:bg-slate-200/70 border border-slate-200/80 rounded-md text-xs font-bold text-slate-700 hover:text-[#0B1727] transition-all"
-              title="Return to Public Website Home"
-            >
-              <Home size={14} className="text-slate-500" />
-              <span className="hidden sm:inline">Back to Home</span>
-            </Link>
-
-            <div className="w-px h-4 bg-slate-200"></div>
 
             <button 
               className="text-slate-400 hover:text-primary-600 p-1.5 rounded-md hover:bg-slate-50 transition-colors relative"
