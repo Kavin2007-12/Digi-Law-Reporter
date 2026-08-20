@@ -420,20 +420,6 @@ export default function AdminLayout() {
                       </p>
                     </div>
 
-                    {/* Role Switcher Button for Testing */}
-                    <div className="px-4 py-1.5">
-                      <button
-                        onClick={() => {
-                          const nextRole = adminRole === 'MAIN_ADMIN' ? 'EXTRA_ADMIN' : 'MAIN_ADMIN';
-                          toggleAdminRole(nextRole);
-                          setIsProfileOpen(false);
-                        }}
-                        className="w-full text-center py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[11px] font-bold cursor-pointer transition-colors"
-                      >
-                        Switch Role to: {adminRole === 'MAIN_ADMIN' ? 'EXTRA_ADMIN' : 'MAIN_ADMIN'}
-                      </button>
-                    </div>
-
                     <div className="my-1 border-t border-slate-100"></div>
 
                     <Link 
