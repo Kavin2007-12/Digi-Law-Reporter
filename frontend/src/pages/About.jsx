@@ -57,7 +57,7 @@ export default function About() {
     : MOCK_LAWYER_SETTINGS.aboutPage.teamMembers;
 
   return (
-    <div className="bg-[#FAFBFF] font-jakarta min-h-screen pb-2">
+    <div className="bg-[#FAFBFF] font-jakarta min-h-screen pb-6">
       
       {/* Senior Founders & Managing Lawyers Showcase */}
       <section className="pt-8 md:pt-10 pb-10 md:pb-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -161,7 +161,7 @@ export default function About() {
       </section>
 
       {/* Legal Research & Editorial Team Section */}
-      <section className="py-6 md:py-8 bg-white border-y border-slate-200">
+      <section className="pt-6 pb-10 md:pt-8 md:pb-12 bg-white border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
           <div className="text-center max-w-2xl mx-auto space-y-2 mb-6">
