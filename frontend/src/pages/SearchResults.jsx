@@ -575,8 +575,7 @@ export default function SearchResults() {
             </div>
             
             {[
-              { id: 'ALL', label: 'All Results', count: categoryCounts.ALL },
-              { id: 'Judgments', label: 'Judgments', count: categoryCounts.Judgments }
+              { id: 'Judgments', label: 'Judgments', count: results.length }
             ].map(cat => (
               <button
                 key={cat.id}
