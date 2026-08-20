@@ -122,9 +122,26 @@ export const searchCasesFromDb = async (params) => {
 
       // 3. FIND BY PARTY NAME (tab === 'party')
       else if (tab === 'party') {
-        values.push(`%${cleanTerm}%`);
-        const pIdx = values.length;
-        sql += ` AND (petitioner ILIKE $${pIdx} OR respondent ILIKE $${pIdx} OR title ILIKE $${pIdx})`;
+        let courtPart = null;
+        let partyPart = rawTerm;
+
+        if (rawTerm.includes(':')) {
+          const parts = rawTerm.split(':');
+          courtPart = parts[0].trim();
+          partyPart = parts.slice(1).join(':').trim();
+        }
+
+        if (courtPart && courtPart !== '') {
+          values.push(`%${courtPart}%`);
+          const cIdx = values.length;
+          sql += ` AND (court ILIKE $${cIdx} OR court_name ILIKE $${cIdx})`;
+        }
+
+        if (partyPart && partyPart !== '') {
+          values.push(`%${partyPart}%`);
+          const pIdx = values.length;
+          sql += ` AND (petitioner ILIKE $${pIdx} OR respondent ILIKE $${pIdx} OR title ILIKE $${pIdx})`;
+        }
       }
 
       // 4. FIND BY TOPIC (tab === 'topic')

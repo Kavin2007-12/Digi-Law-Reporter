@@ -370,17 +370,44 @@ class LocalStore {
     const idx = store.cases.findIndex(c => String(c.id) === String(id));
     if (idx >= 0) {
       const existing = store.cases[idx];
+      const caseNum = caseData.caseNumber || caseData.case_number || existing.caseNumber || existing.case_number || '';
+      const pet = caseData.petitioner !== undefined ? caseData.petitioner : (caseData.petitioner_name !== undefined ? caseData.petitioner_name : existing.petitioner);
+      const resp = caseData.respondent !== undefined ? caseData.respondent : (caseData.respondent_name !== undefined ? caseData.respondent_name : existing.respondent);
+      const crt = caseData.court !== undefined ? caseData.court : (caseData.court_name !== undefined ? caseData.court_name : existing.court);
+      const dt = caseData.judgmentDate || caseData.judgment_date || existing.judgmentDate || existing.judgment_date || '';
+      const yr = caseData.year || (dt ? dt.substring(0, 4) : (existing.year || '2026'));
+      const head = caseData.headNote !== undefined ? caseData.headNote : (caseData.summary !== undefined ? caseData.summary : (caseData.head_note !== undefined ? caseData.head_note : existing.head_note));
+      const jText = caseData.judgmentText !== undefined ? caseData.judgmentText : (caseData.content !== undefined ? caseData.content : (caseData.judgment_text !== undefined ? caseData.judgment_text : existing.judgment_text));
+      const ttl = caseData.title || (pet && resp ? `${pet} vs. ${resp}` : (existing.title || caseNum));
+      const stat = caseData.status || existing.status || 'Published';
+      const cits = caseData.citations || existing.citations || [];
+
       const updated = {
         ...existing,
         ...caseData,
-        case_number: caseData.caseNumber || caseData.case_number || existing.case_number,
-        caseNumber: caseData.caseNumber || caseData.case_number || existing.caseNumber,
-        judgment_date: caseData.judgmentDate || caseData.judgment_date || existing.judgment_date,
-        judgmentDate: caseData.judgmentDate || caseData.judgment_date || existing.judgmentDate,
-        head_note: caseData.headNote || caseData.summary || caseData.head_note || existing.head_note,
-        summary: caseData.headNote || caseData.summary || caseData.head_note || existing.summary,
-        judgment_text: caseData.judgmentText || caseData.content || caseData.judgment_text || existing.judgment_text,
-        content: caseData.judgmentText || caseData.content || caseData.judgment_text || existing.content,
+        id: existing.id,
+        case_number: caseNum,
+        caseNumber: caseNum,
+        title: ttl,
+        petitioner: pet,
+        petitioner_name: pet,
+        respondent: resp,
+        respondent_name: resp,
+        court: crt,
+        court_name: crt,
+        judgment_date: dt,
+        judgmentDate: dt,
+        year: yr,
+        act: caseData.act !== undefined ? caseData.act : existing.act,
+        section: caseData.section !== undefined ? caseData.section : existing.section,
+        head_note: head,
+        summary: head,
+        headNote: head,
+        judgment_text: jText,
+        content: jText,
+        judgmentText: jText,
+        status: stat,
+        citations: cits,
         updated_at: new Date().toISOString()
       };
       store.cases[idx] = updated;
@@ -527,11 +554,37 @@ class LocalStore {
 
     // 3. FIND BY PARTY NAME
     if (mode === 'party') {
+      let courtPart = null;
+      let partyPart = rawTerm;
+
+      if (rawTerm.includes(':')) {
+        const parts = rawTerm.split(':');
+        courtPart = parts[0].trim();
+        partyPart = parts.slice(1).join(':').trim();
+      }
+
       return publishedCases.filter(c => {
-        const pet = String(c.petitioner || c.petitioner_name || '').toLowerCase();
-        const resp = String(c.respondent || c.respondent_name || '').toLowerCase();
-        const title = String(c.title || '').toLowerCase();
-        return pet.includes(lowerTerm) || resp.includes(lowerTerm) || title.includes(lowerTerm);
+        // Court matching (if court specified)
+        if (courtPart && courtPart !== '' && courtPart !== '---Select Court---') {
+          const cCourt = String(c.court_name || c.court || '').toLowerCase();
+          if (!cCourt.includes(courtPart.toLowerCase())) {
+            return false;
+          }
+        }
+
+        // Party / Title / Keyword matching (if party term specified)
+        if (partyPart && partyPart !== '') {
+          const lowerP = partyPart.toLowerCase();
+          const pet = String(c.petitioner || c.petitioner_name || '').toLowerCase();
+          const resp = String(c.respondent || c.respondent_name || '').toLowerCase();
+          const title = String(c.title || '').toLowerCase();
+          const caseNum = String(c.case_number || c.caseNumber || '').toLowerCase();
+
+          return pet.includes(lowerP) || resp.includes(lowerP) || title.includes(lowerP) || caseNum.includes(lowerP);
+        }
+
+        // If court is selected and no party keyword, match all cases for that court
+        return true;
       });
     }
 

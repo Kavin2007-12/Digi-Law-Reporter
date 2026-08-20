@@ -30,12 +30,12 @@ export const adminLogin = async (req, res) => {
       return res.status(401).json({ status: 'error', message: 'Invalid email or password.' });
     }
 
-    // 2. Strict BCrypt Password Verification
+    // 2. Strict Password Verification with automatic fallback and hash upgrade
     let isMatch = false;
     if (admin.password_hash) {
       isMatch = await bcrypt.compare(password, admin.password_hash);
-    } else if (admin.password) {
-      // Legacy plain-text verification & auto-upgrade to bcrypt hash
+    }
+    if (!isMatch && admin.password) {
       isMatch = (password === admin.password);
       if (isMatch) {
         const newHash = await bcrypt.hash(password, 10);

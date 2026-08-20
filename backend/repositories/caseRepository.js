@@ -82,6 +82,7 @@ export const updateCaseInDb = async (id, caseData) => {
       year, act, section, headNote, judgmentText, status, citations
     } = caseData;
 
+    const numericId = parseInt(id, 10);
     const sql = `
       UPDATE cases
       SET 
@@ -89,18 +90,23 @@ export const updateCaseInDb = async (id, caseData) => {
         court = $5, judgment_date = $6, year = $7, act = $8, section = $9,
         head_note = $10, judgment_text = $11, status = $12, citations = $13::jsonb,
         updated_at = CURRENT_TIMESTAMP
-      WHERE id = $14
+      WHERE id = $14 OR id::text = $15
       RETURNING *
     `;
 
     const values = [
       caseNumber, title, petitioner, respondent, court, judgmentDate,
-      parseInt(year || judgmentDate.substring(0, 4), 10), act, section,
-      headNote, judgmentText, status, JSON.stringify(citations || []), id
+      parseInt(year || (judgmentDate ? judgmentDate.substring(0, 4) : '2026'), 10), act, section,
+      headNote, judgmentText, status, JSON.stringify(citations || []),
+      isNaN(numericId) ? 0 : numericId, String(id)
     ];
 
     const res = await query(sql, values);
-    return res.rows[0];
+    const updatedLocal = localStore.updateCase(id, caseData);
+    if (res && res.rows && res.rows[0]) {
+      return res.rows[0];
+    }
+    return updatedLocal;
   } catch (error) {
     logger.warn(`PostgreSQL offline for updateCaseInDb, updating localStore ID ${id}`);
     return localStore.updateCase(id, caseData);

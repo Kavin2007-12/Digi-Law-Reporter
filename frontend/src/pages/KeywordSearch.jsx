@@ -113,18 +113,18 @@ export default function KeywordSearch() {
     fetchCasesData();
   }, []);
 
-  // Compute Courts dynamically ONLY from case records added by Admin in the database
+  // Compute Courts dynamically ONLY from published case records added by Admin in the database
   const dynamicCourts = useMemo(() => {
     if (!Array.isArray(publishedCasesData) || publishedCasesData.length === 0) {
-      return ['Supreme Court of India'];
+      return [];
     }
 
     const courtsFromDb = publishedCasesData
       .map(c => (c.court_name || c.court || '').trim())
       .filter(Boolean);
 
-    const uniqueCourts = Array.from(new Set(courtsFromDb));
-    return uniqueCourts.length > 0 ? uniqueCourts : ['Supreme Court of India'];
+    const uniqueCourts = Array.from(new Set(courtsFromDb)).sort();
+    return uniqueCourts;
   }, [publishedCasesData]);
 
   // Compute Party Names (Petitioner & Respondent / Appellant) from database
@@ -314,7 +314,7 @@ export default function KeywordSearch() {
                 <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center justify-between">
                   <span>Search by Party Name</span>
                   <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded-full">
-                    {dynamicCourts.length > 0 ? `${dynamicCourts.length} Courts Available` : 'All Courts'}
+                    {dynamicCourts.length > 0 ? `${dynamicCourts.length} ${dynamicCourts.length === 1 ? 'Court Available' : 'Courts Available'}` : 'All Courts'}
                   </span>
                 </h3>
 
@@ -325,7 +325,7 @@ export default function KeywordSearch() {
                     onChange={(e) => setPartyCourt(e.target.value)}
                     className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white appearance-none cursor-pointer pr-8 shadow-2xs transition-colors"
                   >
-                    <option value="">---Select Court---</option>
+                    <option value="">All Courts</option>
                     {dynamicCourts.map((opt) => (
                       <option key={opt} value={opt} className="bg-white font-semibold text-slate-900">
                         {opt}
@@ -335,14 +335,15 @@ export default function KeywordSearch() {
                   <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                 </div>
 
-                {/* Party Keyword Input + Search Button */}
                 <form 
                   onSubmit={(e) => {
                     e.preventDefault();
                     const searchVal = partyKeyword.trim();
-                    if (!searchVal) return;
-                    const finalQuery = partyCourt ? `${partyCourt}: ${searchVal}` : searchVal;
-                    navigate(`/search/results?q=${encodeURIComponent(finalQuery)}&tab=party`);
+                    let finalQuery = searchVal;
+                    if (partyCourt) {
+                      finalQuery = searchVal ? `${partyCourt}: ${searchVal}` : `${partyCourt}:`;
+                    }
+                    navigate(`/search/results?q=${encodeURIComponent(finalQuery || '')}&tab=party`);
                   }} 
                   className="space-y-2"
                 >

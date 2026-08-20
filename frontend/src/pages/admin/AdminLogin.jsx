@@ -19,6 +19,35 @@ export default function AdminLogin() {
 
   const navigate = useNavigate();
 
+  // Recognize existing valid 1-hour session within the 1-hour lifetime
+  React.useEffect(() => {
+    const token = localStorage.getItem('adminToken');
+    const sessionId = localStorage.getItem('adminSessionId');
+    const isAuth = localStorage.getItem('adminAuth') === 'true';
+
+    if (isAuth && token) {
+      fetch('http://localhost:5000/api/admin/session-status', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'x-admin-session-id': sessionId || ''
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.status === 'success' && data.authenticated) {
+          navigate('/admin/dashboard', { replace: true });
+        } else {
+          localStorage.removeItem('adminAuth');
+          localStorage.removeItem('adminToken');
+          localStorage.removeItem('adminSessionId');
+          localStorage.removeItem('adminUser');
+          localStorage.removeItem('adminRole');
+        }
+      })
+      .catch(() => {});
+    }
+  }, [navigate]);
+
   const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -37,6 +66,13 @@ export default function AdminLogin() {
       if (data.status === 'success' && data.user) {
         localStorage.setItem('adminAuth', 'true');
         localStorage.setItem('adminToken', data.token || 'admin-jwt-token');
+        localStorage.setItem('adminSessionId', data.session?.sessionId || '');
+        if (data.session?.expiresAt) {
+          localStorage.setItem('adminSessionExpiresAt', String(data.session.expiresAt));
+        } else {
+          localStorage.setItem('adminSessionExpiresAt', String(Date.now() + 3600 * 1000));
+        }
+        localStorage.setItem('adminSession', JSON.stringify(data.session || {}));
         localStorage.setItem('adminRole', data.user.role || 'MAIN_ADMIN');
         localStorage.setItem('adminUser', JSON.stringify(data.user));
         setLoading(false);

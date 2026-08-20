@@ -64,10 +64,26 @@ export default function AdminLayout() {
     }
   }, [location.pathname]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const token = localStorage.getItem('adminToken');
+    const sessionId = localStorage.getItem('adminSessionId');
+    try {
+      if (token) {
+        await fetch('http://localhost:5000/api/admin/logout', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'x-admin-session-id': sessionId || ''
+          }
+        });
+      }
+    } catch (e) {}
+
     localStorage.removeItem('adminAuth');
     localStorage.removeItem('adminToken');
+    localStorage.removeItem('adminSessionId');
     localStorage.removeItem('adminUser');
+    localStorage.removeItem('adminRole');
     navigate('/admin');
   };
 

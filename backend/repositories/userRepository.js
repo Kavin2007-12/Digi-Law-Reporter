@@ -131,7 +131,8 @@ class UserRepository {
     return admins.find(a => 
       (a.email && a.email.toLowerCase() === clean) || 
       (a.username && a.username.toLowerCase() === clean) ||
-      (a.name && a.name.toLowerCase() === clean)
+      (a.name && a.name.toLowerCase() === clean) ||
+      (clean === 'mainadmin' && (a.role === 'MAIN_ADMIN' || String(a.id) === '1'))
     ) || null;
   }
 

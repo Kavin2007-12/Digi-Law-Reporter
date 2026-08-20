@@ -27,8 +27,8 @@ export default function Contact() {
   const office = settings.office || MOCK_LAWYER_SETTINGS.office;
 
   return (
-    <div className="min-h-screen bg-[#FAFBFF] font-jakarta py-10 md:py-16 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto space-y-12">
+    <div className="min-h-screen bg-[#FAFBFF] font-jakarta pt-4 md:pt-6 pb-10 md:pb-16 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto space-y-8 md:space-y-10">
         
         {/* Page Header */}
         <div className="text-center max-w-3xl mx-auto space-y-3">
