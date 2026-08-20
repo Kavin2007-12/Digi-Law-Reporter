@@ -63,17 +63,6 @@ export default function Login() {
 
   return (
     <div className="flex-1 flex items-center justify-center p-4 sm:p-6 pb-20 md:pb-4 w-full h-full min-h-[calc(100vh-80px)] font-jakarta relative">
-      
-      {/* Top Left Corner Back to Home Button (Matching User Screenshot) */}
-      <button 
-        onClick={() => navigate('/')} 
-        className="absolute top-4 left-4 sm:top-6 sm:left-6 inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer z-30"
-        title="Back to Home"
-      >
-        <ArrowLeft size={14} />
-        <span>Back to Home</span>
-      </button>
-
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
