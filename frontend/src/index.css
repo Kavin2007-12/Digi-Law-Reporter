@@ -19,12 +19,16 @@
     overflow-x: hidden;
     overflow-y: auto;
     scroll-behavior: smooth;
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
   }
   body {
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
     overflow-y: auto;
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
     margin: 0;
     padding: 0;
     @apply bg-slate-50 text-slate-900 font-sans antialiased selection:bg-blue-200 selection:text-blue-900;
@@ -33,6 +37,8 @@
     width: 100%;
     max-width: 100vw;
     overflow-x: hidden;
+    overscroll-behavior: none;
+    overscroll-behavior-y: none;
   }
 }
 
