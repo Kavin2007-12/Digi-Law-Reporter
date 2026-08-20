@@ -985,7 +985,7 @@ export default function SearchResults() {
                 <AlertTriangle size={32} />
               </div>
               <div className="space-y-1.5">
-                <h2 className="text-lg font-bold text-slate-900">Invalid Citation / No Case Found</h2>
+                <h2 className="text-lg font-bold text-slate-900">No Case Found</h2>
                 <p className="text-xs text-slate-600 leading-relaxed">
                   No published legal precedent was found in the database matching <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">{query || 'your search'}</span>.
                 </p>
