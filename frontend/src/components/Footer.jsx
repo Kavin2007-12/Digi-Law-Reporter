@@ -4,10 +4,10 @@ import { Link } from 'react-router-dom';
 
 export default function Footer() {
   return (
-    <footer className="bg-primary-950 pt-16 pb-8 text-blue-100 border-t border-primary-900 print:hidden">
+    <footer className="bg-primary-950 pt-10 pb-5 text-blue-100 border-t border-primary-900 print:hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-10 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-6">
           
           <div className="md:col-span-1 space-y-4">
              <div className="flex items-center space-x-3">
@@ -66,7 +66,7 @@ export default function Footer() {
 
         </div>
 
-        <div className="text-center pt-8 border-t border-primary-900 text-xs text-blue-300/60">
+        <div className="text-center pt-4 border-t border-primary-900/80 text-xs text-blue-300/60">
           © {new Date().getFullYear()} Digital Law Reporter. All rights reserved.
         </div>
       </div>
