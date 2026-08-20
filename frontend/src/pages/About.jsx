@@ -57,10 +57,10 @@ export default function About() {
     : MOCK_LAWYER_SETTINGS.aboutPage.teamMembers;
 
   return (
-    <div className="bg-[#FAFBFF] font-jakarta min-h-screen pb-16">
+    <div className="bg-[#FAFBFF] font-jakarta min-h-screen pb-2">
       
       {/* Senior Founders & Managing Lawyers Showcase */}
-      <section className="pt-8 md:pt-10 pb-12 md:pb-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="pt-8 md:pt-10 pb-10 md:pb-12 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="text-center max-w-2xl mx-auto space-y-2 mb-6 md:mb-8">
           <span className="text-primary-600 font-extrabold tracking-widest uppercase text-[10px] px-3 py-0.5 bg-primary-50 border border-primary-100 rounded-full inline-block">
@@ -161,10 +161,10 @@ export default function About() {
       </section>
 
       {/* Legal Research & Editorial Team Section */}
-      <section className="py-12 md:py-16 bg-white border-y border-slate-200">
+      <section className="py-6 md:py-8 bg-white border-y border-slate-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           
-          <div className="text-center max-w-2xl mx-auto space-y-2 mb-10">
+          <div className="text-center max-w-2xl mx-auto space-y-2 mb-6">
             <span className="text-primary-600 font-extrabold tracking-widest uppercase text-[10px] px-3 py-0.5 bg-primary-50 border border-primary-100 rounded-full inline-block">
               EDITORIAL & RESEARCH BOARD
             </span>
