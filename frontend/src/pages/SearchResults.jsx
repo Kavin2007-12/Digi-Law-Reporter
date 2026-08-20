@@ -595,38 +595,26 @@ export default function SearchResults() {
             ))}
           </div>
 
-          {/* Courts List */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1" data-lenis-prevent>
-            <div className="text-[10px] font-extrabold text-slate-400 px-2 py-1 uppercase tracking-wider">
+          {/* Courts Select Dropdown */}
+          <div className="p-3 space-y-1.5 border-b border-slate-800">
+            <label className="block text-[10px] font-extrabold text-slate-400 uppercase tracking-wider">
               Courts & Jurisdiction
-            </div>
-
-            <button
-              onClick={() => setSelectedCourtFilter('ALL')}
-              className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-semibold transition-all cursor-pointer ${
-                selectedCourtFilter === 'ALL'
-                  ? 'bg-slate-800 text-blue-400 border border-blue-500/40'
-                  : 'text-slate-300 hover:bg-slate-800'
-              }`}
-            >
-              <span>All Courts</span>
-              <span className="bg-slate-800 text-slate-400 px-1.5 py-0.2 rounded-full text-[10px]">{results.length}</span>
-            </button>
-
-            {Object.entries(courtCounts).map(([court, count], idx) => (
-              <button
-                key={idx}
-                onClick={() => setSelectedCourtFilter(court)}
-                className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded text-xs font-medium transition-all cursor-pointer ${
-                  selectedCourtFilter === court
-                    ? 'bg-slate-800 text-blue-400 border border-blue-500/40 font-bold'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/80'
-                }`}
+            </label>
+            <div className="relative">
+              <select
+                value={selectedCourtFilter}
+                onChange={(e) => setSelectedCourtFilter(e.target.value)}
+                className="w-full bg-slate-800 border border-slate-700 text-slate-200 text-xs rounded-lg px-3 py-2 appearance-none cursor-pointer focus:outline-none focus:border-blue-500 font-medium pr-8 shadow-xs"
               >
-                <span className="truncate text-left max-w-[140px]">{court}</span>
-                <span className="bg-slate-800 text-slate-400 px-1.5 py-0.2 rounded-full text-[10px]">{count}</span>
-              </button>
-            ))}
+                <option value="ALL">All Courts ({results.length})</option>
+                {Object.entries(courtCounts).map(([court, count], idx) => (
+                  <option key={idx} value={court}>
+                    {court} ({count})
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+            </div>
           </div>
 
           {/* Year Range Filter */}
