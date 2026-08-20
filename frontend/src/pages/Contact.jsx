@@ -35,7 +35,7 @@ export default function Contact() {
           <span className="text-primary-600 font-extrabold tracking-widest uppercase text-xs px-3.5 py-1 bg-primary-50 border border-primary-100 rounded-full inline-block">
             GET IN TOUCH WITH US
           </span>
-          <h1 className="text-3xl sm:text-4xl md:text-5xl font-black text-slate-900 tracking-tight font-cinzel">
+          <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-slate-900 tracking-tight font-cinzel">
             Contact & Support
           </h1>
           <p className="text-slate-600 text-sm md:text-base font-normal">
