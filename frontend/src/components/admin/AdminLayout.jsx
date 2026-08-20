@@ -359,18 +359,8 @@ export default function AdminLayout() {
             </Link>
           </div>
 
-          {/* Right: Notifications & Admin User Profile */}
+          {/* Right: Admin User Profile */}
           <div className="flex items-center gap-3">
-
-            <button 
-              className="text-slate-400 hover:text-primary-600 p-1.5 rounded-md hover:bg-slate-50 transition-colors relative"
-              title="Notifications"
-            >
-              <Bell size={17} />
-              <span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
-            </button>
-
-            <div className="w-px h-4 bg-slate-200 hidden sm:block"></div>
 
             {/* Profile Dropdown */}
             <div className="relative" ref={profileRef}>
