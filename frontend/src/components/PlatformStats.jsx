@@ -51,7 +51,7 @@ export default function PlatformStats() {
   ];
 
   return (
-    <section className="relative pt-10 md:pt-14 pb-14 md:pb-20 border-b border-slate-200 overflow-hidden bg-slate-50 font-jakarta">
+    <section className="relative pt-4 md:pt-6 pb-12 md:pb-16 border-b border-slate-200 overflow-hidden bg-slate-50 font-jakarta">
       
       {/* Subtle Supreme Court / Legal Environment Background Image */}
       <div 
@@ -65,7 +65,7 @@ export default function PlatformStats() {
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Section Header */}
-        <div className="mb-8 md:mb-10 text-center max-w-3xl mx-auto space-y-2">
+        <div className="mb-5 md:mb-6 text-center max-w-3xl mx-auto space-y-2">
           <span className="text-primary-600 font-extrabold tracking-widest uppercase text-xs px-3.5 py-1 bg-white border border-primary-100 rounded-full inline-block shadow-2xs">
             Search Capabilities
           </span>

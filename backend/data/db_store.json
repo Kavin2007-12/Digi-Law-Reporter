@@ -211,15 +211,5 @@
       "createdAt": "2026-08-20T08:47:04.944Z"
     }
   ],
-  "adminSessions": [
-    {
-      "sessionId": "924e730464ee0e588a9ba3625ae6f1b34a0734ca3719ac5f1283d2278634e4a0",
-      "adminId": "1",
-      "email": "kavinselvaraj12@gmail.com",
-      "role": "MAIN_ADMIN",
-      "createdAt": 1787228952471,
-      "expiresAt": 1787232552471,
-      "lastActivity": 1787228952471
-    }
-  ]
+  "adminSessions": []
 }
