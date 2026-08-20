@@ -807,6 +807,23 @@ export default function SearchResults() {
                     {copiedCitation ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                   </button>
 
+                  {/* 2. Save Case / Bookmark Icon */}
+                  <button 
+                    onClick={(e) => handleToggleSaveCase(selectedCase, e)}
+                    className={`p-1.5 rounded transition-colors cursor-pointer ${
+                      savedCases.some(c => String(c.id) === String(selectedCase.id))
+                        ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                        : 'hover:bg-blue-800/80 text-white'
+                    }`}
+                    title={savedCases.some(c => String(c.id) === String(selectedCase.id)) ? "Saved Case (Click to remove)" : "Save Case / Bookmark"}
+                  >
+                    {savedCases.some(c => String(c.id) === String(selectedCase.id)) ? (
+                      <BookmarkCheck size={16} className="text-emerald-200" />
+                    ) : (
+                      <Bookmark size={16} />
+                    )}
+                  </button>
+
                   {/* 3. Search inside Judgment Document */}
                   <div className="relative flex items-center">
                     <button 
