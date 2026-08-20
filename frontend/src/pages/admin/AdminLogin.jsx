@@ -82,15 +82,6 @@ export default function AdminLogin() {
   return (
     <div className="h-[100dvh] bg-slate-50 flex items-center justify-center p-4 relative overflow-hidden font-sans">
       
-      {/* Top Left Back to Home Button */}
-      <Link 
-        to="/"
-        className="absolute top-6 left-6 inline-flex items-center gap-2 px-4 py-2 bg-white/90 backdrop-blur-md border border-slate-200 rounded-xl text-slate-700 hover:text-blue-600 hover:border-blue-300 font-bold text-xs shadow-xs transition-all z-30 group"
-      >
-        <ArrowLeft size={16} className="group-hover:-translate-x-0.5 transition-transform text-slate-500 group-hover:text-blue-600" />
-        <span>Back to Home</span>
-      </Link>
-
       {/* Background Orbs */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-blue-100/60 blur-[120px] pointer-events-none"></div>
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-indigo-100/60 blur-[120px] pointer-events-none"></div>
