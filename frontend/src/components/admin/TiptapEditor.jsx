@@ -7,7 +7,7 @@ import TextAlign from '@tiptap/extension-text-align'
 import { 
   Bold, Italic, Underline as UnderlineIcon, Heading1, Heading2, Heading3, 
   List, ListOrdered, Link as LinkIcon, Unlink, AlignLeft, AlignCenter, 
-  AlignRight, AlignJustify, Undo, Redo 
+  AlignRight, AlignJustify, Undo, Redo
 } from 'lucide-react'
 import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
@@ -198,6 +198,8 @@ const MenuBar = ({ editor }) => {
 
 export default function TiptapEditor({ content, onChange, placeholder, minHeight = '160px' }) {
   const [, setForceUpdate] = React.useState(0);
+  const [useRawTextarea, setUseRawTextarea] = React.useState(false);
+  const initialLoadedRef = React.useRef(false);
 
   const editor = useEditor({
     extensions: [
@@ -215,8 +217,11 @@ export default function TiptapEditor({ content, onChange, placeholder, minHeight
       }),
     ],
     content: content || '',
+    parseOptions: {
+      preserveWhitespace: 'full',
+    },
     onUpdate: ({ editor }) => {
-      onChange(editor.getHTML())
+      onChange(editor.getHTML());
     },
     onTransaction: () => {
       setForceUpdate(prev => prev + 1);
@@ -224,40 +229,62 @@ export default function TiptapEditor({ content, onChange, placeholder, minHeight
     editorProps: {
       attributes: {
         class: cn(
-          'prose prose-sm max-w-none focus:outline-none p-4 text-slate-800 leading-relaxed font-sans min-h-[140px]',
+          'prose prose-sm max-w-none focus:outline-none p-4 text-slate-900 leading-relaxed font-sans min-h-[140px] select-text',
         ),
       },
+      transformPastedHTML(html) {
+        if (!html) return '';
+        // Strip inline white/transparent text colors copied from Word/PDF/websites
+        return html
+          .replace(/color\s*:\s*(white|#fff|#ffffff|rgb\(255,\s*255,\s*255\)|transparent)/gi, 'color: #0f172a')
+          .replace(/background(-color)?\s*:\s*[^;"]+/gi, '');
+      },
+      transformPastedText(text) {
+        return text || '';
+      }
     },
-  })
+  });
 
-  // Watch for external reset or update
+  // Load external content safely ONLY when initially mounting or when user is NOT focused
   React.useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content || '', false)
+    if (editor && !editor.isDestroyed) {
+      if (!initialLoadedRef.current || (!editor.isFocused && (content || '') !== editor.getHTML())) {
+        try {
+          editor.commands.setContent(content || '', false);
+          initialLoadedRef.current = true;
+        } catch (e) {
+          console.warn('Tiptap setContent sync caught:', e);
+        }
+      }
     }
-  }, [content, editor])
+  }, [content, editor]);
 
   return (
     <div 
-      className="flex flex-col border border-slate-200/90 rounded-2xl overflow-hidden bg-white shadow-2xs focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all relative group"
+      className="flex flex-col border border-slate-200/90 rounded-2xl overflow-hidden bg-white shadow-2xs focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100 transition-all relative group select-text"
       style={{ minHeight }}
     >
-      <MenuBar editor={editor} />
-      <div 
-        className="flex-1 overflow-y-auto bg-white cursor-text p-1"
-        onClick={() => {
-          if (editor) editor.commands.focus()
-        }}
-      >
-        <EditorContent editor={editor} />
+      <div className="border-b border-slate-200/90 bg-[#F8FAFC]">
+        <MenuBar editor={editor} />
       </div>
 
-      {/* Resize Grip Icon at Bottom Right */}
+      <div 
+        className="flex-1 overflow-y-auto bg-white cursor-text p-1 select-text"
+        onClick={(e) => {
+          if (editor && !editor.isFocused && e.button === 0) {
+            editor.commands.focus();
+          }
+        }}
+      >
+        <EditorContent editor={editor} className="select-text" />
+      </div>
+
+      {/* Resize Grip Icon */}
       <div className="absolute bottom-1 right-1 pointer-events-none text-slate-300 opacity-60">
         <svg width="10" h="10" viewBox="0 0 10 10" fill="currentColor">
           <path d="M8 2L2 8M9 5L5 9M9 8L8 9" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
         </svg>
       </div>
     </div>
-  )
+  );
 }

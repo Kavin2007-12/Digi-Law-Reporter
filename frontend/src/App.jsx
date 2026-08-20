@@ -13,6 +13,7 @@ import Contact from './pages/Contact';
 
 import SearchResults from './pages/SearchResults';
 import AdminLogin from './pages/admin/AdminLogin';
+import AdminResetPassword from './pages/admin/AdminResetPassword';
 import AdminDashboard from './pages/admin/AdminDashboard';
 import AdminCases from './pages/admin/AdminCases';
 import AdminCaseForm from './pages/admin/AdminCaseForm';
@@ -30,18 +31,13 @@ function App() {
   const hideFooter = isAuthPage || location.pathname.startsWith('/search') || location.pathname.startsWith('/admin');
   const hideHeader = location.pathname.startsWith('/admin') || location.pathname.startsWith('/search/results');
 
+  // Automatically scroll to top on page navigation without scroll locking
   useEffect(() => {
-    if (location.pathname.startsWith('/admin')) return;
-    import('lenis').then(({ default: Lenis }) => {
-      const lenis = new Lenis({ duration: 1.2, smooth: true });
-      function raf(time) { lenis.raf(time); requestAnimationFrame(raf); }
-      requestAnimationFrame(raf);
-      return () => lenis.destroy();
-    }).catch(() => {});
+    window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
   }, [location.pathname]);
 
   return (
-    <div className="min-h-screen bg-[#FAFBFF] text-slate-900 font-sans relative selection:bg-primary-200 selection:text-primary-900 flex flex-col print:bg-white">
+    <div className="min-h-screen bg-[#FAFBFF] text-slate-900 font-sans relative selection:bg-primary-200 selection:text-primary-900 flex flex-col print:bg-white w-full max-w-full overflow-x-hidden">
       {/* Premium Background Glows & Grid */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 print:hidden">
          <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary-200/30 blur-[120px]"></div>
@@ -68,16 +64,18 @@ function App() {
             
             {/* Admin Auth */}
             <Route path="/admin" element={<AdminLogin />} />
+            <Route path="/admin/reset-password" element={<AdminResetPassword />} />
             
             {/* Admin Dashboard Routes (Strictly Dashboard, Cases, Users, Settings) */}
             <Route element={<AdminLayout />}>
               <Route path="/admin/dashboard" element={<AdminDashboard />} />
               <Route path="/admin/cases" element={<AdminCases />} />
               <Route path="/admin/cases/add" element={<AdminCaseForm />} />
+              <Route path="/admin/cases/edit/:id" element={<AdminCaseForm />} />
               <Route path="/admin/cases/draft" element={<AdminDraftCases />} />
               <Route path="/admin/cases/published" element={<AdminPublishedCases />} />
-              <Route path="/admin/cases/:id" element={<AdminCaseDetail />} />
               <Route path="/admin/cases/:id/edit" element={<AdminCaseForm />} />
+              <Route path="/admin/cases/:id" element={<AdminCaseDetail />} />
               <Route path="/admin/users" element={<AdminUsers />} />
               <Route path="/admin/users/:id" element={<AdminUsers />} />
               <Route path="/admin/settings" element={<AdminSettings />} />

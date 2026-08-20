@@ -58,7 +58,7 @@ export default function Hero() {
           >
             <User size={20} className="stroke-[2.5]" />
             <span>{isLoggedIn ? "Go to Legal Search" : "Login to Search"}</span>
-            <ArrowRight size={20} className="group-hover:translate-x-1.5 transition-transform stroke-[2.5]" />
+            <ArrowRight size={20} className="stroke-[2.5]" />
           </button>
         </div>
         

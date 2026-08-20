@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Upload, FileText, CheckCircle2, X, Plus } from 'lucide-react';
+import { ArrowLeft, Upload, FileText, CheckCircle2, X, Plus, AlertTriangle } from 'lucide-react';
 import { MOCK_CASES } from '../../data/adminMockData';
 import TiptapEditor from '../../components/admin/TiptapEditor';
 import { API_BASE_URL } from '../../config/api';
@@ -33,6 +33,13 @@ export default function AdminCaseForm() {
     uploadedFiles: []
   });
 
+  const handleChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
   // Citation Builder State
   const [citationInput, setCitationInput] = useState({
     year: '',
@@ -43,64 +50,167 @@ export default function AdminCaseForm() {
   });
 
   const [citationsList, setCitationsList] = useState([]);
-
+  const [citationError, setCitationError] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+  const [loadingCase, setLoadingCase] = useState(isEditing);
 
-  // Initial load
+  // Load existing case details when editing
   useEffect(() => {
-    if (isEditing) {
-      const existing = MOCK_CASES.find(c => String(c.id) === String(id));
-      if (existing) {
-        setFormData({
-          caseNumber: existing.caseNumber || '',
-          title: existing.title || '',
-          petitioner: existing.petitioner || '',
-          respondent: existing.respondent || '',
-          court: existing.court || 'Supreme Court of India',
-          year: existing.year || '2026',
-          bench: existing.bench || '',
-
-          diaryNumber: existing.diaryNumber || '',
-          act: existing.act || '',
-          section: existing.section || '',
-
-          summary: existing.summary || '',
-          issues: existing.issues ? existing.issues.join('\n') : '',
-          importantPoints: existing.importantPoints ? existing.importantPoints.join('\n') : '',
-          judgmentText: existing.judgmentText || '',
-
-          status: existing.status || 'Published',
-          uploadedFiles: existing.documents || []
-        });
-
-        if (existing.citation || existing.dlrNumber) {
-          setCitationsList([
-            {
-              id: Date.now(),
-              year: existing.year || '2026',
-              month: '04',
-              court: 'SC',
-              number: '123',
-              equivalentText: existing.citation || '2026 INSC 810'
-            }
-          ]);
-        }
-      }
+    if (!isEditing || !id) {
+      setLoadingCase(false);
+      return;
     }
+
+    let isMounted = true;
+    setLoadingCase(true);
+
+    const fetchCaseDetails = async () => {
+      try {
+        let caseItem = null;
+
+        // 1. Try GET /api/cases/:id
+        try {
+          const res = await fetch(`${API_BASE_URL}/cases/${id}`);
+          const data = await res.json();
+          if (data.success && data.data) {
+            caseItem = data.data;
+          }
+        } catch (e) {}
+
+        // 2. Fallback: Try GET /api/cases and find matching ID
+        if (!caseItem) {
+          try {
+            const listRes = await fetch(`${API_BASE_URL}/cases`);
+            const listData = await listRes.json();
+            if (listData.success && Array.isArray(listData.data)) {
+              caseItem = listData.data.find(c => String(c.id) === String(id));
+            }
+          } catch (e) {}
+        }
+
+        // 3. Fallback: Try public search API
+        if (!caseItem) {
+          try {
+            const publicRes = await fetch(`${API_BASE_URL}/public/cases/search?q=${encodeURIComponent(id)}`);
+            const publicData = await publicRes.json();
+            if (publicData.success && Array.isArray(publicData.data)) {
+              caseItem = publicData.data.find(c => String(c.id) === String(id)) || publicData.data[0];
+            }
+          } catch (e) {}
+        }
+
+        if (isMounted && caseItem) {
+          const rawDate = caseItem.judgment_date || caseItem.judgmentDate || '';
+          let formattedDate = '2026-04-12';
+          if (typeof rawDate === 'string' && rawDate.length >= 10) {
+            formattedDate = rawDate.includes('T') ? rawDate.split('T')[0] : rawDate.substring(0, 10);
+          }
+
+          const rawTitle = String(caseItem.title || '');
+          const titleParts = rawTitle.includes(' vs ') ? rawTitle.split(' vs ') : (rawTitle.includes(' v. ') ? rawTitle.split(' v. ') : [rawTitle, '']);
+
+          setFormData({
+            caseNumber: String(caseItem.case_number || caseItem.caseNumber || ''),
+            title: rawTitle,
+            petitioner: String(caseItem.petitioner_name || caseItem.petitioner || titleParts[0] || ''),
+            respondent: String(caseItem.respondent_name || caseItem.respondent || titleParts[1] || ''),
+            court: String(caseItem.court_name || caseItem.court || 'Supreme Court of India'),
+            year: caseItem.year ? String(caseItem.year) : (formattedDate ? formattedDate.substring(0, 4) : '2026'),
+            judgmentDate: formattedDate,
+            bench: String(caseItem.bench || (Array.isArray(caseItem.judges) ? caseItem.judges.join(', ') : (caseItem.judges || ''))),
+
+            diaryNumber: String(caseItem.diaryNumber || ''),
+            act: String(caseItem.act || ''),
+            section: String(caseItem.section || ''),
+
+            summary: String(caseItem.head_note || caseItem.headNote || caseItem.summary || ''),
+            issues: String(caseItem.issues || ''),
+            importantPoints: String(caseItem.importantPoints || ''),
+            judgmentText: String(caseItem.content || caseItem.judgment_text || caseItem.judgmentText || ''),
+
+            status: String(caseItem.status || 'Published'),
+            uploadedFiles: Array.isArray(caseItem.uploadedFiles) ? caseItem.uploadedFiles : []
+          });
+
+          if (caseItem.citations && Array.isArray(caseItem.citations)) {
+            setCitationsList(caseItem.citations);
+          } else if (caseItem.citation) {
+            setCitationsList([{ id: Date.now(), number: String(caseItem.citation), year: String(caseItem.year || '') }]);
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load case details for editing:', err);
+      } finally {
+        if (isMounted) setLoadingCase(false);
+      }
+    };
+
+    fetchCaseDetails();
+
+    return () => {
+      isMounted = false;
+    };
   }, [id, isEditing]);
 
-  const handleChange = (field, value) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+  // Live duplicate citation check
+  const checkDuplicateCitation = async (num, yr) => {
+    if (!num || !num.trim()) {
+      setCitationError('');
+      return false;
+    }
+    const cleanNum = num.trim();
+    const cleanYr = yr ? yr.trim() : (formData.year || '2026');
+
+    // 1. Check in current case citations list
+    const existsLocally = citationsList.some(c => 
+      String(c.number).trim() === cleanNum && 
+      (!c.year || String(c.year).trim() === cleanYr)
+    );
+    if (existsLocally) {
+      setCitationError(`Citation #${cleanNum} is already added in the list below.`);
+      return true;
+    }
+
+    // 2. Check in database via backend / localStore
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/judgments/check-citation?number=${encodeURIComponent(cleanNum)}&year=${encodeURIComponent(cleanYr)}`);
+      const data = await res.json();
+      if (data.exists) {
+        setCitationError(`Citation number #${cleanNum} already exists in the database for year ${cleanYr}! Please enter a different citation number.`);
+        return true;
+      }
+    } catch (e) {}
+
+    setCitationError('');
+    return false;
   };
 
-  const handleAddCitation = () => {
-    if (!citationInput.year.trim() && !citationInput.court.trim() && !citationInput.equivalentText.trim()) return;
+  const handleCitationFieldChange = (field, val) => {
+    const updated = { ...citationInput, [field]: val };
+    setCitationInput(updated);
+    if (field === 'number' || field === 'year') {
+      checkDuplicateCitation(updated.number, updated.year);
+    }
+  };
+
+  const handleAddCitation = async () => {
+    if (!citationInput.number.trim()) {
+      setCitationError("Please enter a Citation Number (#)");
+      return;
+    }
+
+    const isDup = await checkDuplicateCitation(citationInput.number, citationInput.year);
+    if (isDup) {
+      showToast("Duplicate Citation Number: This citation already exists in the database.");
+      return;
+    }
 
     const newCit = {
       id: Date.now(),
       ...citationInput
     };
     setCitationsList(prev => [...prev, newCit]);
+    setCitationError('');
 
     // Reset citation input fields to blank
     setCitationInput({
@@ -147,7 +257,7 @@ export default function AdminCaseForm() {
     try {
       const payload = {
         caseNumber: formData.caseNumber,
-        title: formData.title,
+        title: formData.title || (formData.petitioner && formData.respondent ? `${formData.petitioner} vs. ${formData.respondent}` : (formData.caseNumber || 'Case Record')),
         petitioner: formData.petitioner,
         respondent: formData.respondent,
         court: formData.court,
@@ -181,6 +291,15 @@ export default function AdminCaseForm() {
       showToast('Error connecting to backend API');
     }
   };
+
+  if (loadingCase) {
+    return (
+      <div className="max-w-4xl mx-auto py-24 text-center space-y-4">
+        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+        <p className="text-sm font-semibold text-slate-600">Loading case precedent record for editing...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8 pb-20 font-jakarta text-[#0B1727]">
@@ -255,19 +374,7 @@ export default function AdminCaseForm() {
                 required
                 value={formData.caseNumber}
                 onChange={(e) => handleChange('caseNumber', e.target.value)}
-                placeholder="Criminal Appeal No. 1428 of 2026"
-                className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-primary-600"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Case Title *</label>
-              <input
-                type="text"
-                required
-                value={formData.title}
-                onChange={(e) => handleChange('title', e.target.value)}
-                placeholder="State of Tamil Nadu vs. Ramesh Kumar & Ors."
+                placeholder=""
                 className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-primary-600"
               />
             </div>
@@ -278,7 +385,7 @@ export default function AdminCaseForm() {
                 type="text"
                 value={formData.petitioner}
                 onChange={(e) => handleChange('petitioner', e.target.value)}
-                placeholder="Petitioner name"
+                placeholder=""
                 className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-primary-600"
               />
             </div>
@@ -289,7 +396,7 @@ export default function AdminCaseForm() {
                 type="text"
                 value={formData.respondent}
                 onChange={(e) => handleChange('respondent', e.target.value)}
-                placeholder="Respondent name"
+                placeholder=""
                 className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-primary-600"
               />
             </div>
@@ -300,7 +407,18 @@ export default function AdminCaseForm() {
                 type="text"
                 value={formData.court}
                 onChange={(e) => handleChange('court', e.target.value)}
-                placeholder="e.g. Supreme Court of India or Delhi High Court"
+                placeholder=""
+                className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-primary-600"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Act</label>
+              <input
+                type="text"
+                value={formData.act}
+                onChange={(e) => handleChange('act', e.target.value)}
+                placeholder=""
                 className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-primary-600"
               />
             </div>
@@ -316,11 +434,9 @@ export default function AdminCaseForm() {
                   const derivedYear = newDate ? newDate.substring(0, 4) : '';
                   setFormData(prev => ({ ...prev, judgmentDate: newDate, year: derivedYear }));
                 }}
-                className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-primary-600"
+                className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-primary-600 cursor-pointer"
               />
             </div>
-
-
           </div>
         </div>
 
@@ -377,13 +493,13 @@ export default function AdminCaseForm() {
             <div className="space-y-2">
               <span className="text-[11px] font-bold text-slate-600 block">Add New Citation</span>
               
-              <div className="bg-white border border-slate-200 rounded-xl p-3 sm:px-4 sm:py-3 flex items-center gap-2 flex-wrap sm:flex-nowrap shadow-2xs">
+              <div className={`bg-white border rounded-xl p-3 sm:px-4 sm:py-3 flex items-center gap-2 flex-wrap sm:flex-nowrap shadow-2xs transition-colors ${citationError ? 'border-red-400 bg-red-50/20' : 'border-slate-200'}`}>
                 
                 {/* Year YYYY */}
                 <input
                   type="text"
                   value={citationInput.year}
-                  onChange={(e) => setCitationInput({ ...citationInput, year: e.target.value })}
+                  onChange={(e) => handleCitationFieldChange('year', e.target.value)}
                   placeholder="YYYY"
                   className="w-14 sm:w-16 border-b border-slate-300 text-center font-mono text-xs font-bold text-slate-800 placeholder:text-slate-300 outline-none pb-0.5"
                 />
@@ -394,7 +510,7 @@ export default function AdminCaseForm() {
                   <input
                     type="text"
                     value={citationInput.month}
-                    onChange={(e) => setCitationInput({ ...citationInput, month: e.target.value })}
+                    onChange={(e) => handleCitationFieldChange('month', e.target.value)}
                     placeholder="MM"
                     className="w-8 border-b border-slate-300 text-center font-mono text-xs font-bold text-slate-800 placeholder:text-slate-300 outline-none pb-0.5 mx-1"
                   />
@@ -410,7 +526,7 @@ export default function AdminCaseForm() {
                   <input
                     type="text"
                     value={citationInput.court}
-                    onChange={(e) => setCitationInput({ ...citationInput, court: e.target.value })}
+                    onChange={(e) => handleCitationFieldChange('court', e.target.value)}
                     placeholder="SC"
                     className="w-10 border-b border-slate-300 text-center font-mono text-xs font-bold text-slate-800 placeholder:text-slate-300 uppercase outline-none pb-0.5 mx-1"
                   />
@@ -421,9 +537,9 @@ export default function AdminCaseForm() {
                 <input
                   type="text"
                   value={citationInput.number}
-                  onChange={(e) => setCitationInput({ ...citationInput, number: e.target.value })}
+                  onChange={(e) => handleCitationFieldChange('number', e.target.value)}
                   placeholder="#"
-                  className="w-12 sm:w-14 border-b border-slate-300 text-center font-mono text-xs font-bold text-slate-800 placeholder:text-slate-300 outline-none pb-0.5"
+                  className={`w-12 sm:w-14 border-b text-center font-mono text-xs font-bold outline-none pb-0.5 ${citationError ? 'border-red-500 text-red-600 font-black' : 'border-slate-300 text-slate-800 placeholder:text-slate-300'}`}
                 />
 
                 {/* Colon : */}
@@ -433,20 +549,29 @@ export default function AdminCaseForm() {
                 <input
                   type="text"
                   value={citationInput.equivalentText}
-                  onChange={(e) => setCitationInput({ ...citationInput, equivalentText: e.target.value })}
-                  placeholder="Equivalent text (e.g. 2026 INSC 666)"
+                  onChange={(e) => handleCitationFieldChange('equivalentText', e.target.value)}
+                  placeholder=""
                   className="flex-1 min-w-[180px] border-b border-slate-300 text-xs text-slate-800 placeholder:text-slate-400 outline-none font-medium px-1 pb-0.5"
                 />
 
               </div>
             </div>
 
+            {/* Citation Duplicate Error Notice */}
+            {citationError && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-bold flex items-center gap-2 animate-in fade-in">
+                <AlertTriangle size={16} className="shrink-0 text-red-600" />
+                <span>{citationError}</span>
+              </div>
+            )}
+
             {/* + Add Citation Button (Bottom Right) */}
             <div className="flex justify-end pt-1">
               <button
                 type="button"
                 onClick={handleAddCitation}
-                className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-slate-600 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs"
+                disabled={Boolean(citationError)}
+                className="inline-flex items-center gap-1.5 px-5 py-2.5 bg-slate-600 hover:bg-slate-700 text-white rounded-xl text-xs font-bold transition-all shadow-xs disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 <Plus size={15} />
                 <span>Add Citation</span>
@@ -454,34 +579,9 @@ export default function AdminCaseForm() {
             </div>
 
           </div>
-
-          {/* Act, Section */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Act</label>
-              <input
-                type="text"
-                value={formData.act}
-                onChange={(e) => handleChange('act', e.target.value)}
-                placeholder="Code of Criminal Procedure, 1973"
-                className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-primary-600"
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Section / Article</label>
-              <input
-                type="text"
-                value={formData.section}
-                onChange={(e) => handleChange('section', e.target.value)}
-                placeholder="Section 482 or Article 21"
-                className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded-md text-xs font-medium text-slate-900 focus:outline-none focus:border-primary-600"
-              />
-            </div>
-          </div>
         </div>
 
-        {/* CASE CONTENT RICH TEXT EDITORS (Matching Picture 2 & Picture 3) */}
+        {/* CASE CONTENT RICH TEXT EDITORS */}
         <div className="space-y-6">
           {/* Head Note * */}
           <div className="space-y-2">
@@ -492,7 +592,7 @@ export default function AdminCaseForm() {
               <TiptapEditor 
                 content={formData.summary} 
                 onChange={(val) => handleChange('summary', val)} 
-                placeholder="Enter Head Note & Ratio Decidendi summary..." 
+                placeholder="" 
                 minHeight="150px"
               />
             </div>
@@ -507,7 +607,7 @@ export default function AdminCaseForm() {
               <TiptapEditor 
                 content={formData.judgmentText} 
                 onChange={(val) => handleChange('judgmentText', val)} 
-                placeholder="Enter complete judgment text..." 
+                placeholder="" 
                 minHeight="280px"
               />
             </div>

@@ -1,11 +1,15 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import UniversalLegalDocument from '../components/UniversalLegalDocument';
+import { downloadCaseAsPDF, printCaseAsPDF } from '../utils/pdfExporter';
+import { downloadCaseAsDOCX } from '../utils/docxExporter';
 import { 
   Search, ChevronDown, Download, FileText, Bookmark, BookmarkCheck, 
   Printer, Share2, Filter, Copy, Check, ZoomIn, ZoomOut, Scale, Landmark,
   LayoutDashboard, Volume2, VolumeX, Highlighter, Mail, X, ExternalLink,
   ChevronsLeft, ChevronLeft, ChevronRight, ChevronsRight, SlidersHorizontal,
-  FolderBookmark, Sparkles, CheckCircle2
+  FolderBookmark, Sparkles, CheckCircle2, AlertTriangle, Eye,
+  Play, Pause, RotateCcw, Square
 } from 'lucide-react';
 
 // Authentic Social Media Brand SVG Icons
@@ -21,32 +25,17 @@ const TwitterXIcon = () => (
   </svg>
 );
 
-const LinkedinIcon = () => (
-  <svg className="w-3.5 h-3.5 fill-current shrink-0" viewBox="0 0 24 24">
-    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.74a1.6 1.6 0 1 0 0 3.2 1.6 1.6 0 0 0 0-3.2z"/>
+const LinkedInIcon = () => (
+  <svg className="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24">
+    <path d="M19 3a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14m-.5 15.5v-5.3a3.26 3.26 0 0 0-3.26-3.26c-.85 0-1.84.52-2.28 1.3v-1.11h-2.79v8.37h2.79v-4.93c0-.77.62-1.4 1.39-1.4a1.4 1.4 0 0 1 1.4 1.4v4.93h2.75M6.46 10.9v8.37H9.25V10.9H6.46M7.86 6.74a1.62 1.62 0 1 0 0 3.24 1.62 1.62 0 0 0 0-3.24z"/>
   </svg>
 );
 
-// Utility to extract a snippet around the keyword and highlight the keyword
-const getHighlightedSnippet = (text, keyword, snippetLength = 140) => {
-  if (!text) return { __html: '' };
-  if (!keyword) return { __html: text.substring(0, snippetLength) + (text.length > snippetLength ? '...' : '') };
+// Highlighting Utility (Safe HTML Injection)
+const getHighlightedSnippet = (snippet, keyword) => {
+  if (!snippet) return { __html: '' };
+  if (!keyword) return { __html: snippet };
   
-  const lowerText = text.toLowerCase();
-  const lowerKeyword = keyword.toLowerCase();
-  const index = lowerText.indexOf(lowerKeyword);
-  
-  if (index === -1) {
-    return { __html: text.substring(0, snippetLength) + (text.length > snippetLength ? '...' : '') };
-  }
-
-  let start = Math.max(0, index - (snippetLength / 2));
-  let end = Math.min(text.length, index + lowerKeyword.length + (snippetLength / 2));
-  
-  let snippet = text.substring(start, end);
-  if (start > 0) snippet = '...' + snippet;
-  if (end < text.length) snippet = snippet + '...';
-
   const regex = new RegExp(`(${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
   const highlighted = snippet.replace(regex, '<mark class="bg-yellow-200 text-slate-900 px-1 rounded font-bold">$1</mark>');
 
@@ -84,6 +73,7 @@ export default function SearchResults() {
   const [selectedCase, setSelectedCase] = useState(null);
   const [copiedCitation, setCopiedCitation] = useState(false);
   const [fontSize, setFontSize] = useState(15); // Default font size in px
+  const [isCaseDetailsModalOpen, setIsCaseDetailsModalOpen] = useState(false);
   
   // Filter States
   const [selectedCourtFilter, setSelectedCourtFilter] = useState('ALL');
@@ -98,20 +88,160 @@ export default function SearchResults() {
   const [toastMessage, setToastMessage] = useState('');
   const [isSavedDrawerOpen, setIsSavedDrawerOpen] = useState(false);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
+  const [isDownloadMenuOpen, setIsDownloadMenuOpen] = useState(false);
+  const [copySuccess, setCopySuccess] = useState(false);
+  const shareMenuRef = useRef(null);
+  const downloadMenuRef = useRef(null);
+
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [emailAddress, setEmailAddress] = useState('');
   const [isHighlightingEnabled, setIsHighlightingEnabled] = useState(true);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isAudioWidgetOpen, setIsAudioWidgetOpen] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [speechRate, setSpeechRate] = useState(1);
 
-  // Persisted Saved Cases in LocalStorage
+  // Close share menu popover on outside click or Escape key
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (shareMenuRef.current && !shareMenuRef.current.contains(event.target)) {
+        setIsShareMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setIsShareMenuOpen(false);
+      }
+    };
+
+    if (isShareMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isShareMenuOpen]);
+
+  const handleShareClick = (platform) => {
+    if (!selectedCase) return;
+    const currentUrl = window.location.href;
+    const title = selectedCase.title || 'Legal Precedent - Digi Law Reporter';
+    const textToShare = `${title}\n${currentUrl}`;
+
+    switch (platform) {
+      case 'whatsapp':
+        window.open(`https://wa.me/?text=${encodeURIComponent(textToShare)}`, '_blank', 'noopener,noreferrer');
+        break;
+      case 'linkedin':
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(currentUrl)}`, '_blank', 'noopener,noreferrer');
+        break;
+      case 'twitter':
+        window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(currentUrl)}&text=${encodeURIComponent(title)}`, '_blank', 'noopener,noreferrer');
+        break;
+      case 'email':
+        const mailtoLink = `mailto:?subject=${encodeURIComponent(title)}&body=${encodeURIComponent(`${title}\n\n${currentUrl}`)}`;
+        window.location.href = mailtoLink;
+        break;
+      case 'copy':
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText(currentUrl).then(() => {
+            setCopySuccess(true);
+            showToast("Link copied to clipboard!");
+            setTimeout(() => setCopySuccess(false), 2500);
+          }).catch(() => {
+            fallbackCopyTextToClipboard(currentUrl);
+          });
+        } else {
+          fallbackCopyTextToClipboard(currentUrl);
+        }
+        break;
+      default:
+        break;
+    }
+    setIsShareMenuOpen(false);
+  };
+
+  const fallbackCopyTextToClipboard = (text) => {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    document.body.appendChild(textArea);
+    textArea.focus();
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      setCopySuccess(true);
+      showToast("Link copied to clipboard!");
+      setTimeout(() => setCopySuccess(false), 2500);
+    } catch (err) {}
+    document.body.removeChild(textArea);
+  };
+
+  // Get storage key scoped strictly to current logged-in user
+  const getUserSavedCasesStorageKey = () => {
+    try {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        const identifier = u.id || u.username || u.email || u.name;
+        if (identifier) {
+          return `digi_saved_cases_full_${identifier.toString().toLowerCase().trim()}`;
+        }
+      }
+    } catch (e) {}
+    return 'digi_saved_cases_full_guest';
+  };
+
+  // Helper to get logged in user's mobile/id identifier
+  const getUserIdentifier = () => {
+    try {
+      const savedUser = localStorage.getItem('user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        return u.mobile || u.id || u.username || u.email;
+      }
+    } catch (e) {}
+    return null;
+  };
+
+  // Persisted Saved Cases in LocalStorage & Backend (Strictly User-Scoped)
   const [savedCases, setSavedCases] = useState(() => {
     try {
-      const saved = localStorage.getItem('digi_saved_cases_full');
-      return saved ? JSON.parse(saved) : [];
+      const key = getUserSavedCasesStorageKey();
+      const saved = localStorage.getItem(key);
+      if (saved) return JSON.parse(saved);
+      return [];
     } catch (e) {
       return [];
     }
   });
+
+  // Re-sync savedCases from Backend API & LocalStorage if user account switches
+  useEffect(() => {
+    const syncSavedCases = async () => {
+      const key = getUserSavedCasesStorageKey();
+      const localSaved = localStorage.getItem(key);
+      if (localSaved) {
+        setSavedCases(JSON.parse(localSaved));
+      }
+
+      const identifier = getUserIdentifier();
+      if (identifier) {
+        try {
+          const res = await fetch(`http://localhost:5000/api/auth/saved-cases/${encodeURIComponent(identifier)}`);
+          const data = await res.json();
+          if (data.status === 'success' && Array.isArray(data.data) && data.data.length > 0) {
+            setSavedCases(data.data);
+            localStorage.setItem(key, JSON.stringify(data.data));
+          }
+        } catch (err) {}
+      }
+    };
+    syncSavedCases();
+  }, []);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -119,7 +249,7 @@ export default function SearchResults() {
   };
 
   // Toggle Save Case / Bookmark for Future Use
-  const handleToggleSaveCase = (caseItem, e) => {
+  const handleToggleSaveCase = async (caseItem, e) => {
     if (e) e.stopPropagation();
     if (!caseItem) return;
 
@@ -135,108 +265,136 @@ export default function SearchResults() {
     }
 
     setSavedCases(updated);
+    const key = getUserSavedCasesStorageKey();
     try {
-      localStorage.setItem('digi_saved_cases_full', JSON.stringify(updated));
+      localStorage.setItem(key, JSON.stringify(updated));
     } catch (err) {}
-  };
 
-  // Audio Text to Speech Reader
-  const handleToggleAudio = () => {
-    if (!selectedCase) return;
-
-    if ('speechSynthesis' in window) {
-      if (isSpeaking) {
-        window.speechSynthesis.cancel();
-        setIsSpeaking(false);
-        showToast("Audio reader paused");
-      } else {
-        window.speechSynthesis.cancel();
-        const textToRead = `${selectedCase.title}. Judgment delivered by ${selectedCase.court_name || 'Supreme Court of India'}. ${selectedCase.head_note || ''}. ${selectedCase.content || ''}`;
-        const utterance = new SpeechSynthesisUtterance(textToRead.substring(0, 1500));
-        utterance.rate = 0.95;
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
-        window.speechSynthesis.speak(utterance);
-        setIsSpeaking(true);
-        showToast("Reading judgment summary aloud...");
-      }
-    } else {
-      showToast("Text-to-Speech is not supported in this browser");
+    // Post to backend database for logged-in user
+    const identifier = getUserIdentifier();
+    if (identifier) {
+      try {
+        await fetch('http://localhost:5000/api/auth/saved-cases', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier, cases: updated })
+        });
+      } catch (err) {}
     }
   };
 
-  // Download Case (Direct PDF or Clean Legal Document)
+  // Audio Text to Speech Reader with Popup Widget Controls
+  const startSpeech = (rate = speechRate) => {
+    if (!selectedCase) return;
+    if (!('speechSynthesis' in window)) {
+      showToast("Text-to-Speech is not supported in this browser");
+      return;
+    }
+    window.speechSynthesis.cancel();
+    const textToRead = `${selectedCase.title || ''}. Judgment of ${selectedCase.court_name || selectedCase.court || 'Supreme Court of India'}. ${selectedCase.head_note || ''}. ${selectedCase.content || ''}`;
+    const utterance = new SpeechSynthesisUtterance(textToRead.substring(0, 3000));
+    utterance.rate = rate;
+    utterance.onend = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+    };
+    utterance.onerror = () => {
+      setIsSpeaking(false);
+      setIsPaused(false);
+    };
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+    setIsPaused(false);
+    setIsAudioWidgetOpen(true);
+  };
+
+  const handleToggleAudio = () => {
+    if (!selectedCase) return;
+    if (isSpeaking) {
+      if (isPaused) {
+        window.speechSynthesis.resume();
+        setIsPaused(false);
+        showToast("Audio resumed");
+      } else {
+        window.speechSynthesis.pause();
+        setIsPaused(true);
+        showToast("Audio paused");
+      }
+    } else {
+      startSpeech();
+      showToast("Playing Judgment Audio...");
+    }
+  };
+
+  const handleStopAudio = () => {
+    window.speechSynthesis.cancel();
+    setIsSpeaking(false);
+    setIsPaused(false);
+    setIsAudioWidgetOpen(false);
+  };
+
+  const handleRestartAudio = () => {
+    startSpeech();
+    showToast("Restarting Audio from beginning...");
+  };
+
+  const handleChangeRate = (newRate) => {
+    setSpeechRate(newRate);
+    if (isSpeaking) {
+      startSpeech(newRate);
+    }
+  };
+
+  // Download Case directly as PDF document file using DLR PDF Exporter
   const handleDownloadCase = (caseItem, e) => {
     if (e) e.stopPropagation();
     if (!caseItem) return;
-
-    if (caseItem.pdf_file_path) {
-      const pdfUrl = `${import.meta.env.VITE_BASE_URL || ''}${caseItem.pdf_file_path}`;
-      window.open(pdfUrl, '_blank');
-      showToast(`Downloading official PDF judgment file...`);
-      return;
-    }
-
-    const docContent = `
-================================================================================
-DIGI LAW REPORTER - OFFICIAL VERIFIED JUDGMENT RECORD
-================================================================================
-
-TITLE: ${caseItem.title || 'Untitled Case'}
-COURT: ${caseItem.court_name || 'Supreme Court of India'}
-DATE: ${caseItem.judgment_date ? new Date(caseItem.judgment_date).toLocaleDateString('en-IN') : 'N/A'}
-CITATIONS: ${caseItem.citation || 'N/A'}
-CASE NO: ${caseItem.case_number || 'N/A'}
-PARTIES: ${caseItem.petitioner_name || 'Petitioner'} VERSUS ${caseItem.respondent_name || 'Respondent'}
-
---------------------------------------------------------------------------------
-HEADNOTE & RATIO DECIDENDI
---------------------------------------------------------------------------------
-${caseItem.head_note || 'N/A'}
-
---------------------------------------------------------------------------------
-FULL JUDGMENT TEXT
---------------------------------------------------------------------------------
-${caseItem.content || 'N/A'}
-
-================================================================================
-VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
-================================================================================
-`;
-
-    const blob = new Blob([docContent], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    const sanitizedTitle = (caseItem.title || 'Judgment').replace(/[^a-zA-Z0-9]/g, '_');
-    link.href = url;
-    link.download = `Judgment_${sanitizedTitle}.txt`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-
-    showToast(`Downloaded judgment text record successfully`);
+    downloadCaseAsPDF(caseItem, 'printable-judgment-document', showToast);
   };
 
   useEffect(() => {
     const fetchResults = async () => {
       setLoading(true);
       try {
-        if (query && query.trim()) {
-          const res = await fetch(`http://localhost:5000/api/public/search?keyword=${encodeURIComponent(query.trim())}`);
-          const data = await res.json();
-          if (data.success && data.data && data.data.length > 0) {
-            setResults(data.data);
-            setSelectedCase(data.data[0]);
-            setLoading(false);
-            return;
-          }
+        const activeTabCode = searchParams.get('tab') || 'keyword';
+        const searchUrl = query && query.trim()
+          ? `http://localhost:5000/api/public/search?keyword=${encodeURIComponent(query.trim())}&tab=${encodeURIComponent(activeTabCode)}`
+          : `http://localhost:5000/api/public/search?tab=${encodeURIComponent(activeTabCode)}`;
+
+        const res = await fetch(searchUrl);
+        const data = await res.json();
+        
+        if (data.success && data.data && data.data.length > 0) {
+          const normalized = data.data.map(c => ({
+            ...c,
+            id: c.id,
+            title: c.title || c.case_number || c.caseNumber || 'Untitled Legal Precedent',
+            case_number: c.case_number || c.caseNumber || '',
+            caseNumber: c.caseNumber || c.case_number || '',
+            court_name: c.court_name || c.court || 'Supreme Court of India',
+            court: c.court || c.court_name || 'Supreme Court of India',
+            judgment_date: c.judgment_date || c.judgmentDate || '',
+            judgmentDate: c.judgmentDate || c.judgment_date || '',
+            head_note: c.head_note || c.summary || c.headNote || '',
+            summary: c.summary || c.head_note || c.headNote || '',
+            content: c.content || c.judgment_text || c.judgmentText || '',
+            judgment_text: c.judgment_text || c.content || c.judgmentText || '',
+            petitioner_name: c.petitioner_name || c.petitioner || '',
+            respondent_name: c.respondent_name || c.respondent || '',
+            citation: Array.isArray(c.citations) && c.citations.length > 0 
+              ? `${c.citations[0].year || ''} DLR (${c.citations[0].court || 'SC'}) #${c.citations[0].number || ''}` 
+              : (typeof c.citations === 'string' ? c.citations : (c.citation || ''))
+          }));
+
+          setResults(normalized);
+          setSelectedCase(normalized[0]);
+          setLoading(false);
+          return;
         }
       } catch (err) {
         console.error("Error fetching search results:", err);
       }
       
-      // Clean state: No dummy fallback data
       setResults([]);
       setSelectedCase(null);
       setLoading(false);
@@ -247,7 +405,7 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
 
   // Compute Categories & Courts
   const categoryCounts = useMemo(() => {
-    const counts = { ALL: results.length, Judgments: 0, "Digest Notes": 0, Articles: 0, Notifications: 0 };
+    const counts = { ALL: results.length, Judgments: 0 };
     results.forEach(r => {
       const cat = r.category || 'Judgments';
       counts[cat] = (counts[cat] || 0) + 1;
@@ -269,17 +427,21 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
     return results.filter(item => {
       // Category filter
       if (selectedCategory !== 'ALL' && (item.category || 'Judgments') !== selectedCategory) return false;
+      
       // Court filter
-      if (selectedCourtFilter !== 'ALL' && (item.court_name || 'Supreme Court of India') !== selectedCourtFilter) return false;
-      // Year range filter
-      if (item.judgment_date) {
-        const yr = new Date(item.judgment_date).getFullYear();
-        if (yr < startYear || yr > endYear) return false;
+      if (selectedCourtFilter !== 'ALL') {
+        const itemCourt = (item.court_name || item.court || '').toLowerCase();
+        if (!itemCourt.includes(selectedCourtFilter.toLowerCase())) return false;
       }
+
+      // Year range filter
+      const itemYr = parseInt(item.year || (item.judgment_date ? new Date(item.judgment_date).getFullYear() : 0), 10);
+      if (itemYr && (itemYr < startYear || itemYr > endYear)) return false;
+
       // Search within search results input
       if (searchWithinResults.trim()) {
         const q = searchWithinResults.toLowerCase();
-        const full = `${item.title} ${item.citation} ${item.content} ${item.head_note}`.toLowerCase();
+        const full = `${item.title || ''} ${item.citation || ''} ${item.content || ''} ${item.head_note || ''} ${item.case_number || ''}`.toLowerCase();
         if (!full.includes(q)) return false;
       }
       return true;
@@ -313,7 +475,7 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
       {/* ========================================================================= */}
       {/* 1. TOP GLOBAL WORKSPACE HEADER BAR */}
       {/* ========================================================================= */}
-      <div className="bg-slate-900 border-b border-slate-700/80 px-4 py-2 flex flex-wrap items-center justify-between gap-3 shrink-0 z-30 shadow-md">
+      <div className="bg-slate-900 border-b border-slate-700/80 px-4 py-2 flex flex-wrap items-center justify-between gap-3 shrink-0 z-30 shadow-md no-print">
         
         {/* Left: Brand Badge */}
         <div className="flex items-center gap-3">
@@ -391,7 +553,7 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row w-full h-[calc(100vh-49px)] overflow-hidden bg-slate-200">
         
         {/* PANE 1: FILTERS SIDEBAR (Left Column) */}
-        <div className="w-full lg:w-64 bg-slate-900 text-slate-200 border-b lg:border-b-0 lg:border-r border-slate-700 flex flex-col shrink-0">
+        <div className="w-full lg:w-64 bg-slate-900 text-slate-200 border-b lg:border-b-0 lg:border-r border-slate-700 flex flex-col shrink-0 no-print">
           
           {/* Category Tabs */}
           <div className="p-3 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
@@ -414,10 +576,7 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
             
             {[
               { id: 'ALL', label: 'All Results', count: categoryCounts.ALL },
-              { id: 'Judgments', label: 'Judgments', count: categoryCounts.Judgments },
-              { id: 'Digest Notes', label: 'Digest Notes', count: categoryCounts["Digest Notes"] },
-              { id: 'Articles', label: 'Legal Articles', count: categoryCounts.Articles },
-              { id: 'Notifications', label: 'Notifications', count: categoryCounts.Notifications }
+              { id: 'Judgments', label: 'Judgments', count: categoryCounts.Judgments }
             ].map(cat => (
               <button
                 key={cat.id}
@@ -500,7 +659,7 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
         </div>
 
         {/* PANE 2: RESULT LIST (Middle Column) */}
-        <div className="w-full lg:w-[380px] h-[320px] lg:h-full flex flex-col bg-slate-100 border-b lg:border-b-0 lg:border-r border-slate-300 shrink-0 z-10">
+        <div className="w-full lg:w-[380px] h-[320px] lg:h-full flex flex-col bg-slate-100 border-b lg:border-b-0 lg:border-r border-slate-300 shrink-0 z-10 no-print">
           
           {/* Result List Header Bar */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-slate-300 bg-white shrink-0 shadow-2xs">
@@ -601,7 +760,7 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
           {selectedCase ? (
             <>
               {/* CASE DETAILS ACTION TOOLBAR BAR */}
-              <div className="bg-[#1E4D6E] text-white px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 shrink-0 shadow-md z-10">
+              <div className="bg-[#1E4D6E] text-white px-3 py-1.5 flex flex-wrap items-center justify-between gap-2 shrink-0 shadow-md z-10 no-print">
                 
                 {/* Navigation Pill (|< < Pencil > >|) */}
                 <div className="flex items-center bg-[#153852] rounded-full px-2 py-0.5 gap-1 border border-blue-400/30">
@@ -661,19 +820,6 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
                     {copiedCitation ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                   </button>
 
-                  {/* 2. Save / Bookmark Icon for Future Use */}
-                  <button
-                    onClick={(e) => handleToggleSaveCase(selectedCase, e)}
-                    className={`p-1.5 rounded transition-colors cursor-pointer ${
-                      savedCases.some(c => String(c.id) === String(selectedCase.id))
-                        ? 'bg-yellow-400 text-slate-950 font-bold shadow-xs'
-                        : 'hover:bg-blue-800/80 text-white'
-                    }`}
-                    title="Save Case to Bookmarks for Future Use"
-                  >
-                    <Bookmark size={16} fill={savedCases.some(c => String(c.id) === String(selectedCase.id)) ? "currentColor" : "none"} />
-                  </button>
-
                   {/* 3. Search inside Judgment Document */}
                   <div className="relative flex items-center">
                     <button 
@@ -699,19 +845,10 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
                     )}
                   </div>
 
-                  {/* 4. Social & Email Share Icon */}
-                  <button 
-                    onClick={() => setIsShareModalOpen(true)}
-                    className="p-1.5 hover:bg-blue-800/80 rounded transition-colors text-white cursor-pointer"
-                    title="Share Case (WhatsApp, Twitter/X, LinkedIn & Email)"
-                  >
-                    <Share2 size={16} />
-                  </button>
-
                   {/* 5. Font Size Toggle (A+/A-) */}
                   <div className="flex items-center bg-[#153852] rounded px-1.5 py-0.5 border border-blue-400/30 text-xs font-mono font-bold">
                     <button 
-                      onClick={() => setFontSize(prev => Math.max(12, prev - 1))}
+                      onClick={() => setFontSize(prev => Math.max(10, prev - 1))}
                       className="px-1 hover:text-yellow-300 transition-colors cursor-pointer"
                       title="Decrease Font Size"
                     >
@@ -719,7 +856,7 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
                     </button>
                     <span className="px-1 text-[11px] text-blue-200">{fontSize}px</span>
                     <button 
-                      onClick={() => setFontSize(prev => Math.min(22, prev + 1))}
+                      onClick={() => setFontSize(prev => Math.min(32, prev + 1))}
                       className="px-1 hover:text-yellow-300 transition-colors cursor-pointer"
                       title="Increase Font Size"
                     >
@@ -727,25 +864,109 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
                     </button>
                   </div>
 
-                  {/* 6. Print Icon */}
+                  {/* 6. Print Icon (Uses Single Source-of-Truth PDF Generator) */}
                   <button 
-                    onClick={() => window.print()}
+                    onClick={() => printCaseAsPDF(selectedCase, 'printable-judgment-document', showToast)}
                     className="p-1.5 hover:bg-blue-800/80 rounded transition-colors text-white cursor-pointer"
-                    title="Print Judgment Document"
+                    title="Print Official Legal Document"
+                    aria-label="Print document"
                   >
                     <Printer size={16} />
                   </button>
 
-                  {/* 7. Download PDF / Text File Icon */}
+                  {/* 7. Download PDF Icon */}
                   <button 
-                    onClick={(e) => handleDownloadCase(selectedCase, e)}
+                    onClick={() => downloadCaseAsPDF(selectedCase, 'printable-judgment-document', showToast)}
                     className="p-1.5 hover:bg-blue-800/80 rounded transition-colors text-white cursor-pointer"
-                    title="Download Judgment PDF / File"
+                    title="Download Judgment PDF Document"
+                    aria-label="Download PDF document"
                   >
                     <Download size={16} />
                   </button>
 
-                  {/* 8. Audio Speaker Text-to-Speech Icon */}
+                  {/* 8. Share Case with Popover Menu */}
+                  <div className="relative flex items-center" ref={shareMenuRef}>
+                    <button 
+                      onClick={() => setIsShareMenuOpen(prev => !prev)}
+                      className={`p-1.5 rounded transition-colors text-white cursor-pointer ${isShareMenuOpen ? 'bg-blue-800 text-yellow-300' : 'hover:bg-blue-800/80'}`}
+                      title="Share Document"
+                      aria-label="Share document"
+                      aria-expanded={isShareMenuOpen}
+                      aria-haspopup="true"
+                    >
+                      <Share2 size={16} />
+                    </button>
+
+                    {/* Share Popover Menu */}
+                    {isShareMenuOpen && (
+                      <div 
+                        role="menu"
+                        aria-label="Share options"
+                        className="absolute right-0 top-9 bg-slate-900 border border-slate-700/90 rounded-xl shadow-2xl p-2 z-50 min-w-[190px] text-xs font-sans space-y-1 animate-in fade-in zoom-in-95"
+                      >
+                        <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 mb-1">
+                          Share Document
+                        </div>
+
+                        {/* WhatsApp */}
+                        <button
+                          role="menuitem"
+                          aria-label="Share on WhatsApp"
+                          onClick={() => handleShareClick('whatsapp')}
+                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-emerald-400 transition-colors font-medium cursor-pointer text-left"
+                        >
+                          <WhatsappIcon />
+                          <span>WhatsApp</span>
+                        </button>
+
+                        {/* LinkedIn */}
+                        <button
+                          role="menuitem"
+                          aria-label="Share on LinkedIn"
+                          onClick={() => handleShareClick('linkedin')}
+                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-blue-400 transition-colors font-medium cursor-pointer text-left"
+                        >
+                          <LinkedInIcon />
+                          <span>LinkedIn</span>
+                        </button>
+
+                        {/* X / Twitter */}
+                        <button
+                          role="menuitem"
+                          aria-label="Share on X (Twitter)"
+                          onClick={() => handleShareClick('twitter')}
+                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white transition-colors font-medium cursor-pointer text-left"
+                        >
+                          <TwitterXIcon />
+                          <span>X / Twitter</span>
+                        </button>
+
+                        {/* Email */}
+                        <button
+                          role="menuitem"
+                          aria-label="Share via Email"
+                          onClick={() => handleShareClick('email')}
+                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-red-400 transition-colors font-medium cursor-pointer text-left"
+                        >
+                          <Mail size={15} className="text-red-400 shrink-0" />
+                          <span>Email</span>
+                        </button>
+
+                        {/* Copy Link */}
+                        <button
+                          role="menuitem"
+                          aria-label="Copy document link"
+                          onClick={() => handleShareClick('copy')}
+                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-yellow-400 transition-colors font-medium cursor-pointer text-left border-t border-slate-800/80 mt-1 pt-1.5"
+                        >
+                          {copySuccess ? <Check size={15} className="text-emerald-400 shrink-0" /> : <Copy size={15} className="text-yellow-400 shrink-0" />}
+                          <span>{copySuccess ? 'Link copied' : 'Copy Link'}</span>
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 9. Audio Speaker Text-to-Speech Icon */}
                   <button 
                     onClick={handleToggleAudio}
                     className={`p-1.5 rounded transition-colors cursor-pointer ${isSpeaking ? 'bg-yellow-400 text-slate-950 font-bold animate-pulse' : 'hover:bg-blue-800/80 text-white'}`}
@@ -757,94 +978,36 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
                 </div>
               </div>
 
-              {/* Judgment Text Viewer (Full Height Scrollable Container) */}
+              {/* Universal DLR Legal Document Viewer Container */}
               <div 
-                className="flex-1 min-h-0 overflow-y-auto p-4 md:p-8 bg-slate-200 select-text" 
-                style={{ fontSize: `${fontSize}px` }}
+                className="flex-1 min-h-0 overflow-y-auto p-4 md:p-6 bg-slate-100/80 select-text space-y-4 print:p-0 print:bg-white print:overflow-visible" 
                 data-lenis-prevent
               >
-                <div className="max-w-4xl mx-auto bg-white p-6 md:p-10 rounded-lg border border-slate-300 shadow-md text-slate-900 font-serif leading-relaxed mb-12">
-                  
-                  {/* Formal Citation Header */}
-                  <div className="mb-6 pb-6 border-b border-slate-300 space-y-3">
-                    {selectedCase.citation && (
-                      <div className="text-lg md:text-xl font-bold font-mono text-slate-900">
-                        {selectedCase.citation}
-                      </div>
-                    )}
-
-                    <div className="text-center font-sans space-y-1">
-                      <h1 className="text-base md:text-lg font-black text-slate-900 uppercase tracking-wide">
-                        {selectedCase.court_name || 'In the Supreme Court of India'}
-                      </h1>
-                      {selectedCase.bench && (
-                        <div className="text-xs text-slate-600 font-semibold italic">
-                          ({selectedCase.bench})
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="py-3 text-sm md:text-base font-semibold text-slate-800 text-center font-sans space-y-1">
-                      <div><span className="font-bold text-blue-900">{selectedCase.petitioner_name || selectedCase.title}</span> ... Appellant(s);</div>
-                      <div className="text-xs italic font-bold text-slate-500">Versus</div>
-                      <div><span className="font-bold text-blue-900">{selectedCase.respondent_name || 'Respondent'}</span> ... Respondent(s).</div>
-                    </div>
-
-                    {selectedCase.case_number && (
-                      <div className="text-xs text-center text-slate-600 font-medium font-sans">
-                        {selectedCase.case_number}
-                      </div>
-                    )}
-                    
-                    {selectedCase.judgment_date && (
-                      <div className="text-xs text-center font-bold text-slate-700 font-sans">
-                        Decided on {new Date(selectedCase.judgment_date).toLocaleDateString('en-IN', { month: 'long', day: 'numeric', year: 'numeric' })}
-                      </div>
-                    )}
-
-                    {selectedCase.advocates && (
-                      <div className="pt-3 border-t border-slate-200 text-xs text-slate-700 font-sans leading-normal">
-                        <span className="font-bold text-slate-900 block mb-1">Advocates who appeared in this case:</span>
-                        <p className="text-slate-600">{selectedCase.advocates}</p>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Body Text & Headnotes */}
-                  <div className="space-y-6">
-                    {selectedCase.head_note && (
-                      <div className="bg-slate-50 p-4 rounded border border-slate-200 space-y-2">
-                        <h3 className="text-xs font-bold text-slate-700 uppercase tracking-wider font-sans">
-                          Head Note & Ratio Decidendi
-                        </h3>
-                        <div 
-                          className="text-sm font-medium text-slate-800 leading-relaxed font-sans"
-                          dangerouslySetInnerHTML={getHighlightedFullText(selectedCase.head_note, activeHighlightQuery, isHighlightingEnabled)}
-                        />
-                      </div>
-                    )}
-
-                    {selectedCase.content && (
-                      <div className="space-y-3 pt-2">
-                        <div 
-                          className="whitespace-pre-line text-slate-900 text-justify font-serif"
-                          dangerouslySetInnerHTML={getHighlightedFullText(selectedCase.content, activeHighlightQuery, isHighlightingEnabled)}
-                        />
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="mt-10 pt-4 border-t border-slate-200 text-center font-sans text-xs text-slate-400">
-                    - DIGI LAW REPORTER OFFICIAL VERIFIED RECORD -
-                  </div>
-
-                </div>
+                <UniversalLegalDocument 
+                  doc={selectedCase}
+                  fontSize={fontSize}
+                  searchQuery={activeHighlightQuery}
+                  isHighlightingEnabled={isHighlightingEnabled}
+                />
               </div>
             </>
           ) : (
-            <div className="flex-1 flex flex-col items-center justify-center text-slate-500 p-6 text-center space-y-2">
-              <Scale size={48} className="text-slate-400 stroke-[1.5]" />
-              <p className="text-sm font-semibold">Select a case from the Result List to view details.</p>
+            <div className="flex-1 flex flex-col items-center justify-center p-6 text-center space-y-4 max-w-md mx-auto my-auto">
+              <div className="w-16 h-16 bg-red-50 text-red-600 rounded-2xl flex items-center justify-center border border-red-200 shadow-sm">
+                <AlertTriangle size={32} />
+              </div>
+              <div className="space-y-1.5">
+                <h2 className="text-lg font-bold text-slate-900">Invalid Citation / No Case Found</h2>
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  No published legal precedent was found in the database matching <span className="font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-200">{query || 'your search'}</span>.
+                </p>
+              </div>
+              <button
+                onClick={() => navigate('/search')}
+                className="px-5 py-2 bg-[#0B1727] hover:bg-slate-800 text-white text-xs font-bold rounded-xl transition-all shadow-md cursor-pointer active:scale-95"
+              >
+                Back to Search Portal
+              </button>
             </div>
           )}
 
@@ -1072,9 +1235,235 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
         </div>
       )}
 
+      {/* CASE DETAILS MODAL POPUP (Matching exact Screenshots 2 & 3) */}
+      {isCaseDetailsModalOpen && selectedCase && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/50 backdrop-blur-xs p-4 animate-in fade-in">
+          <div className="bg-slate-50 text-slate-900 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl overflow-hidden border border-slate-200 animate-in zoom-in-95">
+            
+            {/* Header */}
+            <div className="px-6 py-4 bg-white border-b border-slate-200 flex items-center justify-between shrink-0">
+              <h3 className="font-extrabold text-base md:text-lg text-slate-900">
+                Case Details
+              </h3>
+              <button
+                onClick={() => setIsCaseDetailsModalOpen(false)}
+                className="text-slate-400 hover:text-slate-700 p-1 rounded-lg transition-colors cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Scrollable Body (4 Cards matching Screenshots 2 & 3) */}
+            <div className="flex-1 overflow-y-auto p-5 sm:p-6 space-y-4 font-sans text-slate-900" data-lenis-prevent>
+              
+              {/* CARD 1: COURT, JUDGMENT DATE, CASE NUMBER, CITATION */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
+                  {/* COURT */}
+                  <div className="md:col-span-8 space-y-1">
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block">
+                      COURT
+                    </span>
+                    <div className="font-bold text-slate-800 text-xs sm:text-sm leading-relaxed uppercase">
+                      {selectedCase.court_name || selectedCase.court || 'IN THE SUPREME COURT OF INDIA'}
+                      {selectedCase.bench && ` ${selectedCase.bench}`}
+                    </div>
+                  </div>
+
+                  {/* JUDGMENT DATE */}
+                  <div className="md:col-span-4 space-y-1">
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block">
+                      JUDGMENT DATE
+                    </span>
+                    <div className="font-bold text-slate-800 text-xs sm:text-sm">
+                      {selectedCase.judgment_date 
+                        ? (new Date(selectedCase.judgment_date).toLocaleDateString('en-IN', { day: '2-digit', month: '2-digit', year: 'numeric' }))
+                        : (selectedCase.date || '—')}
+                    </div>
+                  </div>
+                </div>
+
+                {/* CASE NUMBER */}
+                {selectedCase.case_number && (
+                  <div className="space-y-1 pt-1 border-t border-slate-100">
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block">
+                      CASE NUMBER
+                    </span>
+                    <div className="font-bold text-slate-800 text-xs sm:text-sm leading-relaxed">
+                      {selectedCase.case_number}
+                    </div>
+                  </div>
+                )}
+
+                {/* CITATION */}
+                {selectedCase.citation && (
+                  <div className="space-y-1 pt-1 border-t border-slate-100">
+                    <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block">
+                      CITATION
+                    </span>
+                    <div className="font-bold text-slate-800 text-xs sm:text-sm font-mono">
+                      {selectedCase.citation}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* CARD 2: PETITIONER & RESPONDENT */}
+              <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs space-y-4">
+                {/* PETITIONER */}
+                <div className="space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block">
+                    PETITIONER
+                  </span>
+                  <div className="font-bold text-slate-800 text-xs sm:text-sm">
+                    {selectedCase.petitioner_name || selectedCase.petitioner || selectedCase.title?.split(' vs ')[0] || selectedCase.title}
+                  </div>
+                </div>
+
+                <div className="border-t border-slate-100"></div>
+
+                {/* RESPONDENT */}
+                <div className="space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider block">
+                    RESPONDENT
+                  </span>
+                  <div className="font-bold text-slate-800 text-xs sm:text-sm">
+                    {selectedCase.respondent_name || selectedCase.respondent || selectedCase.title?.split(' vs ')[1] || '—'}
+                  </div>
+                </div>
+              </div>
+
+              {/* CARD 3: HEAD NOTE */}
+              {selectedCase.head_note && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-4 bg-blue-600 rounded-full inline-block"></span>
+                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                      Head Note
+                    </h3>
+                  </div>
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
+                    <div 
+                      className="text-xs sm:text-sm text-slate-800 font-normal leading-relaxed font-sans"
+                      dangerouslySetInnerHTML={getHighlightedFullText(selectedCase.head_note, activeHighlightQuery, isHighlightingEnabled)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* CARD 4: FULL JUDGMENT */}
+              {selectedCase.content && (
+                <div className="space-y-2 pt-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-1.5 h-4 bg-emerald-600 rounded-full inline-block"></span>
+                    <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wide">
+                      Full Judgment
+                    </h3>
+                  </div>
+                  <div className="bg-white rounded-2xl border border-slate-200/90 p-5 shadow-2xs">
+                    <div 
+                      className="whitespace-pre-line text-xs sm:text-sm text-slate-900 font-sans leading-relaxed text-justify"
+                      dangerouslySetInnerHTML={getHighlightedFullText(selectedCase.content, activeHighlightQuery, isHighlightingEnabled)}
+                    />
+                  </div>
+                </div>
+              )}
+
+            </div>
+
+            {/* Footer */}
+            <div className="px-6 py-3 bg-white border-t border-slate-200 flex justify-end shrink-0">
+              <button
+                onClick={() => setIsCaseDetailsModalOpen(false)}
+                className="bg-white hover:bg-slate-50 text-slate-700 font-bold border border-slate-300 px-5 py-2 rounded-xl text-xs shadow-2xs transition-all cursor-pointer"
+              >
+                Close
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
+
+      {/* Floating Audio Control Widget Popup */}
+      {isAudioWidgetOpen && selectedCase && (
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900/95 text-white border border-slate-700/80 rounded-2xl shadow-2xl p-4 max-w-xs w-full backdrop-blur-md animate-in slide-in-from-bottom-5 font-sans no-print">
+          
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-slate-800 pb-2.5 mb-3">
+            <div className="flex items-center gap-2">
+              <div className={`w-2.5 h-2.5 rounded-full ${isPaused ? 'bg-amber-400' : 'bg-emerald-400 animate-ping'}`} />
+              <span className="font-bold text-xs text-slate-200">
+                {isPaused ? 'Audio Paused' : 'Playing Judgment Audio'}
+              </span>
+            </div>
+            <button 
+              onClick={handleStopAudio}
+              className="text-slate-400 hover:text-white p-1 rounded-full cursor-pointer"
+              title="Close Audio Control"
+            >
+              <X size={15} />
+            </button>
+          </div>
+
+          {/* Case Title */}
+          <div className="text-xs font-semibold text-slate-300 line-clamp-1 mb-3">
+            {selectedCase.title}
+          </div>
+
+          {/* Controls: Play/Pause, Repeat, Stop, Speed */}
+          <div className="flex items-center justify-between gap-2">
+            
+            <div className="flex items-center gap-2">
+              {/* Play / Pause Button */}
+              <button
+                onClick={handleToggleAudio}
+                className="p-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-bold transition-all shadow-md active:scale-95 cursor-pointer flex items-center justify-center"
+                title={isPaused ? "Play Audio" : "Pause Audio"}
+              >
+                {isPaused ? <Play size={16} /> : <Pause size={16} />}
+              </button>
+
+              {/* Repeat / Restart Button */}
+              <button
+                onClick={handleRestartAudio}
+                className="p-2 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl transition-all cursor-pointer flex items-center justify-center border border-slate-700"
+                title="Repeat / Restart from Beginning"
+              >
+                <RotateCcw size={15} />
+              </button>
+
+              {/* Stop Button */}
+              <button
+                onClick={handleStopAudio}
+                className="p-2 bg-red-500/20 hover:bg-red-500/30 text-red-400 rounded-xl transition-all cursor-pointer flex items-center justify-center border border-red-500/30"
+                title="Stop Audio"
+              >
+                <Square size={14} />
+              </button>
+            </div>
+
+            {/* Speed Selector */}
+            <div className="flex items-center gap-1 bg-slate-800 p-1 rounded-xl border border-slate-700 text-[10px] font-bold">
+              {[1, 1.25, 1.5].map((rate) => (
+                <button
+                  key={rate}
+                  onClick={() => handleChangeRate(rate)}
+                  className={`px-1.5 py-0.5 rounded-md transition-colors cursor-pointer ${speechRate === rate ? 'bg-blue-600 text-white font-black' : 'text-slate-400 hover:text-slate-200'}`}
+                >
+                  {rate}x
+                </button>
+              ))}
+            </div>
+
+          </div>
+
+        </div>
+      )}
+
       {/* Floating Action Toast Notification */}
       {toastMessage && (
-        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white font-bold text-xs md:text-sm px-4 py-2.5 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3">
+        <div className="fixed bottom-6 right-6 z-50 bg-slate-900 text-white font-bold text-xs md:text-sm px-4 py-2.5 rounded-xl shadow-2xl border border-slate-700 flex items-center gap-2 animate-in fade-in slide-in-from-bottom-3 no-print">
           <Sparkles size={16} className="text-yellow-400 shrink-0" />
           <span>{toastMessage}</span>
         </div>

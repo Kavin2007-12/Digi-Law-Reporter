@@ -26,8 +26,7 @@ pool.on('connect', () => {
 });
 
 pool.on('error', (err) => {
-  logger.error('Unexpected error on idle PostgreSQL client', err);
-  process.exit(-1);
+  logger.error('PostgreSQL Connection Warning:', err.message);
 });
 
 // Helper for single queries

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Search, BookOpen, FileText, Users, Library, Type, ChevronDown } from 'lucide-react';
 
@@ -92,13 +92,50 @@ export default function KeywordSearch() {
   const [citeNumber, setCiteNumber] = useState('');
   const [citeEquivalent, setCiteEquivalent] = useState('');
 
-  // Find By Party Name State
+  // Find By Party Name State, Dynamic Courts & Dynamic Party Names
   const [partyCourt, setPartyCourt] = useState('');
   const [partyKeyword, setPartyKeyword] = useState('');
-  const [famousCaseKeyword, setFamousCaseKeyword] = useState('');
-
   const [topicTerm, setTopicTerm] = useState('');
   const [phraseTerm, setPhraseTerm] = useState('');
+  const [dynamicCourts, setDynamicCourts] = useState(['Supreme Court of India']);
+  const [publishedCasesData, setPublishedCasesData] = useState([]);
+
+  // Fetch published cases automatically from backend
+  useEffect(() => {
+    const fetchCasesData = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/public/search');
+        const data = await res.json();
+        if (data.success && Array.isArray(data.data) && data.data.length > 0) {
+          setPublishedCasesData(data.data);
+          const courtsFromDb = data.data
+            .map(c => c.court_name || c.court)
+            .filter(Boolean);
+          const uniqueCourts = Array.from(new Set(courtsFromDb));
+          if (uniqueCourts.length > 0) {
+            setDynamicCourts(uniqueCourts);
+          }
+        }
+      } catch (err) {}
+    };
+    fetchCasesData();
+  }, []);
+
+  // Compute Party Names (Petitioner & Respondent / Appellant) from database
+  const availablePartyNames = useMemo(() => {
+    let cases = publishedCasesData;
+    if (partyCourt) {
+      cases = cases.filter(c => (c.court_name || c.court || '').toLowerCase() === partyCourt.toLowerCase());
+    }
+
+    const parties = [];
+    cases.forEach(c => {
+      if (c.petitioner || c.petitioner_name) parties.push((c.petitioner || c.petitioner_name).trim());
+      if (c.respondent || c.respondent_name) parties.push((c.respondent || c.respondent_name).trim());
+    });
+
+    return Array.from(new Set(parties)).filter(Boolean);
+  }, [publishedCasesData, partyCourt]);
 
   // Sync tab from URL if present
   useEffect(() => {
@@ -137,10 +174,10 @@ export default function KeywordSearch() {
       const monthPart = citeMonth ? `(${citeMonth.trim()})` : '';
       const journalPart = 'DLR';
       const courtPart = citeCourt ? `(${citeCourt.trim()})` : '';
-      const numPart = citeNumber ? citeNumber.trim() : '';
+      const numPart = citeNumber ? `#${citeNumber.trim()}` : '';
       const eqPart = citeEquivalent ? `: ${citeEquivalent.trim()}` : '';
 
-      activeVal = `${yearPart} ${monthPart} ${journalPart} ${courtPart} ${numPart} ${eqPart}`.replace(/\s+/g, ' ').trim();
+      activeVal = `citation:${yearPart} ${monthPart} ${journalPart} ${courtPart} ${numPart} ${eqPart}`.replace(/\s+/g, ' ').trim();
     } else if (activeTab === 'Find By Party Name') {
       activeVal = partyKeyword.trim();
     } else if (activeTab === 'Find By Topic') {
@@ -244,7 +281,7 @@ export default function KeywordSearch() {
                     type="text"
                     value={citeEquivalent}
                     onChange={(e) => setCiteEquivalent(e.target.value)}
-                    placeholder="Equivalent text (e.g. 2026 INSC 666)"
+                    placeholder="Equivalent text"
                     className="flex-1 min-w-[120px] bg-transparent border-b border-slate-300 focus:border-blue-600 text-slate-900 font-medium px-1 py-0.5 outline-none placeholder:text-slate-400 text-xs font-sans"
                   />
                 </div>
@@ -263,35 +300,33 @@ export default function KeywordSearch() {
             </div>
           )}
 
-          {/* Special UI Layout for "Find By Party Name" (Ultra Sleek & Reduced Box Size) */}
+          {/* Special UI Layout for "Find By Party Name" (Single Clean Box with Dynamic Backend Courts) */}
           {activeTab === 'Find By Party Name' && (
-            <div className="bg-slate-100 border border-slate-300 rounded-xl p-2.5 sm:p-3 shadow-lg text-slate-900 space-y-2 max-w-md mx-auto">
+            <div className="bg-[#0D1B2A]/90 backdrop-blur-md border border-slate-700/80 rounded-2xl p-4 sm:p-5 shadow-2xl text-slate-900 max-w-lg mx-auto">
               
-              {/* SECTION 1: Search by Party Name */}
-              <div className="bg-white border border-slate-200/90 rounded-lg p-2.5 sm:p-3 shadow-xs space-y-1.5">
-                <h3 className="text-[10px] font-extrabold text-slate-800 uppercase tracking-wider">
-                  Search by Party Name
+              <div className="bg-white border border-slate-200 rounded-xl p-3.5 sm:p-4 shadow-sm space-y-3">
+                <h3 className="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center justify-between">
+                  <span>Search by Party Name</span>
+                  <span className="text-[10px] text-blue-600 font-bold bg-blue-50 px-2 py-0.5 rounded-full">
+                    {dynamicCourts.length > 0 ? `${dynamicCourts.length} Courts Available` : 'All Courts'}
+                  </span>
                 </h3>
 
-                {/* Court Dropdown */}
+                {/* Court Dropdown (Automatically Fetched from Admin Published Cases) */}
                 <div className="relative">
                   <select
                     value={partyCourt}
                     onChange={(e) => setPartyCourt(e.target.value)}
-                    className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-[11px] font-medium text-slate-700 focus:outline-none focus:border-blue-600 appearance-none cursor-pointer pr-6 shadow-2xs"
+                    className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs font-semibold text-slate-800 focus:outline-none focus:border-blue-600 focus:bg-white appearance-none cursor-pointer pr-8 shadow-2xs transition-colors"
                   >
                     <option value="">---Select Court---</option>
-                    {COURTS_CATEGORIES.map((cat, idx) => (
-                      <optgroup key={idx} label={cat.group} className="font-bold text-slate-900 bg-slate-100">
-                        {cat.options.map((opt) => (
-                          <option key={opt} value={opt} className="bg-white font-medium text-slate-800">
-                            {opt}
-                          </option>
-                        ))}
-                      </optgroup>
+                    {dynamicCourts.map((opt) => (
+                      <option key={opt} value={opt} className="bg-white font-semibold text-slate-900">
+                        {opt}
+                      </option>
                     ))}
                   </select>
-                  <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
+                  <ChevronDown size={14} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" />
                 </div>
 
                 {/* Party Keyword Input + Search Button */}
@@ -303,69 +338,28 @@ export default function KeywordSearch() {
                     const finalQuery = partyCourt ? `${partyCourt}: ${searchVal}` : searchVal;
                     navigate(`/search/results?q=${encodeURIComponent(finalQuery)}&tab=party`);
                   }} 
-                  className="flex items-center gap-1.5"
+                  className="space-y-2"
                 >
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      value={partyKeyword}
-                      onChange={(e) => setPartyKeyword(e.target.value)}
-                      placeholder="Type Keywords Or Select History"
-                      className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 font-medium shadow-2xs"
-                    />
+                  <div className="flex items-center gap-2">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        autoComplete="off"
+                        value={partyKeyword}
+                        onChange={(e) => setPartyKeyword(e.target.value)}
+                        placeholder="Type Party Name / Case Title"
+                        className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white font-medium shadow-2xs transition-colors"
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
+                      className="bg-[#0B1727] hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-lg transition-all shadow-md flex items-center justify-center gap-1.5 text-xs shrink-0 cursor-pointer active:scale-95"
+                    >
+                      <Search size={13} />
+                      <span>Find Case</span>
+                    </button>
                   </div>
-
-                  <button
-                    type="submit"
-                    className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 py-1 rounded transition-colors shadow-xs flex items-center justify-center gap-1 text-[11px] shrink-0 cursor-pointer active:scale-95"
-                  >
-                    <Search size={11} />
-                    <span>Find Case</span>
-                  </button>
-                </form>
-              </div>
-
-              {/* OR Divider Badge */}
-              <div className="relative flex items-center justify-center py-0.5">
-                <div className="border-t border-slate-300 w-full"></div>
-                <span className="absolute bg-slate-100 px-2 text-[9px] font-extrabold text-slate-500 tracking-widest">
-                  OR
-                </span>
-              </div>
-
-              {/* SECTION 2: Search by Famous Case Names */}
-              <div className="bg-white border border-slate-200/90 rounded-lg p-2.5 sm:p-3 shadow-xs space-y-1.5">
-                <h3 className="text-[10px] font-extrabold text-slate-800 uppercase tracking-wider">
-                  Search by Famous Case Names
-                </h3>
-
-                {/* Famous Case Keyword Input + Search Button */}
-                <form 
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    const searchVal = famousCaseKeyword.trim();
-                    if (!searchVal) return;
-                    navigate(`/search/results?q=${encodeURIComponent(searchVal)}&tab=party`);
-                  }} 
-                  className="flex items-center gap-1.5"
-                >
-                  <div className="relative flex-1">
-                    <input
-                      type="text"
-                      value={famousCaseKeyword}
-                      onChange={(e) => setFamousCaseKeyword(e.target.value)}
-                      placeholder="Type Keywords Or Select History"
-                      className="w-full bg-white border border-slate-300 rounded px-2 py-1 text-[11px] text-slate-800 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 font-medium shadow-2xs"
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    className="bg-slate-800 hover:bg-slate-900 text-white font-bold px-3 py-1 rounded transition-colors shadow-xs flex items-center justify-center gap-1 text-[11px] shrink-0 cursor-pointer active:scale-95"
-                  >
-                    <Search size={11} />
-                    <span>Find Case</span>
-                  </button>
                 </form>
               </div>
 

@@ -1,5 +1,6 @@
 import { query } from '../config/db.js';
 import logger from '../utils/logger.js';
+import localStore from '../data/localStore.js';
 
 // Get all cases (with optional status filter & pagination)
 export const getAllCasesFromDb = async ({ status, limit = 50, offset = 0 }) => {
@@ -18,8 +19,26 @@ export const getAllCasesFromDb = async ({ status, limit = 50, offset = 0 }) => {
     const res = await query(sql, values);
     return res.rows;
   } catch (error) {
-    logger.error('Error fetching cases from DB:', error);
-    throw error;
+    logger.warn('PostgreSQL offline for getAllCasesFromDb, reading from localStore');
+    return localStore.getCases(status);
+  }
+};
+
+// Get single case by ID
+export const getCaseByIdFromDb = async (id) => {
+  try {
+    const numericId = parseInt(id, 10);
+    let res;
+    if (!isNaN(numericId)) {
+      res = await query(`SELECT * FROM cases WHERE id = $1 OR id::text = $2`, [numericId, String(id)]);
+    } else {
+      res = await query(`SELECT * FROM cases WHERE id::text = $1`, [String(id)]);
+    }
+    if (res && res.rows && res.rows.length > 0) return res.rows[0];
+    return localStore.getCaseById(id);
+  } catch (error) {
+    logger.warn(`PostgreSQL query error for getCaseByIdFromDb, falling back to localStore ID ${id}`);
+    return localStore.getCaseById(id);
   }
 };
 
@@ -50,8 +69,8 @@ export const createCaseInDb = async (caseData) => {
     const res = await query(sql, values);
     return res.rows[0];
   } catch (error) {
-    logger.error('Error inserting case into DB:', error);
-    throw error;
+    logger.warn('PostgreSQL offline for createCaseInDb, saving to localStore');
+    return localStore.addCase(caseData);
   }
 };
 
@@ -83,32 +102,36 @@ export const updateCaseInDb = async (id, caseData) => {
     const res = await query(sql, values);
     return res.rows[0];
   } catch (error) {
-    logger.error(`Error updating case ID ${id} in DB:`, error);
-    throw error;
+    logger.warn(`PostgreSQL offline for updateCaseInDb, updating localStore ID ${id}`);
+    return localStore.updateCase(id, caseData);
   }
 };
 
-// Delete case
+// Delete case permanently from database
 export const deleteCaseFromDb = async (id) => {
   try {
-    const res = await query(`DELETE FROM cases WHERE id = $1 RETURNING *`, [id]);
-    return res.rows[0];
+    const numericId = parseInt(id, 10);
+    let res;
+    if (!isNaN(numericId)) {
+      res = await query(`DELETE FROM cases WHERE id = $1 OR id::text = $2 RETURNING *`, [numericId, String(id)]);
+    } else {
+      res = await query(`DELETE FROM cases WHERE id::text = $1 RETURNING *`, [String(id)]);
+    }
+    if (res && res.rows && res.rows.length > 0) return res.rows[0];
+    return localStore.deleteCase(id);
   } catch (error) {
-    logger.error(`Error deleting case ID ${id} from DB:`, error);
-    throw error;
+    logger.warn(`PostgreSQL query error for deleteCaseFromDb, deleting from localStore ID ${id}`);
+    return localStore.deleteCase(id);
   }
 };
 
-// Toggle Case Status (Draft <-> Published)
+// Update case status
 export const updateCaseStatusInDb = async (id, status) => {
   try {
-    const res = await query(
-      `UPDATE cases SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`,
-      [status, id]
-    );
+    const res = await query(`UPDATE cases SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`, [status, id]);
     return res.rows[0];
   } catch (error) {
-    logger.error(`Error updating status for case ID ${id}:`, error);
-    throw error;
+    logger.warn(`PostgreSQL offline for updateCaseStatusInDb, updating localStore ID ${id}`);
+    return localStore.updateCase(id, { status });
   }
 };

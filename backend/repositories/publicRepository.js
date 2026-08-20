@@ -1,5 +1,6 @@
 import { query } from '../config/db.js';
 import logger from '../utils/logger.js';
+import localStore from '../data/localStore.js';
 
 export const getHomeStatsFromDb = async () => {
   try {
@@ -19,72 +20,122 @@ export const getHomeStatsFromDb = async () => {
       recentCases: recentCasesRes.rows
     };
   } catch (error) {
-    logger.error('Error fetching home stats from DB:', error);
-    throw error;
+    logger.warn('PostgreSQL offline for getHomeStatsFromDb, reading from localStore');
+    const cases = localStore.getCases('Published');
+    const users = localStore.getUsers();
+    return {
+      totalPublishedCases: cases.length,
+      totalActiveUsers: users.length,
+      recentCases: cases.slice(0, 6)
+    };
   }
 };
 
 export const searchCasesFromDb = async (params) => {
-  try {
-    const { keyword, citation, party, act, section, court, year, limit = 20, offset = 0 } = params;
+  const rawTerm = (params.keyword || params.q || params.citation || params.party || '').trim();
+  const tab = (params.tab || 'keyword').toLowerCase().trim();
 
+  try {
     let sql = `
-      SELECT id, case_number, title, petitioner, respondent, court, judgment_date, year, act, section, head_note, citations
+      SELECT id, case_number, title, petitioner, respondent, court, judgment_date, year, act, section, head_note, judgment_text, citations
       FROM cases 
       WHERE status = 'Published'
     `;
     const values = [];
 
-    // 1. Full Text Search Keyword Query using GIN Index
-    if (keyword && keyword.trim()) {
-      values.push(keyword.trim().split(/\s+/).join(' & '));
-      sql += ` AND search_vector @@ to_tsquery('english', $${values.length})`;
-    }
+    if (rawTerm) {
+      const cleanTerm = rawTerm.includes(':') ? rawTerm.split(':').pop().trim() : rawTerm;
+      const lowerRaw = rawTerm.toLowerCase();
 
-    // 2. Citation Filter
-    if (citation && citation.trim()) {
-      values.push(`%${citation.trim()}%`);
-      sql += ` AND (citations::text ILIKE $${values.length} OR case_number ILIKE $${values.length})`;
-    }
+      // 1. FIND BY CITATION (tab === 'citation' or starts with citation:)
+      if (tab === 'citation' || lowerRaw.startsWith('citation:')) {
+        const wordTokens = cleanTerm.split(/[\s,()#:]+/).filter(w => w.length > 0);
+        const yearToken = wordTokens.find(w => /^(19|20)\d{2}$/.test(w));
+        const numberToken = wordTokens.find(w => /^\d+$/.test(w) && w !== yearToken && w !== '08' && w !== '8');
 
-    // 3. Party Filter (Petitioner or Respondent)
-    if (party && party.trim()) {
-      values.push(`%${party.trim()}%`);
-      sql += ` AND (petitioner ILIKE $${values.length} OR respondent ILIKE $${values.length} OR title ILIKE $${values.length})`;
-    }
+        if (yearToken && numberToken) {
+          values.push(`%${yearToken}%`);
+          const yIdx = values.length;
+          values.push(`%"number":"${numberToken}"%`);
+          const nIdx1 = values.length;
+          values.push(`%#${numberToken}%`);
+          const nIdx2 = values.length;
+          sql += ` AND (citations::text ILIKE $${nIdx1} OR citations::text ILIKE $${nIdx2}) AND (citations::text ILIKE $${yIdx} OR judgment_date::text ILIKE $${yIdx})`;
+        } else if (numberToken) {
+          values.push(`%"number":"${numberToken}"%`);
+          const nIdx1 = values.length;
+          values.push(`%#${numberToken}%`);
+          const nIdx2 = values.length;
+          sql += ` AND (citations::text ILIKE $${nIdx1} OR citations::text ILIKE $${nIdx2})`;
+        } else if (yearToken) {
+          values.push(`%${yearToken}%`);
+          const yIdx = values.length;
+          sql += ` AND (citations::text ILIKE $${yIdx} OR judgment_date::text ILIKE $${yIdx})`;
+        } else {
+          values.push(`%${cleanTerm}%`);
+          const cIdx = values.length;
+          sql += ` AND (citations::text ILIKE $${cIdx})`;
+        }
+      }
 
-    // 4. Act Filter
-    if (act && act.trim()) {
-      values.push(`%${act.trim()}%`);
-      sql += ` AND act ILIKE $${values.length}`;
-    }
+      // 2. FIND BY SECTION / TITLE OR ACT (tab === 'section' or tab === 'act' or tab === 'title')
+      else if (tab === 'section' || tab === 'act' || tab === 'title' || tab === 'section_only') {
+        const numMatch = cleanTerm.match(/\d+[a-zA-Z]*/);
+        values.push(`%${cleanTerm}%`);
+        const sIdx = values.length;
 
-    // 5. Section Filter
-    if (section && section.trim()) {
-      values.push(`%${section.trim()}%`);
-      sql += ` AND section ILIKE $${values.length}`;
-    }
+        if (numMatch) {
+          values.push(`%${numMatch[0]}%`);
+          const nIdx = values.length;
+          sql += ` AND (
+            section ILIKE $${sIdx} OR 
+            section ILIKE $${nIdx} OR 
+            title ILIKE $${sIdx} OR 
+            act ILIKE $${sIdx} OR 
+            (act ILIKE $${nIdx} AND (act ILIKE '%section%' OR act ILIKE '%sec%' OR act ILIKE '%u/s%'))
+          )`;
+        } else {
+          sql += ` AND (section ILIKE $${sIdx} OR title ILIKE $${sIdx} OR act ILIKE $${sIdx})`;
+        }
+      }
 
-    // 6. Court Filter
-    if (court && court.trim()) {
-      values.push(`%${court.trim()}%`);
-      sql += ` AND court ILIKE $${values.length}`;
-    }
+      // 3. FIND BY PARTY NAME (tab === 'party')
+      else if (tab === 'party') {
+        values.push(`%${cleanTerm}%`);
+        const pIdx = values.length;
+        sql += ` AND (petitioner ILIKE $${pIdx} OR respondent ILIKE $${pIdx} OR title ILIKE $${pIdx})`;
+      }
 
-    // 7. Year Filter
-    if (year) {
-      values.push(parseInt(year, 10));
-      sql += ` AND year = $${values.length}`;
+      // 4. FIND BY TOPIC (tab === 'topic')
+      else if (tab === 'topic') {
+        values.push(`%${cleanTerm}%`);
+        const tpIdx = values.length;
+        sql += ` AND (act ILIKE $${tpIdx} OR head_note ILIKE $${tpIdx})`;
+      }
+
+      // 5. WORDS & PHRASES (tab === 'phrase')
+      else if (tab === 'phrase') {
+        values.push(`%${cleanTerm}%`);
+        const phIdx = values.length;
+        sql += ` AND (head_note ILIKE $${phIdx} OR judgment_text ILIKE $${phIdx})`;
+      }
+
+      // 6. KEYWORD SEARCH (tab === 'keyword' or default)
+      else {
+        values.push(`%${cleanTerm}%`);
+        const kIdx = values.length;
+        sql += ` AND (title ILIKE $${kIdx} OR head_note ILIKE $${kIdx} OR judgment_text ILIKE $${kIdx})`;
+      }
     }
 
     sql += ` ORDER BY judgment_date DESC LIMIT $${values.length + 1} OFFSET $${values.length + 2}`;
-    values.push(parseInt(limit, 10), parseInt(offset, 10));
+    values.push(parseInt(params.limit || 50, 10), parseInt(params.offset || 0, 10));
 
     const res = await query(sql, values);
     return res.rows;
   } catch (error) {
-    logger.error('Error executing legal search query:', error);
-    throw error;
+    logger.warn('PostgreSQL query error or offline for searchCasesFromDb, searching localStore for: ' + rawTerm);
+    return localStore.searchCases(rawTerm, tab);
   }
 };
 
@@ -93,7 +144,7 @@ export const getJudgmentByIdFromDb = async (id) => {
     const res = await query(`SELECT * FROM cases WHERE id = $1 AND status = 'Published'`, [id]);
     return res.rows[0] || null;
   } catch (error) {
-    logger.error(`Error fetching judgment with ID ${id}:`, error);
-    throw error;
+    logger.warn(`PostgreSQL offline for getJudgmentByIdFromDb, getting localStore ID ${id}`);
+    return localStore.getCaseById(id);
   }
 };

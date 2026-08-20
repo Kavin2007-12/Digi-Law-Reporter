@@ -86,50 +86,61 @@ export default function AdminDraftCases() {
         </span>
       </div>
 
-      {/* Table */}
-      <div className="bg-white border border-slate-200/80 rounded-xl overflow-hidden shadow-xs">
+      {/* Modern Legal Precedent Table */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-xs">
         {loading ? (
-          <div className="py-12 text-center text-slate-400 font-medium text-xs">
+          <div className="py-16 text-center text-slate-400 font-medium text-xs">
             Loading draft cases from database...
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs md:text-sm">
+            <table className="w-full text-left border-collapse text-xs table-fixed">
               <thead>
-                <tr className="border-b border-slate-200 bg-slate-50/50 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
-                  <th className="py-3 px-4 w-12 text-center">S.No</th>
-                  <th className="py-3 px-4">Case Number</th>
-                  <th className="py-3 px-4">Case Title</th>
-                  <th className="py-3 px-4">Citation / DLR</th>
-                  <th className="py-3 px-4">Year</th>
-                  <th className="py-3 px-4">Last Updated</th>
-                  <th className="py-3 px-4 text-right">Actions</th>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-extrabold uppercase tracking-wider text-[11px]">
+                  <th className="py-3 px-4 w-12 text-center">#</th>
+                  <th className="py-3 px-4 w-48">Case Number</th>
+                  <th className="py-3 px-4 w-64">Case Title</th>
+                  <th className="py-3 px-4 w-40">Citation</th>
+                  <th className="py-3 px-4 w-32">Last Updated</th>
+                  <th className="py-3 px-4 w-40 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100 font-medium">
+              <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                 {casesList.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="text-center py-12 text-slate-400 font-semibold text-xs">
+                    <td colSpan="6" className="py-14 text-center text-slate-400 font-medium text-xs">
                       No draft cases pending publication.
                     </td>
                   </tr>
                 ) : (
                   casesList.map((c, idx) => (
-                    <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 text-center font-bold text-slate-400 text-xs">
+                    <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3.5 px-4 text-center font-bold text-slate-400">
                         {idx + 1}
                       </td>
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-800 whitespace-nowrap">{c.caseNumber}</td>
-                      <td className="py-3.5 px-4 font-bold text-[#0B1727]">{c.title}</td>
-                      <td className="py-3.5 px-4 font-mono text-slate-700">{c.citation}</td>
-                      <td className="py-3.5 px-4 font-semibold text-slate-700">{c.year}</td>
-                      <td className="py-3.5 px-4 text-slate-500 text-xs">{c.updatedAt}</td>
+
+                      <td className="py-3.5 px-4 font-mono text-xs font-bold text-slate-800 truncate" title={c.caseNumber || ''}>
+                        {c.caseNumber || '—'}
+                      </td>
+
+                      <td className="py-3.5 px-4 font-bold text-[#0B1727] text-xs truncate" title={c.title || ''}>
+                        {c.title}
+                      </td>
+
+                      <td className="py-3.5 px-4 font-mono font-bold text-primary-700 text-xs truncate" title={c.citation || ''}>
+                        {c.citation || 'Unassigned'}
+                      </td>
+
+                      <td className="py-3.5 px-4 text-slate-500 font-mono text-xs whitespace-nowrap">
+                        {c.updatedAt || c.judgmentDate || '—'}
+                      </td>
+
                       <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
                             onClick={() => handlePublishCase(c.id)}
-                            className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-200 rounded font-bold text-xs transition-colors flex items-center gap-1 cursor-pointer"
+                            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded font-bold text-xs transition-all shadow-2xs flex items-center gap-1 cursor-pointer"
                           >
                             <Globe size={13} />
                             <span>Publish</span>
@@ -138,7 +149,7 @@ export default function AdminDraftCases() {
                           <button
                             type="button"
                             onClick={() => navigate(`/admin/cases/edit/${c.id}`)}
-                            className="p-1 text-slate-400 hover:text-amber-600 rounded"
+                            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors"
                             title="Edit Draft"
                           >
                             <Edit3 size={15} />
@@ -147,7 +158,7 @@ export default function AdminDraftCases() {
                           <button
                             type="button"
                             onClick={() => setDeleteModalCase(c)}
-                            className="p-1 text-slate-400 hover:text-red-600 rounded cursor-pointer"
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors cursor-pointer"
                             title="Delete Draft"
                           >
                             <Trash2 size={15} />

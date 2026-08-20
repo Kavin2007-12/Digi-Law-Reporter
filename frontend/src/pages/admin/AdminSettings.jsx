@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { LogOut, CheckCircle2, Upload, Camera, Plus, Trash2, User } from 'lucide-react';
+import { LogOut, CheckCircle2, Upload, Camera, Plus, Trash2, User, Eye, EyeOff } from 'lucide-react';
 import { MOCK_LAWYER_SETTINGS } from '../../data/adminMockData';
 
 export default function AdminSettings() {
@@ -10,7 +10,11 @@ export default function AdminSettings() {
     return saved ? JSON.parse(saved) : MOCK_LAWYER_SETTINGS;
   });
 
-  const [passwordForm, setPasswordForm] = useState({ current: '', newPass: '', confirm: '' });
+  const currentAdminRole = localStorage.getItem('adminRole') || 'MAIN_ADMIN';
+  const [passwordForm, setPasswordForm] = useState({ username: 'mainadmin', current: '', newPass: '', confirm: '' });
+  const [showCurrentPass, setShowCurrentPass] = useState(false);
+  const [showNewPass, setShowNewPass] = useState(false);
+  const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [toastMessage, setToastMessage] = useState('');
 
   const showToast = (msg) => {
@@ -660,64 +664,166 @@ export default function AdminSettings() {
           </div>
         </div>
 
-        {/* SECTION 4: ACCOUNT & SECURITY */}
+        {/* SECTION 4: ACCOUNT SECURITY (UPDATE PASSWORD - MAIN ADMIN ONLY) */}
         <div className="bg-white border border-slate-200/80 rounded-xl p-6 sm:p-8 shadow-xs space-y-6">
           <div className="pb-3 border-b border-slate-200">
             <h2 className="text-xs font-extrabold uppercase tracking-widest text-[#0B1727]">Account Security</h2>
-            <p className="text-xs text-slate-500">Change password & sign out</p>
+            <p className="text-xs text-slate-500">
+              {currentAdminRole === 'MAIN_ADMIN' 
+                ? 'Change password & manage session' 
+                : 'Password management is restricted strictly to the Main Administrator'}
+            </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-5 text-xs">
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">Current Password</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={passwordForm.current}
-                onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded text-slate-900 focus:outline-none focus:border-primary-600"
-              />
+          {currentAdminRole === 'MAIN_ADMIN' ? (
+            <>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Admin Username</label>
+                  <input
+                    type="text"
+                    required
+                    value={passwordForm.username}
+                    onChange={(e) => setPasswordForm({ ...passwordForm, username: e.target.value })}
+                    placeholder="mainadmin"
+                    className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded text-slate-900 focus:outline-none focus:border-primary-600 font-mono font-semibold"
+                  />
+                </div>
+
+                {/* Current Password */}
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Current Password</label>
+                  <div className="relative group">
+                    <input
+                      type={showCurrentPass ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={passwordForm.current}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, current: e.target.value })}
+                      className="w-full px-3.5 pr-10 py-2.5 bg-slate-50/50 border border-slate-200 rounded text-slate-900 focus:outline-none focus:border-primary-600 font-mono text-xs font-semibold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowCurrentPass(!showCurrentPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200"
+                      title={showCurrentPass ? "Hide password" : "Show password"}
+                    >
+                      {showCurrentPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* New Password */}
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">New Password</label>
+                  <div className="relative group">
+                    <input
+                      type={showNewPass ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={passwordForm.newPass}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, newPass: e.target.value })}
+                      className="w-full px-3.5 pr-10 py-2.5 bg-slate-50/50 border border-slate-200 rounded text-slate-900 focus:outline-none focus:border-primary-600 font-mono text-xs font-semibold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowNewPass(!showNewPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200"
+                      title={showNewPass ? "Hide password" : "Show password"}
+                    >
+                      {showNewPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Confirm Password */}
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Confirm Password</label>
+                  <div className="relative group">
+                    <input
+                      type={showConfirmPass ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={passwordForm.confirm}
+                      onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
+                      className="w-full px-3.5 pr-10 py-2.5 bg-slate-50/50 border border-slate-200 rounded text-slate-900 focus:outline-none focus:border-primary-600 font-mono text-xs font-semibold"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPass(!showConfirmPass)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200"
+                      title={showConfirmPass ? "Hide password" : "Show password"}
+                    >
+                      {showConfirmPass ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-100">
+                <button
+                  onClick={async () => {
+                    const cleanUsername = passwordForm.username.trim().toLowerCase();
+                    if (!cleanUsername) {
+                      showToast('Username cannot be empty');
+                      return;
+                    }
+                    if (passwordForm.newPass && passwordForm.newPass.length < 8) {
+                      showToast('New password must be at least 8 characters long');
+                      return;
+                    }
+                    if (passwordForm.newPass && passwordForm.newPass !== passwordForm.confirm) {
+                      showToast('Please enter matching new passwords');
+                      return;
+                    }
+
+                    try {
+                      const res = await fetch('http://localhost:5000/api/admin/admins/1/password', {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                          username: cleanUsername,
+                          password: passwordForm.newPass.trim() || undefined,
+                          currentPassword: passwordForm.current.trim() || undefined
+                        })
+                      });
+                      const data = await res.json();
+
+                      if (data.status === 'success' || res.ok) {
+                        showToast(data.message || 'Main Admin credentials updated successfully!');
+                        setPasswordForm({ username: cleanUsername, current: '', newPass: '', confirm: '' });
+                      } else {
+                        showToast(data.message || 'Error updating credentials');
+                      }
+                    } catch (e) {
+                      showToast('Error connecting to backend server');
+                    }
+                  }}
+                  className="w-full sm:w-auto px-4 py-2 bg-[#0B1727] hover:bg-slate-800 text-white font-bold text-xs rounded transition-colors cursor-pointer"
+                >
+                  Save Account Credentials
+                </button>
+
+                <button
+                  onClick={handleLogout}
+                  className="w-full sm:w-auto px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  <LogOut size={14} />
+                  <span>Logout</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="flex items-center justify-between pt-2">
+              <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded font-semibold">
+                🔒 Password changes & sub-admin accounts are managed by Main Admin.
+              </span>
+              <button
+                onClick={handleLogout}
+                className="px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                <LogOut size={14} />
+                <span>Logout</span>
+              </button>
             </div>
-
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">New Password</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={passwordForm.newPass}
-                onChange={(e) => setPasswordForm({ ...passwordForm, newPass: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded text-slate-900 focus:outline-none focus:border-primary-600"
-              />
-            </div>
-
-            <div>
-              <label className="block font-bold text-slate-700 mb-1">Confirm Password</label>
-              <input
-                type="password"
-                placeholder="••••••••"
-                value={passwordForm.confirm}
-                onChange={(e) => setPasswordForm({ ...passwordForm, confirm: e.target.value })}
-                className="w-full px-3.5 py-2.5 bg-slate-50/50 border border-slate-200 rounded text-slate-900 focus:outline-none focus:border-primary-600"
-              />
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-100">
-            <button
-              onClick={() => showToast('Password updated')}
-              className="w-full sm:w-auto px-4 py-2 bg-[#0B1727] hover:bg-slate-800 text-white font-bold text-xs rounded transition-colors cursor-pointer"
-            >
-              Update Password
-            </button>
-
-            <button
-              onClick={handleLogout}
-              className="w-full sm:w-auto px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 cursor-pointer"
-            >
-              <LogOut size={14} />
-              <span>Logout</span>
-            </button>
-          </div>
+          )}
         </div>
 
       </div>

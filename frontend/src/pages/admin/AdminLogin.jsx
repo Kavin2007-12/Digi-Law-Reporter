@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Shield, Key, ArrowRight, Eye, EyeOff, ArrowLeft } from 'lucide-react';
+import { Shield, Key, ArrowRight, Eye, EyeOff, ArrowLeft, X } from 'lucide-react';
 
 export default function AdminLogin() {
   const [email, setEmail] = useState('');
@@ -10,18 +10,73 @@ export default function AdminLogin() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Forgot Password Modal State
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMessage, setForgotMessage] = useState('');
+  const [forgotError, setForgotError] = useState('');
+
   const navigate = useNavigate();
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setLoading(true);
-    localStorage.setItem('adminAuth', 'true');
-    localStorage.setItem('adminToken', 'mock-admin-jwt-token');
-    localStorage.setItem('adminUser', JSON.stringify({ name: 'Admin User', role: 'Administrator' }));
-    setTimeout(() => {
+    setError('');
+
+    const cleanInput = email.trim().toLowerCase();
+
+    try {
+      const res = await fetch('http://localhost:5000/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: cleanInput, username: cleanInput, password })
+      });
+      const data = await res.json();
+      
+      if (data.status === 'success' && data.user) {
+        localStorage.setItem('adminAuth', 'true');
+        localStorage.setItem('adminToken', data.token || 'admin-jwt-token');
+        localStorage.setItem('adminRole', data.user.role || 'MAIN_ADMIN');
+        localStorage.setItem('adminUser', JSON.stringify(data.user));
+        setLoading(false);
+        navigate('/admin/dashboard');
+        return;
+      } else {
+        setError(data.message || 'Invalid email or password.');
+        setLoading(false);
+        return;
+      }
+    } catch (err) {
+      setError('Unable to connect to authentication server. Please try again.');
       setLoading(false);
-      navigate('/admin/dashboard');
-    }, 400);
+    }
+  };
+
+  const handleForgotPasswordSubmit = async (e) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotError('');
+    setForgotMessage('');
+
+    try {
+      const res = await fetch('http://localhost:5000/api/admin/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: forgotEmail.trim() })
+      });
+      const data = await res.json();
+      setForgotLoading(false);
+
+      if (data.status === 'success' || res.ok) {
+        setForgotMessage(data.message || 'If an account is eligible for password reset, a password reset link has been sent.');
+      } else {
+        setForgotError(data.message || 'Unable to process password reset request.');
+      }
+    } catch (err) {
+      setForgotLoading(false);
+      setForgotMessage('If an account is eligible for password reset, a password reset link has been sent.');
+    }
   };
 
   return (
@@ -67,17 +122,17 @@ export default function AdminLogin() {
             )}
             
             <div className="space-y-4">
-              {/* Admin Email */}
+              {/* Admin Username / Email */}
               <div>
-                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Admin Email</label>
+                <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Admin Username / Email</label>
                 <div className="relative">
                   <input 
-                    type="email" 
+                    type="text" 
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 pl-11 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 focus:bg-white transition-all placeholder:text-slate-400 font-medium text-sm"
-                    placeholder="admin@digilawreporter.in"
+                    placeholder="mainadmin or admin@digilawreporter.in"
                   />
                   <Shield size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
                 </div>
@@ -89,6 +144,7 @@ export default function AdminLogin() {
                   <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider ml-1">Password</label>
                   <button
                     type="button"
+                    onClick={() => { setShowForgotModal(true); setForgotEmail(email); setForgotMessage(''); setForgotError(''); }}
                     className="text-xs font-bold text-blue-600 hover:text-blue-700 hover:underline cursor-pointer"
                   >
                     Forgot Password?
@@ -135,6 +191,89 @@ export default function AdminLogin() {
         </div>
       </motion.div>
 
+      {/* Forgot Password Modal (Main Admin Only) */}
+      {showForgotModal && (
+        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <motion.div 
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-white rounded-3xl p-6 sm:p-8 max-w-md w-full shadow-2xl relative border border-slate-100 z-50"
+          >
+            <button 
+              onClick={() => { setShowForgotModal(false); setForgotMessage(''); setForgotError(''); }}
+              className="absolute top-5 right-5 p-1.5 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100 transition-colors cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl">
+                <Shield size={24} />
+              </div>
+              <div>
+                <h2 className="text-lg font-bold text-slate-900">Forgot Admin Password</h2>
+                <p className="text-xs text-slate-500">Main Admin Verification</p>
+              </div>
+            </div>
+
+            {forgotMessage ? (
+              <div className="space-y-4 my-4">
+                <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-emerald-800 text-xs sm:text-sm leading-relaxed font-medium">
+                  {forgotMessage}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowForgotModal(false)}
+                  className="w-full bg-slate-900 text-white rounded-xl py-3 font-semibold text-sm hover:bg-slate-800 transition-colors cursor-pointer"
+                >
+                  Return to Login
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleForgotPasswordSubmit} className="space-y-4 mt-4">
+                {forgotError && (
+                  <div className="p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-medium">
+                    {forgotError}
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                    Main Admin Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="admin@digilawreporter.in"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3.5 text-slate-800 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 text-sm font-medium"
+                  />
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotModal(false)}
+                    className="flex-1 bg-slate-100 text-slate-700 rounded-xl py-3 font-semibold text-sm hover:bg-slate-200 transition-colors cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={forgotLoading}
+                    className="flex-1 bg-blue-600 text-white rounded-xl py-3 font-semibold text-sm hover:bg-blue-700 transition-colors disabled:opacity-50 cursor-pointer"
+                  >
+                    {forgotLoading ? 'Verifying...' : 'Send Reset Link'}
+                  </button>
+                </div>
+              </form>
+            )}
+          </motion.div>
+        </div>
+      )}
+
     </div>
   );
 }
+

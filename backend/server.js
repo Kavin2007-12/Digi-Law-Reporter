@@ -15,6 +15,8 @@ import caseRoutes from './routes/caseRoutes.js';
 import logger from './utils/logger.js';
 import pool from './config/db.js'; // Ensures DB connection is initialized
 
+import { seedMainAdmin } from './utils/seedMainAdmin.js';
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -43,7 +45,8 @@ app.use('/api/search', searchRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/cases', caseRoutes);
 
-// Start Server
-app.listen(PORT, () => {
+// Start Server & Seed Main Admin
+app.listen(PORT, async () => {
   logger.info(`🚀 Server is running on port ${PORT}`);
+  await seedMainAdmin();
 });

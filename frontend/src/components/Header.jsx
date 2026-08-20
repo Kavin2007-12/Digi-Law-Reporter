@@ -53,10 +53,10 @@ export default function Header() {
                      <Link
                        key={item.path}
                        to={item.path}
-                       className={`relative text-sm transition-colors py-1 ${
+                       className={`relative text-sm transition-colors py-1 border-b-2 ${
                          isActive 
-                           ? 'text-primary-700 font-bold border-b-2 border-primary-600' 
-                           : 'text-slate-700 font-semibold hover:text-primary-600'
+                           ? 'text-primary-700 font-bold border-primary-600' 
+                           : 'text-slate-700 font-semibold border-transparent hover:text-primary-600 hover:border-primary-400/30'
                        }`}
                      >
                        {item.label}
@@ -76,7 +76,7 @@ export default function Header() {
                       className="flex items-center gap-2.5 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200/90 px-3.5 py-1.5 rounded-2xl transition-all shadow-2xs group cursor-pointer"
                       title={`Logged in as ${user.name || 'User'} - Click to open Search Portal`}
                     >
-                      <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                      <div className="w-7 h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
                         {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                       </div>
                       <span className="text-blue-700 group-hover:text-blue-800 font-bold text-xs md:text-sm capitalize">
@@ -84,8 +84,8 @@ export default function Header() {
                       </span>
                     </Link>
 
-                    {/* 2. Distinct Search Portal Box (Hidden when already on Search Portal) */}
-                    {!location.pathname.startsWith('/search') && (
+                    {/* 2. Distinct Search Portal Box (Hidden ONLY on /search page) */}
+                    {location.pathname !== '/search' && (
                       <Link 
                         to="/search" 
                         className="flex items-center gap-2 bg-blue-100/90 hover:bg-blue-200/90 border border-blue-200/90 text-blue-700 px-3.5 py-1.5 rounded-2xl transition-all shadow-2xs group cursor-pointer"

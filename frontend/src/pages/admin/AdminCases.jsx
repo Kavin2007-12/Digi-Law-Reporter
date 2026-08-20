@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Search, ChevronLeft, ChevronRight, AlertTriangle, Eye, Edit3, Trash2 } from 'lucide-react';
 import { API_BASE_URL } from '../../config/api';
@@ -36,6 +36,14 @@ export default function AdminCases() {
 
   const itemsPerPage = 8;
 
+  // Extract unique courts dynamically from database case records
+  const availableCourts = useMemo(() => {
+    const courts = casesList
+      .map(c => (c.court || c.court_name || '').trim())
+      .filter(Boolean);
+    return Array.from(new Set(courts)).sort();
+  }, [casesList]);
+
   // Fetch Cases from Backend API
   const fetchCases = async () => {
     setLoading(true);
@@ -50,7 +58,7 @@ export default function AdminCases() {
           title: c.title || '',
           petitioner: c.petitioner || '',
           respondent: c.respondent || '',
-          court: c.court || 'Supreme Court of India',
+          court: c.court || c.court_name || 'Supreme Court of India',
           judgmentDate: c.judgment_date ? new Date(c.judgment_date).toISOString().split('T')[0] : '',
           year: c.year || '',
           status: c.status || 'Published',
@@ -80,9 +88,21 @@ export default function AdminCases() {
     
     const matchesStatus = !selectedStatus || c.status === selectedStatus;
     const matchesYear = !selectedYear || String(c.year) === String(selectedYear);
+    
+    const matchesMonth = (() => {
+      if (!selectedMonth) return true;
+      if (!c.judgmentDate) return false;
+      const dateStr = String(c.judgmentDate);
+      const monthPart = dateStr.includes('-') 
+        ? dateStr.split('-')[1].padStart(2, '0')
+        : String(new Date(dateStr).getMonth() + 1).padStart(2, '0');
+
+      return monthPart === selectedMonth;
+    })();
+
     const matchesCourt = !selectedCourt || c.court === selectedCourt;
 
-    return matchesSearch && matchesStatus && matchesYear && matchesCourt;
+    return matchesSearch && matchesStatus && matchesYear && matchesMonth && matchesCourt;
   });
 
   const totalPages = Math.ceil(filteredCases.length / itemsPerPage) || 1;
@@ -92,9 +112,10 @@ export default function AdminCases() {
     if (deleteModalCase) {
       try {
         await fetch(`${API_BASE_URL}/cases/${deleteModalCase.id}`, { method: 'DELETE' });
+        // Permanently filter out deleted case
         setCasesList(prev => prev.filter(c => c.id !== deleteModalCase.id));
       } catch (err) {
-        console.error('Error deleting case:', err);
+        console.error('Error permanently deleting case:', err);
       } finally {
         setDeleteModalCase(null);
       }
@@ -184,10 +205,9 @@ export default function AdminCases() {
             className="w-full px-3 py-2 bg-slate-50/50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:outline-none focus:border-primary-600 cursor-pointer"
           >
             <option value="">All Courts</option>
-            <option value="Supreme Court of India">Supreme Court of India</option>
-            <option value="Delhi High Court">Delhi High Court</option>
-            <option value="Bombay High Court">Bombay High Court</option>
-            <option value="Madras High Court">Madras High Court</option>
+            {availableCourts.map((courtName) => (
+              <option key={courtName} value={courtName}>{courtName}</option>
+            ))}
           </select>
 
         </div>
@@ -202,55 +222,55 @@ export default function AdminCases() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-left border-collapse text-xs table-fixed">
               <thead>
-                <tr className="bg-slate-50/80 border-b border-slate-200 text-slate-600 font-extrabold uppercase tracking-wider">
-                  <th className="py-3.5 px-4 w-12 text-center">S.No</th>
-                  <th className="py-3.5 px-4 font-bold">Case Details</th>
-                  <th className="py-3.5 px-4 font-bold">Citation</th>
-                  <th className="py-3.5 px-4 font-bold">Court</th>
-                  <th className="py-3.5 px-4 font-bold">Date</th>
-                  <th className="py-3.5 px-4 font-bold">Status</th>
-                  <th className="py-3.5 px-4 font-bold text-right">Actions</th>
+                <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 font-extrabold uppercase tracking-wider text-[11px]">
+                  <th className="py-3 px-4 w-12 text-center">#</th>
+                  <th className="py-3 px-4 w-48">Case Number</th>
+                  <th className="py-3 px-4 w-64">Case Title</th>
+                  <th className="py-3 px-4 w-40">Citation</th>
+                  <th className="py-3 px-4 w-44">Court</th>
+                  <th className="py-3 px-4 w-28">Date</th>
+                  <th className="py-3 px-4 w-24">Status</th>
+                  <th className="py-3 px-4 w-28 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
                 {paginatedCases.length === 0 ? (
                   <tr>
-                    <td colSpan="7" className="py-12 text-center text-slate-400 font-medium">
-                      No case records found. Click "+ Add New Case" to create your first legal precedent.
+                    <td colSpan="8" className="py-14 text-center text-slate-400 font-medium text-xs">
+                      No case records found in database. Click "+ Add New Case" to create your first precedent.
                     </td>
                   </tr>
                 ) : (
                   paginatedCases.map((c, idx) => (
-                    <tr key={c.id} className="hover:bg-slate-50/60 transition-colors">
-                      <td className="py-3.5 px-4 text-center font-extrabold text-slate-400">
+                    <tr key={c.id} className="hover:bg-slate-50/80 transition-colors">
+                      <td className="py-3.5 px-4 text-center font-bold text-slate-400">
                         {(currentPage - 1) * itemsPerPage + idx + 1}
                       </td>
 
-                      <td className="py-3.5 px-4 space-y-0.5 max-w-xs">
-                        <div className="font-bold text-slate-900 line-clamp-1 hover:text-primary-600 transition-colors">
-                          {c.title}
-                        </div>
-                        <div className="text-[11px] text-slate-500 font-mono">
-                          {c.caseNumber}
-                        </div>
+                      <td className="py-3.5 px-4 font-mono text-xs font-bold text-slate-800 truncate" title={c.caseNumber || ''}>
+                        {c.caseNumber || '—'}
                       </td>
 
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-800">
-                        {c.citation}
+                      <td className="py-3.5 px-4 font-bold text-[#0B1727] text-xs truncate" title={c.title || ''}>
+                        {c.title}
                       </td>
 
-                      <td className="py-3.5 px-4 font-medium text-slate-700">
-                        {c.court}
+                      <td className="py-3.5 px-4 font-mono font-bold text-primary-700 text-xs truncate" title={c.citation || ''}>
+                        {c.citation || '—'}
                       </td>
 
-                      <td className="py-3.5 px-4 font-medium text-slate-600">
-                        {c.judgmentDate}
+                      <td className="py-3.5 px-4 font-medium text-slate-700 text-xs truncate" title={c.court || 'Supreme Court of India'}>
+                        {c.court || 'Supreme Court of India'}
+                      </td>
+
+                      <td className="py-3.5 px-4 font-medium text-slate-500 text-xs whitespace-nowrap">
+                        {c.judgmentDate || '—'}
                       </td>
 
                       <td className="py-3.5 px-4">
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold ${
                           c.status === 'Published' 
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' 
                             : 'bg-amber-50 text-amber-700 border border-amber-200'
@@ -263,7 +283,7 @@ export default function AdminCases() {
                         <div className="flex items-center justify-end gap-1">
                           <Link
                             to={`/judgment/${c.id}`}
-                            className="p-1.5 text-slate-400 hover:text-blue-600 rounded-md hover:bg-blue-50 transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-md transition-colors"
                             title="View Judgment"
                           >
                             <Eye size={15} />
@@ -271,7 +291,7 @@ export default function AdminCases() {
 
                           <Link
                             to={`/admin/cases/edit/${c.id}`}
-                            className="p-1.5 text-slate-400 hover:text-amber-600 rounded-md hover:bg-amber-50 transition-colors"
+                            className="p-1.5 text-slate-400 hover:text-amber-600 hover:bg-amber-50 rounded-md transition-colors"
                             title="Edit Case"
                           >
                             <Edit3 size={15} />
@@ -280,7 +300,7 @@ export default function AdminCases() {
                           <button
                             type="button"
                             onClick={() => setDeleteModalCase(c)}
-                            className="p-1.5 text-slate-400 hover:text-red-600 rounded-md hover:bg-red-50 transition-colors cursor-pointer"
+                            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors cursor-pointer"
                             title="Delete Case"
                           >
                             <Trash2 size={15} />

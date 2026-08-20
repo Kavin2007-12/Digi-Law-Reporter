@@ -90,7 +90,7 @@ export default function PlatformStats() {
                 <div>
                   {/* Top Row: Icon Badge & Feature Tag */}
                   <div className="flex items-center justify-between gap-4 mb-5">
-                    <div className="w-12 h-12 rounded-2xl bg-primary-600 text-white flex items-center justify-center shrink-0 shadow-md group-hover:scale-110 group-hover:bg-[#D4AF37] group-hover:text-[#0A1128] transition-all duration-300">
+                    <div className="w-12 h-12 rounded-2xl bg-primary-600 text-white flex items-center justify-center shrink-0 shadow-md group-hover:bg-[#D4AF37] group-hover:text-[#0A1128] transition-all duration-300">
                       {item.icon}
                     </div>
                     <span className="text-[10px] font-extrabold tracking-widest text-primary-700 bg-primary-50 border border-primary-100 px-3 py-1 rounded-full uppercase">
@@ -126,7 +126,7 @@ export default function PlatformStats() {
                 <div>
                   {/* Top Row: Icon Badge & Feature Tag */}
                   <div className="flex items-center justify-between gap-4 mb-5">
-                    <div className="w-12 h-12 rounded-2xl bg-[#0A1128] text-[#D4AF37] flex items-center justify-center shrink-0 shadow-md group-hover:scale-110 group-hover:bg-primary-600 group-hover:text-white transition-all duration-300">
+                    <div className="w-12 h-12 rounded-2xl bg-[#0A1128] text-[#D4AF37] flex items-center justify-center shrink-0 shadow-md group-hover:bg-primary-600 group-hover:text-white transition-all duration-300">
                       {item.icon}
                     </div>
                     <span className="text-[10px] font-extrabold tracking-widest text-slate-700 bg-slate-100 border border-slate-200 px-3 py-1 rounded-full uppercase">

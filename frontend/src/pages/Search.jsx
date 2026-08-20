@@ -57,9 +57,8 @@ export default function SearchDashboard() {
                 bg-gradient-to-br ${tile.color}
                 flex flex-col items-center justify-center p-3.5 sm:p-4 text-center
                 min-h-[110px] sm:min-h-[125px] md:min-h-[135px]
-                border border-white/20 transition-all duration-300 transform hover:-translate-y-1
+                border border-white/20 transition-all duration-300
               `}
-              whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
               {/* Subtle glow effect on hover */}

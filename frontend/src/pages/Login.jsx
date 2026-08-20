@@ -57,28 +57,29 @@ export default function Login() {
       localStorage.setItem('user', JSON.stringify(userData));
     } finally {
       setLoading(false);
-      navigate('/search');
       window.location.href = '/search';
     }
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center p-4 sm:p-6 pb-20 md:pb-4 w-full h-full min-h-[calc(100vh-80px)] font-jakarta">
+    <div className="flex-1 flex items-center justify-center p-4 sm:p-6 pb-20 md:pb-4 w-full h-full min-h-[calc(100vh-80px)] font-jakarta relative">
+      
+      {/* Top Left Corner Back to Home Button (Matching User Screenshot) */}
+      <button 
+        onClick={() => navigate('/')} 
+        className="absolute top-4 left-4 sm:top-6 sm:left-6 inline-flex items-center gap-2 px-4 py-2 bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-700 font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer z-30"
+        title="Back to Home"
+      >
+        <ArrowLeft size={14} />
+        <span>Back to Home</span>
+      </button>
+
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden relative"
       >
-        {/* Back Button */}
-        <button 
-          onClick={() => navigate('/')} 
-          className="absolute top-5 left-5 p-2 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-full transition-all"
-          title="Back to Home"
-        >
-          <ArrowLeft size={20} />
-        </button>
-
-        <div className="p-8 md:p-10 pt-12">
+        <div className="p-8 md:p-10 pt-10">
           
           {/* Header */}
           <div className="text-center mb-8">

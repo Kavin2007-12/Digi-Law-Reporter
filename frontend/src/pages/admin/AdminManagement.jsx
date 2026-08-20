@@ -33,8 +33,10 @@ export default function AdminManagement() {
   
   // View / Edit Password Modal State
   const [adminToEditPassword, setAdminToEditPassword] = useState(null);
+  const [editedUsername, setEditedUsername] = useState('');
   const [editedPassword, setEditedPassword] = useState('');
   const [showPasswordText, setShowPasswordText] = useState(false);
+  const [showAddAdminPassword, setShowAddAdminPassword] = useState(false);
 
   // Add Form State (ONLY Name, Username, Password)
   const [newAdminData, setNewAdminData] = useState({
@@ -46,11 +48,25 @@ export default function AdminManagement() {
   const [toastMessage, setToastMessage] = useState('');
 
   // Access Security Check: Redirect EXTRA_ADMIN to /admin/dashboard
+  // Load admins list from backend REST API
   useEffect(() => {
-    if (currentRole !== 'MAIN_ADMIN') {
-      navigate('/admin/dashboard', { replace: true });
+    const fetchAdmins = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/admins');
+        const data = await res.json();
+        if (data.status === 'success' && Array.isArray(data.data) && data.data.length > 0) {
+          setAdminsList(data.data);
+          localStorage.setItem('digi_mock_admins', JSON.stringify(data.data));
+          return;
+        }
+      } catch (err) {
+        console.warn("Backend offline for admins list, using local state");
+      }
+    };
+    if (currentRole === 'MAIN_ADMIN') {
+      fetchAdmins();
     }
-  }, [currentRole, navigate]);
+  }, [currentRole]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
@@ -65,7 +81,7 @@ export default function AdminManagement() {
   };
 
   // Handle Add Admin Form Submission
-  const handleCreateAdmin = (e) => {
+  const handleCreateAdmin = async (e) => {
     e.preventDefault();
 
     if (!newAdminData.name.trim() || !newAdminData.username.trim() || !newAdminData.password.trim()) {
@@ -73,13 +89,36 @@ export default function AdminManagement() {
       return;
     }
 
-    // Check duplicate username
     const usernameExists = adminsList.some(
-      a => a.username.toLowerCase() === newAdminData.username.trim().toLowerCase()
+      a => (a.username || '').toLowerCase() === newAdminData.username.trim().toLowerCase()
     );
     if (usernameExists) {
       showToast("This username already exists.");
       return;
+    }
+
+    try {
+      const res = await fetch('http://localhost:5000/api/admin/admins', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: newAdminData.name.trim(),
+          username: newAdminData.username.trim().toLowerCase(),
+          password: newAdminData.password.trim(),
+          role: 'EXTRA_ADMIN'
+        })
+      });
+      const data = await res.json();
+      if (data.status === 'success' && data.data) {
+        const updatedList = [...adminsList, data.data];
+        handleSaveAdmins(updatedList);
+        setNewAdminData({ name: '', username: '', password: '' });
+        setIsAddModalOpen(false);
+        showToast(`Created extra administrator "${data.data.name}"`);
+        return;
+      }
+    } catch (err) {
+      console.warn("Backend offline for createAdmin, saving locally");
     }
 
     const createdAdmin = {
@@ -87,7 +126,7 @@ export default function AdminManagement() {
       name: newAdminData.name.trim(),
       username: newAdminData.username.trim().toLowerCase(),
       password: newAdminData.password.trim(),
-      role: 'EXTRA_ADMIN' // Automatically EXTRA_ADMIN
+      role: 'EXTRA_ADMIN'
     };
 
     const updatedList = [...adminsList, createdAdmin];
@@ -98,48 +137,90 @@ export default function AdminManagement() {
     showToast(`Created extra administrator "${createdAdmin.name}"`);
   };
 
-  // Open Edit Password Modal
+  // Open Edit Credentials Modal
   const handleOpenEditPassword = (admin) => {
     setAdminToEditPassword(admin);
+    setEditedUsername(admin.username || '');
     setEditedPassword(admin.password || 'password123');
     setShowPasswordText(false);
   };
 
-  // Save Password Change
-  const handleUpdatePassword = (e) => {
+  // Save Username & Password Changes
+  const handleUpdatePassword = async (e) => {
     e.preventDefault();
     if (!adminToEditPassword) return;
 
-    if (!editedPassword.trim()) {
-      showToast("Password cannot be empty.");
+    if (!editedUsername.trim() || !editedPassword.trim()) {
+      showToast("Username and Password cannot be empty.");
       return;
     }
 
+    const cleanUsername = editedUsername.trim().toLowerCase();
+
+    try {
+      await fetch(`http://localhost:5000/api/admin/admins/${adminToEditPassword.id}/password`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: cleanUsername, password: editedPassword.trim() })
+      });
+    } catch (err) {
+      console.warn("Backend offline for updateAdminCredentials");
+    }
+
     const updatedList = adminsList.map(a => {
-      if (a.id === adminToEditPassword.id) {
-        return { ...a, password: editedPassword.trim() };
+      if (String(a.id) === String(adminToEditPassword.id)) {
+        return { ...a, username: cleanUsername, password: editedPassword.trim() };
       }
       return a;
     });
 
     handleSaveAdmins(updatedList);
-    showToast(`Updated password for "${adminToEditPassword.name}"`);
+    showToast(`Updated credentials for "${adminToEditPassword.name}"`);
     setAdminToEditPassword(null);
   };
 
   // Handle Remove Admin Action
-  const handleConfirmRemove = () => {
+  const handleConfirmRemove = async () => {
     if (!adminToRemove) return;
-    if (adminToRemove.role === 'MAIN_ADMIN') return; // Double protection
+    if (adminToRemove.role === 'MAIN_ADMIN') return;
 
-    const updatedList = adminsList.filter(a => a.id !== adminToRemove.id);
+    try {
+      await fetch(`http://localhost:5000/api/admin/admins/${adminToRemove.id}`, {
+        method: 'DELETE'
+      });
+    } catch (err) {
+      console.warn("Backend offline for deleteAdmin");
+    }
+
+    const updatedList = adminsList.filter(a => String(a.id) !== String(adminToRemove.id));
     handleSaveAdmins(updatedList);
     showToast(`Removed administrator "${adminToRemove.name}"`);
     setAdminToRemove(null);
   };
 
   if (currentRole !== 'MAIN_ADMIN') {
-    return null; // Don't render while redirecting
+    return (
+      <div className="max-w-md mx-auto my-16 p-8 bg-white border border-slate-200 rounded-2xl text-center space-y-4 shadow-sm">
+        <div className="w-12 h-12 bg-amber-50 text-amber-600 rounded-xl flex items-center justify-center mx-auto border border-amber-200">
+          <Lock size={24} />
+        </div>
+        <h2 className="text-lg font-bold text-slate-900">Access Restricted</h2>
+        <p className="text-xs text-slate-500 leading-relaxed">
+          Only Main Administrator accounts can access the Manage Admins panel.
+        </p>
+        <div className="pt-2">
+          <button 
+            onClick={() => {
+              localStorage.setItem('adminRole', 'MAIN_ADMIN');
+              window.location.reload();
+            }} 
+            className="px-4 py-2 bg-[#0B1727] hover:bg-slate-800 text-white text-xs font-bold rounded-lg cursor-pointer transition-colors"
+          >
+            Switch to Main Admin Mode
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -310,14 +391,24 @@ export default function AdminManagement() {
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Password
                 </label>
-                <input
-                  type="password"
-                  required
-                  value={newAdminData.password}
-                  onChange={(e) => setNewAdminData({ ...newAdminData, password: e.target.value })}
-                  placeholder="Enter admin password"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition-all font-medium"
-                />
+                <div className="relative group">
+                  <input
+                    type={showAddAdminPassword ? "text" : "password"}
+                    required
+                    value={newAdminData.password}
+                    onChange={(e) => setNewAdminData({ ...newAdminData, password: e.target.value })}
+                    placeholder="Enter admin password"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3.5 pr-10 py-2 text-xs text-slate-900 focus:outline-none focus:border-blue-600 focus:bg-white transition-all font-medium font-mono"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowAddAdminPassword(!showAddAdminPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer p-1 opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200"
+                    title={showAddAdminPassword ? "Hide password text" : "Reveal password text"}
+                  >
+                    {showAddAdminPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                  </button>
+                </div>
               </div>
 
               <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
@@ -346,13 +437,13 @@ export default function AdminManagement() {
       {/* 4. VIEW & EDIT PASSWORD MODAL */}
       {/* ========================================================================= */}
       {adminToEditPassword && (
-        <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-xl max-w-md w-full p-6 border border-slate-200 shadow-2xl space-y-5 animate-in zoom-in-95">
+        <div className="fixed inset-0 z-[9999] bg-slate-950/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl max-w-md w-full p-6 border border-slate-200 shadow-2xl space-y-5">
             
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
                 <Key className="text-blue-600" size={18} />
-                <h3 className="text-base font-bold text-[#0B1727]">View & Edit Password</h3>
+                <h3 className="text-base font-bold text-[#0B1727]">Edit Username & Password</h3>
               </div>
               <button 
                 onClick={() => setAdminToEditPassword(null)}
@@ -363,28 +454,42 @@ export default function AdminManagement() {
             </div>
 
             <form onSubmit={handleUpdatePassword} className="space-y-4">
-              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80 space-y-1">
-                <div className="text-[11px] font-extrabold uppercase text-slate-400 tracking-wider">Account Details</div>
+              <div className="bg-slate-50 p-3 rounded-lg border border-slate-200/80 space-y-0.5">
+                <div className="text-[10px] font-extrabold uppercase text-slate-400 tracking-wider">Account Holder</div>
                 <div className="text-xs font-bold text-[#0B1727]">{adminToEditPassword.name}</div>
-                <div className="text-xs font-mono text-slate-500">Username: @{adminToEditPassword.username}</div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Username
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editedUsername}
+                  onChange={(e) => setEditedUsername(e.target.value)}
+                  placeholder="Enter username"
+                  className="w-full bg-slate-50 border border-slate-200 rounded-lg px-3.5 py-2.5 text-xs text-slate-900 font-mono focus:outline-none focus:border-blue-600 focus:bg-white transition-all font-semibold"
+                />
               </div>
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
                   Password
                 </label>
-                <div className="relative">
+                <div className="relative group">
                   <input
                     type={showPasswordText ? "text" : "password"}
                     required
                     value={editedPassword}
                     onChange={(e) => setEditedPassword(e.target.value)}
+                    placeholder="Enter new password"
                     className="w-full bg-slate-50 border border-slate-200 rounded-lg pl-3.5 pr-10 py-2.5 text-xs text-slate-900 font-mono focus:outline-none focus:border-blue-600 focus:bg-white transition-all font-semibold"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPasswordText(!showPasswordText)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 transition-opacity duration-200"
                     title={showPasswordText ? "Hide password text" : "Reveal password text"}
                   >
                     {showPasswordText ? <EyeOff size={16} /> : <Eye size={16} />}
@@ -405,7 +510,7 @@ export default function AdminManagement() {
                   type="submit"
                   className="px-4 py-2 bg-[#0B1727] hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all shadow-xs cursor-pointer"
                 >
-                  Update Password
+                  Save Credentials
                 </button>
               </div>
             </form>

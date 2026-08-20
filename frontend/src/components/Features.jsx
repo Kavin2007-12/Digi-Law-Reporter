@@ -140,7 +140,7 @@ export default function Features() {
                   onClick={() => setActiveFeature(idx)}
                   className={`w-full text-left p-4 rounded-2xl transition-all duration-300 flex items-center justify-between group border ${
                     isActive 
-                      ? 'bg-white border-primary-300 shadow-lg scale-[1.02]' 
+                      ? 'bg-white border-primary-300 shadow-lg' 
                       : 'bg-white/60 border-slate-200/80 hover:bg-white hover:border-slate-300'
                   }`}
                 >

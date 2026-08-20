@@ -1,5 +1,5 @@
 import { 
-  getAllCasesFromDb, createCaseInDb, updateCaseInDb, 
+  getAllCasesFromDb, getCaseByIdFromDb, createCaseInDb, updateCaseInDb, 
   deleteCaseFromDb, updateCaseStatusInDb 
 } from '../repositories/caseRepository.js';
 import logger from '../utils/logger.js';
@@ -12,6 +12,21 @@ export const getCases = async (req, res) => {
   } catch (error) {
     logger.error('Failed to fetch cases:', error);
     res.status(500).json({ success: false, message: 'Server error fetching cases' });
+  }
+};
+
+// GET /api/cases/:id
+export const getCaseById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const caseItem = await getCaseByIdFromDb(id);
+    if (!caseItem) {
+      return res.status(404).json({ success: false, message: 'Case record not found' });
+    }
+    res.json({ success: true, data: caseItem });
+  } catch (error) {
+    logger.error(`Failed to fetch case ID ${req.params.id}:`, error);
+    res.status(500).json({ success: false, message: 'Server error fetching case' });
   }
 };
 
@@ -41,7 +56,7 @@ export const updateCase = async (req, res) => {
   }
 };
 
-// DELETE /api/cases/:id
+// DELETE /api/cases/:id -> Permanently deletes case record
 export const deleteCase = async (req, res) => {
   try {
     const { id } = req.params;
@@ -49,7 +64,7 @@ export const deleteCase = async (req, res) => {
     if (!deletedCase) {
       return res.status(404).json({ success: false, message: 'Case record not found' });
     }
-    res.json({ success: true, message: 'Case deleted successfully' });
+    res.json({ success: true, message: 'Case deleted permanently successfully', data: deletedCase });
   } catch (error) {
     logger.error(`Failed to delete case ID ${req.params.id}:`, error);
     res.status(500).json({ success: false, message: 'Server error deleting case' });

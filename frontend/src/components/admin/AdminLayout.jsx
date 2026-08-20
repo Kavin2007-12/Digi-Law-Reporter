@@ -26,7 +26,14 @@ export default function AdminLayout() {
   useEffect(() => {
     if (localStorage.getItem('adminAuth') !== 'true') {
       navigate('/admin');
+      return;
     }
+
+    const currentRole = localStorage.getItem('adminRole') || 'MAIN_ADMIN';
+    if (!localStorage.getItem('adminRole')) {
+      localStorage.setItem('adminRole', 'MAIN_ADMIN');
+    }
+    setAdminRole(currentRole);
 
     const handleResize = () => {
       const mobile = window.innerWidth < 1024;

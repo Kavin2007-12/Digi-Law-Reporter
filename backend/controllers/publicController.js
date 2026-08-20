@@ -18,7 +18,8 @@ export const getHomeData = async (req, res) => {
 // GET /api/public/search
 export const searchJudgments = async (req, res) => {
   try {
-    const results = await searchCasesFromDb(req.query);
+    const keyword = req.query.keyword || req.query.q || '';
+    const results = await searchCasesFromDb({ ...req.query, keyword });
     res.json({
       success: true,
       count: results.length,

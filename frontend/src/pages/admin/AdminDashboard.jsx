@@ -195,16 +195,16 @@ export default function AdminDashboard() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs table-fixed">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/50 text-slate-400 font-extrabold uppercase tracking-wider text-[10px]">
                   <th className="py-3 px-4 w-12 text-center">S.No</th>
-                  <th className="py-3 px-4">Case Details</th>
-                  <th className="py-3 px-4">Citation</th>
-                  <th className="py-3 px-4">Court</th>
-                  <th className="py-3 px-4">Date</th>
-                  <th className="py-3 px-4">Status</th>
-                  <th className="py-3 px-4 text-right">Action</th>
+                  <th className="py-3 px-4 w-64">Case Details</th>
+                  <th className="py-3 px-4 w-40">Citation</th>
+                  <th className="py-3 px-4 w-40">Court</th>
+                  <th className="py-3 px-4 w-28">Date</th>
+                  <th className="py-3 px-4 w-24">Status</th>
+                  <th className="py-3 px-4 w-20 text-right">Action</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
@@ -213,16 +213,16 @@ export default function AdminDashboard() {
                     <td className="py-3.5 px-4 text-center font-bold text-slate-400">
                       {idx + 1}
                     </td>
-                    <td className="py-3.5 px-4 font-bold text-slate-900">
+                    <td className="py-3.5 px-4 font-bold text-slate-900 truncate" title={c.title || ''}>
                       {c.title}
                     </td>
-                    <td className="py-3.5 px-4 font-mono font-bold text-slate-800">
+                    <td className="py-3.5 px-4 font-mono font-bold text-slate-800 truncate" title={c.citation || ''}>
                       {c.citation}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-600">
+                    <td className="py-3.5 px-4 text-slate-600 truncate" title={c.court || ''}>
                       {c.court}
                     </td>
-                    <td className="py-3.5 px-4 text-slate-500">
+                    <td className="py-3.5 px-4 text-slate-500 whitespace-nowrap">
                       {c.judgmentDate}
                     </td>
                     <td className="py-3.5 px-4">
