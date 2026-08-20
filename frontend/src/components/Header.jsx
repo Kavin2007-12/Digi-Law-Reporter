@@ -114,17 +114,6 @@ export default function Header() {
                      <User size={16} className="text-primary-600" />
                      <span>Login</span>
                    </Link>
-                    <button 
-                      onClick={() => {
-                        localStorage.setItem('adminAuth', 'true');
-                        navigate('/admin/dashboard');
-                      }}
-                      className="bg-primary-600 hover:bg-primary-700 text-white px-4 py-2 rounded-lg text-sm font-semibold flex items-center gap-2 transition-all shadow-md hover:shadow-primary-500/25 cursor-pointer"
-                      title="Open Admin Dashboard"
-                    >
-                      <Shield size={16} className="text-white" />
-                      <span>Admin</span>
-                    </button>
                  </div>
                )
              )}
