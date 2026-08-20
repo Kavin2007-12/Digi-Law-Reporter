@@ -312,7 +312,8 @@ export const buildVectorLegalPDF = async (caseItem) => {
       doc.setFont("times", "normal");
       doc.setFontSize(10.5);
       const lines = doc.splitTextToSize(para, contentWidth - 0.4);
-      for (const line of lines) {
+      for (let lIdx = 0; lIdx < lines.length; lIdx++) {
+        const line = lines[lIdx];
         if (!line || !line.trim()) continue;
         if (innerY > maxY - 0.2) {
           doc.addPage();
@@ -322,7 +323,13 @@ export const buildVectorLegalPDF = async (caseItem) => {
         doc.setFont("times", "normal");
         doc.setFontSize(10.5);
         doc.setTextColor(30, 41, 59);
-        doc.text(line.trim(), margin + 0.2, innerY);
+
+        const isLastLine = lIdx === lines.length - 1;
+        if (!isLastLine && line.trim().indexOf(' ') > 0) {
+          doc.text(line.trim(), margin + 0.2, innerY, { align: 'justify', maxWidth: contentWidth - 0.4 });
+        } else {
+          doc.text(line.trim(), margin + 0.2, innerY);
+        }
         innerY += 0.2;
       }
       innerY += 0.08;

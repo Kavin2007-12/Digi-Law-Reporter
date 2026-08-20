@@ -144,6 +144,17 @@ export default function UniversalLegalDocument({
       id="printable-judgment-document" 
       className="max-w-3xl mx-auto bg-white border border-slate-300/90 shadow-xs p-6 sm:p-10 space-y-6 font-lora text-slate-950 pb-6 select-text rounded-sm print:p-0 print:m-0 print:border-none print:shadow-none print:pb-0"
     >
+      {/* Force Automatic Text Justification on all paragraphs & list items */}
+      <style>{`
+        #printable-judgment-document p,
+        #printable-judgment-document li,
+        #printable-judgment-document div.prose,
+        #printable-judgment-document div.prose p,
+        #printable-judgment-document div.prose li {
+          text-align: justify !important;
+          text-justify: inter-word !important;
+        }
+      `}</style>
       
       {/* 1. COMPACT SCC TOP CITATION HEADER */}
       <div className="flex items-center justify-between border-b border-slate-900 pb-2 font-lora text-xs no-print-border">
