@@ -81,12 +81,12 @@ export default function About() {
               className="bg-white border border-slate-200/90 rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all duration-300 flex flex-col md:flex-row group"
             >
               {/* Compact Advocate Portrait Container */}
-              <div className="md:w-4/12 relative bg-slate-900 shrink-0 overflow-hidden flex flex-col items-center justify-center min-h-[160px] md:min-h-[180px] p-4 text-center">
+              <div className="md:w-4/12 relative bg-slate-900 shrink-0 overflow-hidden flex flex-col items-center justify-center min-h-[180px] md:min-h-[180px] p-2 md:p-4 text-center">
                 {lawyer.image ? (
                   <img 
                     src={lawyer.image} 
                     alt={lawyer.name} 
-                    className="w-full h-44 md:h-full object-cover object-top group-hover:scale-105 transition-transform duration-500"
+                    className="w-full max-h-64 md:h-full object-contain md:object-cover object-center md:object-top group-hover:scale-105 transition-transform duration-500"
                     onError={(e) => { e.target.style.display = 'none'; }}
                   />
                 ) : (
