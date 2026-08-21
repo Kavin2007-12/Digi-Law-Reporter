@@ -688,7 +688,13 @@ export default function SearchResults() {
                 return (
                   <div 
                     key={item.id} 
-                    onClick={() => setSelectedCase(item)}
+                    onClick={() => {
+                      setSelectedCase(item);
+                      if (window.innerWidth < 1024) {
+                        const elem = document.getElementById('case-details-workspace');
+                        if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
                     className={`p-3 cursor-pointer transition-all duration-150 ${
                       isSelected 
                         ? 'bg-blue-50/90 border-l-4 border-l-blue-700 shadow-2xs' 
@@ -727,11 +733,24 @@ export default function SearchResults() {
                       dangerouslySetInnerHTML={getHighlightedSnippet(item.content || item.head_note, query)}
                     />
 
-                    {/* Court Badge */}
-                    <div className="flex justify-between items-center text-[10px] text-slate-500">
+                    {/* Court Badge & Mobile Direct Actions (lg:hidden) */}
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[10px] text-slate-500 pt-1 border-t border-slate-100 mt-1">
                       <span className="font-semibold text-slate-700 flex items-center gap-1">
                         <Landmark size={11} className="text-blue-600" /> {item.court_name || 'Supreme Court of India'}
                       </span>
+
+                      {/* Mobile-Only Action Button */}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/judgment/${item.id}`);
+                        }}
+                        className="lg:hidden w-full sm:w-auto inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] transition-colors shadow-2xs cursor-pointer mt-1 sm:mt-0"
+                      >
+                        <FileText size={12} />
+                        <span>View Details & Options →</span>
+                      </button>
                     </div>
                   </div>
                 );
@@ -742,7 +761,7 @@ export default function SearchResults() {
         </div>
 
         {/* PANE 3: CASE DETAILS WORKSPACE & TOOLBAR (Right Column) */}
-        <div className="flex-1 min-h-0 bg-slate-200 flex flex-col relative z-0 h-full overflow-hidden">
+        <div id="case-details-workspace" className="flex-1 min-h-0 bg-slate-200 flex flex-col relative z-0 h-full overflow-hidden">
           
           {selectedCase ? (
             <>
