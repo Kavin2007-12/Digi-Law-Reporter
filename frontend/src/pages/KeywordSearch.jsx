@@ -291,7 +291,10 @@ export default function KeywordSearch() {
                   <input
                     type="text"
                     value={citeNumber}
-                    onChange={(e) => setCiteNumber(e.target.value)}
+                    onChange={(e) => {
+                      setCiteNumber(e.target.value);
+                      if (validationError) setValidationError('');
+                    }}
                     placeholder="#"
                     className="w-9 text-center bg-transparent border-b border-slate-300 focus:border-blue-600 text-slate-900 font-bold px-0.5 py-0.5 outline-none placeholder:text-slate-400 text-xs"
                   />
@@ -301,11 +304,21 @@ export default function KeywordSearch() {
                   <input
                     type="text"
                     value={citeEquivalent}
-                    onChange={(e) => setCiteEquivalent(e.target.value)}
+                    onChange={(e) => {
+                      setCiteEquivalent(e.target.value);
+                      if (validationError) setValidationError('');
+                    }}
                     placeholder="Equivalent text"
                     className="flex-1 min-w-[120px] bg-transparent border-b border-slate-300 focus:border-blue-600 text-slate-900 font-medium px-1 py-0.5 outline-none placeholder:text-slate-400 text-xs font-sans"
                   />
                 </div>
+
+                {validationError && (
+                  <div className="flex items-center gap-1.5 text-xs text-rose-600 font-bold bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg animate-in fade-in">
+                    <AlertCircle size={14} className="shrink-0" />
+                    <span>{validationError}</span>
+                  </div>
+                )}
 
                 <div className="flex justify-end pt-0.5">
                   <button
