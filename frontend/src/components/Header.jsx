@@ -95,7 +95,7 @@ export default function Header() {
                     {location.pathname !== '/search' && (
                       <Link 
                         to="/search" 
-                        className="hidden sm:flex items-center gap-2 bg-blue-100/90 hover:bg-blue-200/90 border border-blue-200/90 text-blue-700 px-3.5 py-1.5 rounded-2xl transition-all shadow-2xs group cursor-pointer"
+                        className="hidden md:flex items-center gap-2 bg-blue-100/90 hover:bg-blue-200/90 border border-blue-200/90 text-blue-700 px-3.5 py-1.5 rounded-2xl transition-all shadow-2xs group cursor-pointer"
                         title="Click to go to Legal Search Portal"
                       >
                         <span className="text-blue-700 font-extrabold text-[11px] md:text-xs tracking-wider">
@@ -107,7 +107,7 @@ export default function Header() {
                     {/* Logout Button (Desktop) */}
                     <button 
                       onClick={handleLogout} 
-                      className="hidden sm:block text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-xl transition-colors ml-0.5"
+                      className="hidden md:block text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-xl transition-colors ml-0.5"
                       title="Logout"
                     >
                       <LogOut size={17} />
