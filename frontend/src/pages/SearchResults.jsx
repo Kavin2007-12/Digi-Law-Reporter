@@ -75,6 +75,9 @@ export default function SearchResults() {
   const [fontSize, setFontSize] = useState(15); // Default font size in px
   const [isCaseDetailsModalOpen, setIsCaseDetailsModalOpen] = useState(false);
   
+  // Mobile View Navigation Tab State ('results' | 'judgment' | 'filters')
+  const [mobileTab, setMobileTab] = useState('results');
+  
   // Filter States
   const [selectedCourtFilter, setSelectedCourtFilter] = useState('ALL');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
@@ -547,13 +550,50 @@ export default function SearchResults() {
 
       </div>
 
+      {/* MOBILE MODE SWITCHER TABS (lg:hidden - Desktop View Unchanged) */}
+      <div className="lg:hidden bg-[#0B1727] text-white flex items-center justify-around px-2 py-1.5 border-b border-slate-700 shrink-0 no-print">
+        <button
+          type="button"
+          onClick={() => setMobileTab('results')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            mobileTab === 'results' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'
+          }`}
+        >
+          <Search size={13} />
+          <span>Results ({filteredResults.length})</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMobileTab('judgment')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            mobileTab === 'judgment' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'
+          }`}
+        >
+          <FileText size={13} />
+          <span>Judgment View</span>
+          {selectedCase && <span className="w-2 h-2 rounded-full bg-emerald-400"></span>}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setMobileTab('filters')}
+          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+            mobileTab === 'filters' ? 'bg-blue-600 text-white shadow-xs' : 'text-slate-300 hover:text-white'
+          }`}
+        >
+          <SlidersHorizontal size={13} />
+          <span>Filters</span>
+        </button>
+      </div>
+
       {/* ========================================================================= */}
       {/* 2. THREE-PANE LEGAL RESEARCH WORKSPACE */}
       {/* ========================================================================= */}
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row w-full h-[calc(100vh-49px)] overflow-hidden bg-slate-200">
         
         {/* PANE 1: FILTERS SIDEBAR (Left Column) */}
-        <div className="w-full lg:w-64 bg-slate-900 text-slate-200 border-b lg:border-b-0 lg:border-r border-slate-700 flex flex-col shrink-0 no-print">
+        <div className={`w-full lg:w-64 bg-slate-900 text-slate-200 border-b lg:border-b-0 lg:border-r border-slate-700 shrink-0 no-print ${mobileTab === 'filters' ? 'flex flex-col flex-1 h-full' : 'hidden lg:flex lg:flex-col'}`}>
           
           {/* Category Tabs */}
           <div className="p-3 border-b border-slate-800 bg-slate-950/60 flex items-center justify-between">
@@ -646,7 +686,7 @@ export default function SearchResults() {
         </div>
 
         {/* PANE 2: RESULT LIST (Middle Column) */}
-        <div className="w-full lg:w-[380px] h-[320px] lg:h-full flex flex-col bg-slate-100 border-b lg:border-b-0 lg:border-r border-slate-300 shrink-0 z-10 no-print">
+        <div className={`w-full lg:w-[380px] bg-slate-100 border-b lg:border-b-0 lg:border-r border-slate-300 shrink-0 z-10 no-print ${mobileTab === 'results' ? 'flex flex-col flex-1 h-full' : 'hidden lg:flex lg:flex-col lg:h-full'}`}>
           
           {/* Result List Header Bar */}
           <div className="flex items-center justify-between px-3 py-2 border-b border-slate-300 bg-white shrink-0 shadow-2xs">
@@ -689,10 +729,9 @@ export default function SearchResults() {
                   <div 
                     key={item.id} 
                     onClick={() => {
+                      setSelectedCase(item);
                       if (window.innerWidth < 1024) {
-                        navigate(`/judgment/${item.id}`);
-                      } else {
-                        setSelectedCase(item);
+                        setMobileTab('judgment');
                       }
                     }}
                     className={`p-3 cursor-pointer transition-all duration-150 ${
@@ -744,7 +783,8 @@ export default function SearchResults() {
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/judgment/${item.id}`);
+                          setSelectedCase(item);
+                          setMobileTab('judgment');
                         }}
                         className="lg:hidden w-full sm:w-auto inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] transition-colors shadow-2xs cursor-pointer mt-1 sm:mt-0"
                       >
@@ -761,7 +801,7 @@ export default function SearchResults() {
         </div>
 
         {/* PANE 3: CASE DETAILS WORKSPACE & TOOLBAR (Right Column) */}
-        <div id="case-details-workspace" className="flex-1 min-h-0 bg-slate-200 flex flex-col relative z-0 h-full overflow-hidden">
+        <div id="case-details-workspace" className={`flex-1 min-h-0 bg-slate-200 relative z-0 h-full overflow-hidden ${mobileTab === 'judgment' ? 'flex flex-col flex-1 h-full' : 'hidden lg:flex lg:flex-col'}`}>
           
           {selectedCase ? (
             <>
