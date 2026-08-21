@@ -109,6 +109,15 @@
           "citation": "2014 DLR (sc) #1"
         }
       ]
+    },
+    {
+      "id": 1787293788844,
+      "name": "tharun",
+      "mobile": "8610475412",
+      "email": "8610475412@digilawreporter.in",
+      "status": "Active",
+      "joined_date": "2026-08-21",
+      "last_login": "2026-08-21T06:29:48.844Z"
     }
   ],
   "admins": [
@@ -128,14 +137,15 @@
       "email": "kavinadmin@digilawreporter.in",
       "password": "kavin123",
       "role": "EXTRA_ADMIN",
-      "created_at": "2026-08-18T07:10:38.819Z"
+      "created_at": "2026-08-18T07:10:38.819Z",
+      "password_hash": "$2b$10$q.9F1PalfusbMxNq3N40ju1O49zTOrhuZPKgrJFz.eckhJzdWJSKK"
     }
   ],
   "cases": [
     {
       "id": 1787292651598,
-      "case_number": "123",
-      "caseNumber": "123",
+      "case_number": "",
+      "caseNumber": "",
       "title": "SHAURYA SUNIL KUMAR SINGH vs. CENTRAL BUREAU OF INVESTIGATION",
       "petitioner": "SHAURYA SUNIL KUMAR SINGH",
       "petitioner_name": "SHAURYA SUNIL KUMAR SINGH",
@@ -154,7 +164,7 @@
       "judgment_text": "<p style=\"text-align: left;\">J U D G M E N T</p><p style=\"text-align: justify;\">SANJAY KAROL, J.</p><p style=\"text-align: justify;\">1. Leave granted.</p><p style=\"text-align: justify;\">2. The present appeal has been preferred against the impugned judgment and order dated 06.02.2026 in CRA No. 475 of 2025 passed by the High Court of Judicature at Bombay, whereby the plea of the appellant - accused for default bail came to be dismissed in connection with FIR No. RC0682025E00041 dated04.07.2025 registered under Sections 61(2) read with 318, 336 and 340 of the Bharatiya Nyaya Sanhita, 20232 ; Section 7 of the Prevention of Corruption Act, 1988 and Section 66 of the Information Technology Act, 2000.</p><p style=\"text-align: justify;\">3. The subject FIR came to be registered against (i) SP Cargo and Courier Services Pvt. Ltd; (ii) Sudhir Palande; (iii) Unknown private persons, and (iv) Unknown bank officials. The case set in the FIR is that reliable information was received by the Central Bureau of Investigation3 , Mumbai that unknown cyber criminals are using sophisticated digital means to extort money from individuals. This has included using tools for impersonation and creating forged documents. Further, they are being assisted by bank officials for the deposit of the cyber fraud proceeds into their bank accounts. The bank officials were abusing their official positions by opening and operating mule accounts based on forged KYC documents, without proper verification.</p><p></p>",
       "content": "<p style=\"text-align: left;\">J U D G M E N T</p><p style=\"text-align: justify;\">SANJAY KAROL, J.</p><p style=\"text-align: justify;\">1. Leave granted.</p><p style=\"text-align: justify;\">2. The present appeal has been preferred against the impugned judgment and order dated 06.02.2026 in CRA No. 475 of 2025 passed by the High Court of Judicature at Bombay, whereby the plea of the appellant - accused for default bail came to be dismissed in connection with FIR No. RC0682025E00041 dated04.07.2025 registered under Sections 61(2) read with 318, 336 and 340 of the Bharatiya Nyaya Sanhita, 20232 ; Section 7 of the Prevention of Corruption Act, 1988 and Section 66 of the Information Technology Act, 2000.</p><p style=\"text-align: justify;\">3. The subject FIR came to be registered against (i) SP Cargo and Courier Services Pvt. Ltd; (ii) Sudhir Palande; (iii) Unknown private persons, and (iv) Unknown bank officials. The case set in the FIR is that reliable information was received by the Central Bureau of Investigation3 , Mumbai that unknown cyber criminals are using sophisticated digital means to extort money from individuals. This has included using tools for impersonation and creating forged documents. Further, they are being assisted by bank officials for the deposit of the cyber fraud proceeds into their bank accounts. The bank officials were abusing their official positions by opening and operating mule accounts based on forged KYC documents, without proper verification.</p><p></p>",
       "judgmentText": "<p style=\"text-align: left;\">J U D G M E N T</p><p style=\"text-align: justify;\">SANJAY KAROL, J.</p><p style=\"text-align: justify;\">1. Leave granted.</p><p style=\"text-align: justify;\">2. The present appeal has been preferred against the impugned judgment and order dated 06.02.2026 in CRA No. 475 of 2025 passed by the High Court of Judicature at Bombay, whereby the plea of the appellant - accused for default bail came to be dismissed in connection with FIR No. RC0682025E00041 dated04.07.2025 registered under Sections 61(2) read with 318, 336 and 340 of the Bharatiya Nyaya Sanhita, 20232 ; Section 7 of the Prevention of Corruption Act, 1988 and Section 66 of the Information Technology Act, 2000.</p><p style=\"text-align: justify;\">3. The subject FIR came to be registered against (i) SP Cargo and Courier Services Pvt. Ltd; (ii) Sudhir Palande; (iii) Unknown private persons, and (iv) Unknown bank officials. The case set in the FIR is that reliable information was received by the Central Bureau of Investigation3 , Mumbai that unknown cyber criminals are using sophisticated digital means to extort money from individuals. This has included using tools for impersonation and creating forged documents. Further, they are being assisted by bank officials for the deposit of the cyber fraud proceeds into their bank accounts. The bank officials were abusing their official positions by opening and operating mule accounts based on forged KYC documents, without proper verification.</p><p></p>",
-      "status": "Published",
+      "status": "Draft",
       "citations": [
         {
           "id": 1787292062970,
@@ -165,7 +175,7 @@
           "equivalentText": "2026 INSC 666"
         }
       ],
-      "updated_at": "2026-08-21T06:19:30.872Z"
+      "updated_at": "2026-08-21T06:26:14.387Z"
     },
     {
       "id": 1787202270090,
@@ -176,8 +186,8 @@
       "petitioner_name": "M/s. Ajeet Seeds Ltd.,",
       "respondent": "K. Gopala Krishnaiah",
       "respondent_name": "K. Gopala Krishnaiah",
-      "court": "Supreme Court of India",
-      "court_name": "Supreme Court of India",
+      "court": "highcourt of madras",
+      "court_name": "highcourt of madras",
       "judgment_date": "2012-07-16",
       "judgmentDate": "2012-07-16",
       "year": "2012",
@@ -200,7 +210,7 @@
           "equivalentText": ""
         }
       ],
-      "updated_at": "2026-08-21T05:38:44.672Z"
+      "updated_at": "2026-08-21T06:27:39.947Z"
     },
     {
       "id": 1787047132756,
@@ -277,21 +287,21 @@
   "resetTokens": [
     {
       "adminId": "1",
-      "tokenHash": "d7e96c4f91bb61c27333c88f113f4f45b5f4f4910f3d2038a1585e40a646c2b5",
-      "expiresAt": "2026-08-20T08:50:04.938Z",
-      "used": true,
-      "createdAt": "2026-08-20T08:47:04.944Z"
+      "tokenHash": "a4a35881ad8d7c470237510da308c78c5f335d46af86f7fbf61375663a691071",
+      "expiresAt": "2026-08-21T06:34:53.589Z",
+      "used": false,
+      "createdAt": "2026-08-21T06:31:53.594Z"
     }
   ],
   "adminSessions": [
     {
-      "sessionId": "c94e885c3c2bf2959d6b5aee6e2a9c0466e528319f8d931dede11c6f5d571f47",
-      "adminId": "1",
-      "email": "kavinselvaraj12@gmail.com",
-      "role": "MAIN_ADMIN",
-      "createdAt": 1787290449713,
-      "expiresAt": 1787294049713,
-      "lastActivity": 1787290449713
+      "sessionId": "9024703e8fe6ca5f957cec0593eed44d0eb8c224d6e5a2b56eb0e889852daa99",
+      "adminId": "1787037038819",
+      "email": "kavinadmin@digilawreporter.in",
+      "role": "EXTRA_ADMIN",
+      "createdAt": 1787294254380,
+      "expiresAt": 1787297854380,
+      "lastActivity": 1787294254380
     }
   ]
 }
