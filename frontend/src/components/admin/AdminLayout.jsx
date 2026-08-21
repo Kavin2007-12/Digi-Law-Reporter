@@ -362,10 +362,19 @@ export default function AdminLayout() {
       <div className="flex-1 flex flex-col min-w-0 min-h-full">
         
         {/* Top Header Bar */}
-        <header className="h-14 bg-white border-b border-slate-200/70 flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 sticky top-0">
+        <header className="h-14 bg-white border-b border-slate-200/70 flex items-center justify-between px-3 sm:px-6 shrink-0 z-30 sticky top-0">
           
-          {/* Left: Branding Logo */}
-          <div className="flex items-center gap-3">
+          {/* Left: Mobile Navigation Hamburger Toggle & Branding Logo */}
+          <div className="flex items-center gap-2">
+            <button 
+              type="button"
+              onClick={() => setIsMobileOpen(true)}
+              className="p-1.5 rounded-lg text-slate-700 hover:text-slate-900 hover:bg-slate-100 lg:hidden cursor-pointer active:scale-95 transition-all"
+              title="Open Navigation Menu"
+            >
+              <Menu size={22} />
+            </button>
+
             <Link to="/admin/dashboard" className="flex items-center gap-2.5 group">
               <img 
                 src="/logo/digital_law_reporter.png" 
