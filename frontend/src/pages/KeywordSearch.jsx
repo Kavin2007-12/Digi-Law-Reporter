@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Search, BookOpen, FileText, Users, Library, Type, ChevronDown } from 'lucide-react';
+import { Search, BookOpen, FileText, Users, Library, Type, ChevronDown, AlertCircle } from 'lucide-react';
 
 const TAB_KEY_MAP = {
   keyword: 'Keyword Search',
@@ -80,7 +80,8 @@ export default function KeywordSearch() {
   const initialTabName = TAB_KEY_MAP[tabParam] || 'Keyword Search';
   const [activeTab, setActiveTab] = useState(initialTabName);
 
-  // Form Fields State
+  // Form Fields State & Validation State
+  const [validationError, setValidationError] = useState('');
   const [searchTerm, setSearchTerm] = useState(queryParam);
   const [sectionTerm, setSectionTerm] = useState('');
   
@@ -159,9 +160,10 @@ export default function KeywordSearch() {
     }
   }, [queryParam]);
 
-  // Tab click switches search option view
+  // Tab click switches search option view and clears validation
   const handleTabClick = (tab) => {
     setActiveTab(tab);
+    setValidationError('');
     const code = REVERSE_TAB_MAP[tab] || 'keyword';
     setSearchParams({ tab: code, ...(queryParam ? { q: queryParam } : {}) });
   };
@@ -171,10 +173,14 @@ export default function KeywordSearch() {
     if (e) e.preventDefault();
 
     let activeVal = '';
+    let emptyErrorMessage = 'Please enter search details before searching.';
+
     if (activeTab === 'Keyword Search') {
       activeVal = searchTerm;
+      emptyErrorMessage = 'Please enter a Keyword search term before searching.';
     } else if (activeTab === 'Title or Act') {
       activeVal = sectionTerm;
+      emptyErrorMessage = 'Please enter a Title, Act name, or Section before searching.';
     } else if (activeTab === 'Find By Citation') {
       const yearPart = citeYear ? citeYear.trim() : '';
       const monthPart = citeMonth ? `(${citeMonth.trim()})` : '';
@@ -184,17 +190,26 @@ export default function KeywordSearch() {
       const eqPart = citeEquivalent ? `: ${citeEquivalent.trim()}` : '';
 
       activeVal = `citation:${yearPart} ${monthPart} ${journalPart} ${courtPart} ${numPart} ${eqPart}`.replace(/\s+/g, ' ').trim();
+      emptyErrorMessage = 'Please enter a Citation Number or Equivalent text before searching.';
     } else if (activeTab === 'Find By Party Name') {
       activeVal = partyKeyword.trim();
+      emptyErrorMessage = 'Please enter a Party Name or Case Title before searching.';
     } else if (activeTab === 'Find By Topic') {
       activeVal = topicTerm;
+      emptyErrorMessage = 'Please enter a Legal Topic before searching.';
     } else if (activeTab === 'Words & Phrases') {
       activeVal = phraseTerm;
+      emptyErrorMessage = 'Please enter a Word or Phrase before searching.';
     }
 
-    const tabCode = REVERSE_TAB_MAP[activeTab] || 'keyword';
     const finalQuery = activeVal.trim();
-    if (!finalQuery) return;
+    if (!finalQuery) {
+      setValidationError(emptyErrorMessage);
+      return;
+    }
+
+    setValidationError('');
+    const tabCode = REVERSE_TAB_MAP[activeTab] || 'keyword';
 
     // Direct Navigation to Full 3-Pane Workspace Page
     navigate(`/search/results?q=${encodeURIComponent(finalQuery)}&tab=${tabCode}`);
@@ -375,65 +390,94 @@ export default function KeywordSearch() {
 
           {/* Standard Search Form Inputs (Clean single input without dropdowns) */}
           {activeTab !== 'Find By Citation' && activeTab !== 'Find By Party Name' && (
-            <form onSubmit={handleSearchSubmit} className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center w-full max-w-2xl mx-auto">
-              
-              {activeTab === 'Keyword Search' && (
-                <div className="flex-1 flex w-full bg-white rounded-md border border-slate-300 overflow-hidden shadow-sm">
-                  <input 
-                    type="text" 
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Enter Search Term (e.g. Article 21, natural justice, arbitration)" 
-                    className="w-full bg-transparent text-slate-900 px-3.5 py-2 focus:outline-none text-xs sm:text-sm font-medium"
-                  />
+            <div className="w-full max-w-2xl mx-auto space-y-2">
+              <form onSubmit={handleSearchSubmit} className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center w-full">
+                
+                {activeTab === 'Keyword Search' && (
+                  <div className={`flex-1 flex w-full bg-white rounded-md border overflow-hidden shadow-sm transition-colors ${
+                    validationError ? 'border-rose-500' : 'border-slate-300'
+                  }`}>
+                    <input 
+                      type="text" 
+                      value={searchTerm}
+                      onChange={(e) => {
+                        setSearchTerm(e.target.value);
+                        if (validationError) setValidationError('');
+                      }}
+                      placeholder="Enter Search Term (e.g. Article 21, natural justice, arbitration)" 
+                      className="w-full bg-transparent text-slate-900 px-3.5 py-2 focus:outline-none text-xs sm:text-sm font-medium"
+                    />
+                  </div>
+                )}
+
+                {activeTab === 'Title or Act' && (
+                  <div className={`flex-1 flex w-full bg-white rounded-md border overflow-hidden shadow-sm transition-colors ${
+                    validationError ? 'border-rose-500' : 'border-slate-300'
+                  }`}>
+                    <input 
+                      type="text" 
+                      value={sectionTerm}
+                      onChange={(e) => {
+                        setSectionTerm(e.target.value);
+                        if (validationError) setValidationError('');
+                      }}
+                      placeholder="Enter Title, Act Name, or Section (e.g. IPC, Companies Act 2013, Section 482)" 
+                      className="w-full bg-transparent text-slate-900 px-3.5 py-2 focus:outline-none text-xs sm:text-sm font-medium"
+                    />
+                  </div>
+                )}
+
+                {activeTab === 'Find By Topic' && (
+                  <div className={`flex-1 flex w-full bg-white rounded-md border overflow-hidden shadow-sm transition-colors ${
+                    validationError ? 'border-rose-500' : 'border-slate-300'
+                  }`}>
+                    <input 
+                      type="text" 
+                      value={topicTerm}
+                      onChange={(e) => {
+                        setTopicTerm(e.target.value);
+                        if (validationError) setValidationError('');
+                      }}
+                      placeholder="Enter Legal Topic (e.g. Fundamental Rights, Commercial Arbitration)" 
+                      className="w-full bg-transparent text-slate-900 px-3.5 py-2 focus:outline-none text-xs sm:text-sm font-medium"
+                    />
+                  </div>
+                )}
+
+                {activeTab === 'Words & Phrases' && (
+                  <div className={`flex-1 flex w-full bg-white rounded-md border overflow-hidden shadow-sm transition-colors ${
+                    validationError ? 'border-rose-500' : 'border-slate-300'
+                  }`}>
+                    <input 
+                      type="text" 
+                      value={phraseTerm}
+                      onChange={(e) => {
+                        setPhraseTerm(e.target.value);
+                        if (validationError) setValidationError('');
+                      }}
+                      placeholder="Enter Legal Word or Phrase (e.g. Mens Rea, Ratio Decidendi)" 
+                      className="w-full bg-transparent text-slate-900 px-3.5 py-2 focus:outline-none text-xs sm:text-sm font-medium"
+                    />
+                  </div>
+                )}
+
+                <button 
+                  type="submit"
+                  className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2 rounded-md transition-colors shadow-md flex items-center justify-center gap-1.5 text-xs shrink-0 active:scale-95 cursor-pointer"
+                >
+                  <Search size={14} />
+                  <span>Search</span>
+                </button>
+
+              </form>
+
+              {validationError && (
+                <div className="flex items-center gap-1.5 text-xs text-rose-300 font-bold bg-rose-950/80 border border-rose-800 px-3.5 py-1.5 rounded-md animate-in fade-in max-w-2xl mx-auto">
+                  <AlertCircle size={14} className="shrink-0 text-rose-400" />
+                  <span>{validationError}</span>
                 </div>
               )}
-
-              {activeTab === 'Title or Act' && (
-                <div className="flex-1 flex w-full bg-white rounded-md border border-slate-300 overflow-hidden shadow-sm">
-                  <input 
-                    type="text" 
-                    value={sectionTerm}
-                    onChange={(e) => setSectionTerm(e.target.value)}
-                    placeholder="Enter Title, Act Name, or Section (e.g. IPC, Companies Act 2013, Section 482)" 
-                    className="w-full bg-transparent text-slate-900 px-3.5 py-2 focus:outline-none text-xs sm:text-sm font-medium"
-                  />
-                </div>
-              )}
-
-              {activeTab === 'Find By Topic' && (
-                <div className="flex-1 flex w-full bg-white rounded-md border border-slate-300 overflow-hidden shadow-sm">
-                  <input 
-                    type="text" 
-                    value={topicTerm}
-                    onChange={(e) => setTopicTerm(e.target.value)}
-                    placeholder="Enter Legal Topic (e.g. Fundamental Rights, Commercial Arbitration)" 
-                    className="w-full bg-transparent text-slate-900 px-3.5 py-2 focus:outline-none text-xs sm:text-sm font-medium"
-                  />
-                </div>
-              )}
-
-              {activeTab === 'Words & Phrases' && (
-                <div className="flex-1 flex w-full bg-white rounded-md border border-slate-300 overflow-hidden shadow-sm">
-                  <input 
-                    type="text" 
-                    value={phraseTerm}
-                    onChange={(e) => setPhraseTerm(e.target.value)}
-                    placeholder="Enter Legal Word or Phrase (e.g. Mens Rea, Ratio Decidendi)" 
-                    className="w-full bg-transparent text-slate-900 px-3.5 py-2 focus:outline-none text-xs sm:text-sm font-medium"
-                  />
-                </div>
-              )}
-
-              <button 
-                type="submit"
-                className="bg-primary-600 hover:bg-primary-700 text-white font-bold px-5 py-2 rounded-md transition-colors shadow-md flex items-center justify-center gap-1.5 text-xs shrink-0 active:scale-95 cursor-pointer"
-              >
-                <Search size={14} />
-                <span>Search</span>
-              </button>
-
-            </form>
+            </div>
           )}
 
         </div>
