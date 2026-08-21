@@ -11,9 +11,18 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/admin/users`);
+      const token = localStorage.getItem('adminToken');
+      const sessionId = localStorage.getItem('adminSessionId');
+
+      const headers = {
+        'Content-Type': 'application/json'
+      };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+      if (sessionId) headers['x-admin-session-id'] = sessionId;
+
+      const res = await fetch(`${API_BASE_URL}/admin/users`, { headers });
       const data = await res.json();
-      if (data.status === 'success' && Array.isArray(data.data)) {
+      if ((data.status === 'success' || data.success) && Array.isArray(data.data)) {
         const formatted = data.data.map(u => ({
           id: u.id,
           name: u.name || '',
