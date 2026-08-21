@@ -88,6 +88,16 @@ const MenuBar = ({ editor }) => {
 
   const Divider = () => <div className="w-[1px] h-4 bg-slate-300/80 mx-1 self-center" />
 
+  const linkMarkType = editor.schema.marks.link
+  const { from, to } = editor.state.selection
+  const isLinkActive = editor.isActive('link') || (
+    Boolean(linkMarkType) && (
+      from === to 
+        ? editor.isActive('link') 
+        : editor.state.doc.rangeHasMark(from, to, linkMarkType)
+    )
+  )
+
   return (
     <div className="flex flex-wrap items-center gap-0.5 px-3 py-2 border-b border-slate-200/90 bg-[#F8FAFC]">
       {/* 1. Basic Inline Formatting (B, I, U) */}
@@ -106,36 +116,35 @@ const MenuBar = ({ editor }) => {
       {/* 2. Hyperlink & Unlink Controls */}
       <Button
         onClick={() => {
-          if (editor.isActive('link')) {
-            editor.chain().focus().unsetLink().run()
+          if (isLinkActive) {
+            editor.chain().focus().extendMarkRange('link').unsetLink().run()
             return
           }
-          const previousUrl = editor.getAttributes('link').href
+          const previousUrl = editor.getAttributes('link').href || ''
           const url = window.prompt('Enter Web URL:', previousUrl || 'https://')
           
           if (url === null) return
           if (url.trim() === '') {
-            editor.chain().focus().unsetLink().run()
+            editor.chain().focus().extendMarkRange('link').unsetLink().run()
             return
           }
 
           const formattedUrl = /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`
-          const { from, to } = editor.state.selection
           if (from === to) {
             editor.chain().focus().insertContent(`<a href="${formattedUrl}">${formattedUrl}</a>`).run()
           } else {
             editor.chain().focus().setLink({ href: formattedUrl }).run()
           }
         }}
-        isActive={editor.isActive('link')}
+        isActive={isLinkActive}
         title="Insert Hyperlink"
       >
         <LinkIcon size={15} strokeWidth={2} />
       </Button>
 
       <Button
-        onClick={() => editor.chain().focus().unsetLink().run()}
-        disabled={!editor.isActive('link')}
+        onClick={() => editor.chain().focus().extendMarkRange('link').unsetLink().run()}
+        disabled={!isLinkActive}
         title="Remove Hyperlink"
       >
         <Unlink size={15} strokeWidth={2} />
