@@ -894,16 +894,16 @@ export default function SearchResults() {
                     </button>
 
                     {showDocSearch && (
-                      <div className="absolute right-0 top-9 bg-slate-900 border border-slate-700 p-2 rounded-lg shadow-xl flex items-center gap-1.5 z-50 min-w-[220px]">
+                      <div className="absolute left-1/2 -translate-x-1/2 sm:left-auto sm:translate-x-0 sm:right-0 top-9 bg-slate-900 border border-slate-700 p-2 rounded-lg shadow-xl flex items-center gap-1.5 z-50 w-[calc(100vw-32px)] max-w-[280px] sm:w-[240px]">
                         <input
                           type="text"
                           value={searchWithinDoc}
                           onChange={(e) => setSearchWithinDoc(e.target.value)}
                           placeholder="Search in judgment..."
-                          className="bg-slate-800 text-white text-xs px-2.5 py-1 rounded border border-slate-700 focus:outline-none focus:border-blue-500 flex-1"
+                          className="bg-slate-800 text-white text-xs px-2.5 py-1.5 rounded border border-slate-700 focus:outline-none focus:border-blue-500 flex-1 min-w-0"
                           autoFocus
                         />
-                        <X size={14} className="text-slate-400 cursor-pointer hover:text-white" onClick={() => setShowDocSearch(false)} />
+                        <X size={15} className="text-slate-400 cursor-pointer hover:text-white shrink-0 p-0.5" onClick={() => setShowDocSearch(false)} />
                       </div>
                     )}
                   </div>
