@@ -59,6 +59,10 @@ const InlineHeading = Mark.create({
   },
 })
 
+const CustomLink = Link.extend({
+  inclusive: false,
+})
+
 const MenuBar = ({ editor }) => {
   if (!editor) {
     return null
@@ -116,7 +120,12 @@ const MenuBar = ({ editor }) => {
           }
 
           const formattedUrl = /^https?:\/\//i.test(url.trim()) ? url.trim() : `https://${url.trim()}`
-          editor.chain().focus().extendMarkRange('link').setLink({ href: formattedUrl }).run()
+          const { from, to } = editor.state.selection
+          if (from === to) {
+            editor.chain().focus().insertContent(`<a href="${formattedUrl}">${formattedUrl}</a>`).run()
+          } else {
+            editor.chain().focus().setLink({ href: formattedUrl }).run()
+          }
         }}
         isActive={editor.isActive('link')}
         title="Insert Hyperlink"
@@ -206,8 +215,9 @@ export default function TiptapEditor({ content, onChange, placeholder, minHeight
       StarterKit,
       InlineHeading,
       Underline,
-      Link.configure({
+      CustomLink.configure({
         openOnClick: false,
+        autolink: false,
         HTMLAttributes: {
           class: 'text-blue-600 hover:text-blue-800 underline cursor-pointer font-semibold',
         },
