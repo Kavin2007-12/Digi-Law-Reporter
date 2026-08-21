@@ -176,29 +176,34 @@ export default function KeywordSearch() {
     let emptyErrorMessage = 'Please enter search details before searching.';
 
     if (activeTab === 'Keyword Search') {
-      activeVal = searchTerm;
+      activeVal = searchTerm.trim();
       emptyErrorMessage = 'Please enter a Keyword search term before searching.';
     } else if (activeTab === 'Title or Act') {
-      activeVal = sectionTerm;
+      activeVal = sectionTerm.trim();
       emptyErrorMessage = 'Please enter a Title, Act name, or Section before searching.';
     } else if (activeTab === 'Find By Citation') {
+      const numPart = citeNumber ? citeNumber.trim() : '';
+      const eqPart = citeEquivalent ? citeEquivalent.trim() : '';
+      if (!numPart && !eqPart) {
+        setValidationError('Please enter a Citation Number or Equivalent text before searching.');
+        return;
+      }
       const yearPart = citeYear ? citeYear.trim() : '';
       const monthPart = citeMonth ? `(${citeMonth.trim()})` : '';
       const journalPart = 'DLR';
       const courtPart = citeCourt ? `(${citeCourt.trim()})` : '';
-      const numPart = citeNumber ? `#${citeNumber.trim()}` : '';
-      const eqPart = citeEquivalent ? `: ${citeEquivalent.trim()}` : '';
+      const numFormatted = numPart ? `#${numPart}` : '';
+      const eqFormatted = eqPart ? `: ${eqPart}` : '';
 
-      activeVal = `citation:${yearPart} ${monthPart} ${journalPart} ${courtPart} ${numPart} ${eqPart}`.replace(/\s+/g, ' ').trim();
-      emptyErrorMessage = 'Please enter a Citation Number or Equivalent text before searching.';
+      activeVal = `citation:${yearPart} ${monthPart} ${journalPart} ${courtPart} ${numFormatted} ${eqFormatted}`.replace(/\s+/g, ' ').trim();
     } else if (activeTab === 'Find By Party Name') {
       activeVal = partyKeyword.trim();
       emptyErrorMessage = 'Please enter a Party Name or Case Title before searching.';
     } else if (activeTab === 'Find By Topic') {
-      activeVal = topicTerm;
+      activeVal = topicTerm.trim();
       emptyErrorMessage = 'Please enter a Legal Topic before searching.';
     } else if (activeTab === 'Words & Phrases') {
-      activeVal = phraseTerm;
+      activeVal = phraseTerm.trim();
       emptyErrorMessage = 'Please enter a Word or Phrase before searching.';
     }
 
@@ -367,11 +372,16 @@ export default function KeywordSearch() {
                   onSubmit={(e) => {
                     e.preventDefault();
                     const searchVal = partyKeyword.trim();
+                    if (!searchVal) {
+                      setValidationError('Please enter a Party Name or Case Title before searching.');
+                      return;
+                    }
                     let finalQuery = searchVal;
                     if (partyCourt) {
-                      finalQuery = searchVal ? `${partyCourt}: ${searchVal}` : `${partyCourt}:`;
+                      finalQuery = `${partyCourt}: ${searchVal}`;
                     }
-                    navigate(`/search/results?q=${encodeURIComponent(finalQuery || '')}&tab=party`);
+                    setValidationError('');
+                    navigate(`/search/results?q=${encodeURIComponent(finalQuery)}&tab=party`);
                   }} 
                   className="space-y-2"
                 >
@@ -381,9 +391,14 @@ export default function KeywordSearch() {
                         type="text"
                         autoComplete="off"
                         value={partyKeyword}
-                        onChange={(e) => setPartyKeyword(e.target.value)}
+                        onChange={(e) => {
+                          setPartyKeyword(e.target.value);
+                          if (validationError) setValidationError('');
+                        }}
                         placeholder="Type Party Name / Case Title"
-                        className="w-full bg-slate-50 border border-slate-300 rounded-lg px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:border-blue-600 focus:bg-white font-medium shadow-2xs transition-colors"
+                        className={`w-full bg-slate-50 border rounded-lg px-3 py-2 text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:bg-white font-medium shadow-2xs transition-colors ${
+                          validationError ? 'border-rose-500 focus:border-rose-600 bg-rose-50/20' : 'border-slate-300 focus:border-blue-600'
+                        }`}
                       />
                     </div>
 
@@ -395,6 +410,13 @@ export default function KeywordSearch() {
                       <span>Find Case</span>
                     </button>
                   </div>
+
+                  {validationError && (
+                    <div className="flex items-center gap-1.5 text-xs text-rose-600 font-bold bg-rose-50 border border-rose-200 px-3 py-1.5 rounded-lg animate-in fade-in">
+                      <AlertCircle size={14} className="shrink-0" />
+                      <span>{validationError}</span>
+                    </div>
+                  )}
                 </form>
               </div>
 
