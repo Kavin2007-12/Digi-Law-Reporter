@@ -1,31 +1,97 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Edit3, Globe, Star, FileText, Download, Landmark, Calendar, Scale, Users, CheckCircle2, ShieldCheck } from 'lucide-react';
-import { MOCK_CASES } from '../../data/adminMockData';
+import { ArrowLeft, Edit3, Globe, Star, FileText, Download, Landmark, Calendar, Scale, Users, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
+import { API_BASE_URL } from '../../config/api';
 
 export default function AdminCaseDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
 
-  const initialCase = MOCK_CASES.find(c => String(c.id) === String(id)) || MOCK_CASES[0];
-  const [caseData, setCaseData] = useState(initialCase);
+  const [caseData, setCaseData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [toastMessage, setToastMessage] = useState('');
+
+  useEffect(() => {
+    const fetchBackendCase = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const res = await fetch(`${API_BASE_URL}/cases/${id}`);
+        const data = await res.json();
+        if (data.success && data.data) {
+          setCaseData(data.data);
+        } else {
+          // Attempt fallback search via public API
+          const searchRes = await fetch(`${API_BASE_URL}/public/search?keyword=${encodeURIComponent(id)}`);
+          const searchData = await searchRes.json();
+          if (searchData.success && Array.isArray(searchData.data) && searchData.data.length > 0) {
+            const matched = searchData.data.find(c => String(c.id) === String(id)) || searchData.data[0];
+            setCaseData(matched);
+          } else {
+            setError('Case precedent record not found in backend database.');
+          }
+        }
+      } catch (err) {
+        console.error('Error fetching case detail:', err);
+        setError('Failed to connect to backend database.');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBackendCase();
+  }, [id]);
 
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(''), 3000);
   };
 
-  const handleTogglePublish = () => {
+  const handleTogglePublish = async () => {
+    if (!caseData) return;
     const nextStatus = caseData.status === 'Published' ? 'Draft' : 'Published';
+    try {
+      await fetch(`${API_BASE_URL}/cases/${caseData.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...caseData, status: nextStatus })
+      });
+    } catch (e) {}
     setCaseData(prev => ({ ...prev, status: nextStatus }));
     showToast(`Case status updated to "${nextStatus}"`);
   };
 
   const handleToggleImportant = () => {
+    if (!caseData) return;
     setCaseData(prev => ({ ...prev, isImportant: !prev.isImportant }));
     showToast(caseData.isImportant ? 'Unmarked from important judgments' : 'Marked as Important Judgment');
   };
+
+  if (loading) {
+    return (
+      <div className="w-full flex-1 py-16 flex flex-col items-center justify-center space-y-4 font-jakarta">
+        <Loader2 size={36} className="text-primary-600 animate-spin" />
+        <p className="text-xs font-semibold text-slate-600">Retrieving case record from database...</p>
+      </div>
+    );
+  }
+
+  if (error || !caseData) {
+    return (
+      <div className="w-full max-w-2xl mx-auto px-4 py-16 text-center space-y-4 font-jakarta">
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 font-medium text-xs">
+          {error || 'Case precedent record not found in database.'}
+        </div>
+        <button
+          onClick={() => navigate('/admin/cases')}
+          className="px-4 py-2 bg-[#0B1727] text-white font-bold text-xs rounded-lg cursor-pointer"
+        >
+          Back to Cases
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-5xl mx-auto space-y-8 pb-16 font-jakarta">
