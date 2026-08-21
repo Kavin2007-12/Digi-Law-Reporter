@@ -689,10 +689,10 @@ export default function SearchResults() {
                   <div 
                     key={item.id} 
                     onClick={() => {
-                      setSelectedCase(item);
                       if (window.innerWidth < 1024) {
-                        const elem = document.getElementById('case-details-workspace');
-                        if (elem) elem.scrollIntoView({ behavior: 'smooth' });
+                        navigate(`/judgment/${item.id}`);
+                      } else {
+                        setSelectedCase(item);
                       }
                     }}
                     className={`p-3 cursor-pointer transition-all duration-150 ${
@@ -746,10 +746,10 @@ export default function SearchResults() {
                           e.stopPropagation();
                           navigate(`/judgment/${item.id}`);
                         }}
-                        className="lg:hidden w-full sm:w-auto inline-flex items-center justify-center gap-1 px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] transition-colors shadow-2xs cursor-pointer mt-1 sm:mt-0"
+                        className="lg:hidden w-full sm:w-auto inline-flex items-center justify-center gap-1 px-3 py-1.5 rounded bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] transition-colors shadow-2xs cursor-pointer mt-1 sm:mt-0"
                       >
                         <FileText size={12} />
-                        <span>View Details & Options →</span>
+                        <span>View Details</span>
                       </button>
                     </div>
                   </div>
