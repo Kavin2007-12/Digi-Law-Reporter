@@ -808,8 +808,8 @@ export default function SearchResults() {
               {/* CASE DETAILS ACTION TOOLBAR BAR */}
               <div className="bg-[#1E4D6E] text-white px-3 py-1.5 flex sm:flex-nowrap flex-wrap items-center justify-between gap-2 shrink-0 shadow-md z-10 no-print">
                 
-                {/* Navigation Pill (|< < Pencil > >|) */}
-                <div className="flex items-center bg-[#153852] rounded-full px-2 py-0.5 gap-1 border border-blue-400/30">
+                {/* Navigation Pill (|< < Pencil > >|) - Hidden on mobile view only */}
+                <div className="hidden sm:flex items-center bg-[#153852] rounded-full px-2 py-0.5 gap-1 border border-blue-400/30">
                   <button 
                     onClick={handleNavFirst} 
                     disabled={currentIndex <= 0}
