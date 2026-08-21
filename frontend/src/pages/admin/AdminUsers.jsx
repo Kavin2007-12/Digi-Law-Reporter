@@ -23,12 +23,8 @@ export default function AdminUsers() {
       const res = await fetch(`${API_BASE_URL}/admin/users`, { headers });
       const data = await res.json();
       if ((data.status === 'success' || data.success) && Array.isArray(data.data)) {
-        // Sort users by last_login descending (newest login / signup at top S.NO 1)
-        const sortedData = [...data.data].sort((a, b) => {
-          const timeA = new Date(a.last_login || a.joined_date || 0).getTime();
-          const timeB = new Date(b.last_login || b.joined_date || 0).getTime();
-          return timeB - timeA;
-        });
+        // Sort users by join order / ID descending (newly joined user at top S.NO 1)
+        const sortedData = [...data.data].sort((a, b) => (Number(b.id) || 0) - (Number(a.id) || 0));
 
         const formatted = sortedData.map(u => ({
           id: u.id,

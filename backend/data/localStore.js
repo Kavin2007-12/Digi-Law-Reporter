@@ -106,11 +106,7 @@ class LocalStore {
   // User methods
   getUsers() {
     const users = this.read().users || [];
-    return [...users].sort((a, b) => {
-      const timeA = new Date(a.last_login || a.joined_date || 0).getTime();
-      const timeB = new Date(b.last_login || b.joined_date || 0).getTime();
-      return timeB - timeA;
-    });
+    return [...users].sort((a, b) => (b.id || 0) - (a.id || 0));
   }
 
   addUser(user) {
