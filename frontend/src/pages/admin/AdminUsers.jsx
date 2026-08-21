@@ -23,12 +23,27 @@ export default function AdminUsers() {
       const res = await fetch(`${API_BASE_URL}/admin/users`, { headers });
       const data = await res.json();
       if ((data.status === 'success' || data.success) && Array.isArray(data.data)) {
-        const formatted = data.data.map(u => ({
+        // Sort users by last_login descending (newest login / signup at top S.NO 1)
+        const sortedData = [...data.data].sort((a, b) => {
+          const timeA = new Date(a.last_login || a.joined_date || 0).getTime();
+          const timeB = new Date(b.last_login || b.joined_date || 0).getTime();
+          return timeB - timeA;
+        });
+
+        const formatted = sortedData.map(u => ({
           id: u.id,
           name: u.name || '',
           mobile: u.mobile || '',
           joinedDate: u.joined_date ? new Date(u.joined_date).toISOString().split('T')[0] : '',
-          lastLogin: u.last_login ? new Date(u.last_login).toLocaleString('en-IN') : 'No login record',
+          lastLogin: u.last_login ? new Date(u.last_login).toLocaleString('en-IN', {
+            day: 'numeric',
+            month: 'numeric',
+            year: 'numeric',
+            hour: 'numeric',
+            minute: 'numeric',
+            second: 'numeric',
+            hour12: true
+          }) : 'No login record',
           status: u.status || 'Active'
         }));
         setUsersList(formatted);

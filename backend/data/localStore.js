@@ -105,7 +105,12 @@ class LocalStore {
 
   // User methods
   getUsers() {
-    return this.read().users || [];
+    const users = this.read().users || [];
+    return [...users].sort((a, b) => {
+      const timeA = new Date(a.last_login || a.joined_date || 0).getTime();
+      const timeB = new Date(b.last_login || b.joined_date || 0).getTime();
+      return timeB - timeA;
+    });
   }
 
   addUser(user) {
@@ -117,8 +122,9 @@ class LocalStore {
     if (existingIdx >= 0) {
       store.users[existingIdx].name = user.name || store.users[existingIdx].name;
       store.users[existingIdx].last_login = now;
+      const updatedUser = store.users[existingIdx];
       this.write(store);
-      return store.users[existingIdx];
+      return updatedUser;
     } else {
       const newUser = {
         id: Date.now(),
@@ -129,7 +135,7 @@ class LocalStore {
         joined_date: now.split('T')[0],
         last_login: now
       };
-      store.users.push(newUser);
+      store.users.unshift(newUser);
       this.write(store);
       return newUser;
     }
