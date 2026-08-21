@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, User, Shield, Menu, X, Search } from 'lucide-react';
+import { LogOut, User, Shield, Menu, X, Search, ArrowLeft } from 'lucide-react';
 
 export default function Header() {
   const [user, setUser] = useState(null);
@@ -41,7 +41,7 @@ export default function Header() {
            
            {/* Left: Original Logo Image */}
            <div className="flex items-center">
-             <Link to="/" className="cursor-pointer flex items-center">
+             <Link to="/" className="cursor-pointer flex items-center" title="Return to Home">
                <img 
                  src="/logo/digital_law_reporter.png" 
                  alt="Digital Law Reporter" 
@@ -50,9 +50,18 @@ export default function Header() {
              </Link>
            </div>
 
-           {/* Right: Nav Links (Home, About, Contact) & Actions (Login, Admin) */}
+           {/* Right: Nav Links & Actions */}
            <div className="flex items-center space-x-3 md:space-x-8">
-             {!isAuthPage && (
+             {isAuthPage ? (
+               <Link
+                 to="/"
+                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs transition-all shadow-2xs cursor-pointer"
+                 title="Return to Home Page"
+               >
+                 <ArrowLeft size={14} className="text-slate-500" />
+                 <span>Back to Home</span>
+               </Link>
+             ) : (
                <nav className="hidden md:flex items-center space-x-5 lg:space-x-6">
                  {navItems.map((item) => {
                    const isActive = location.pathname === item.path || (item.path === '/' && location.pathname === '/');
