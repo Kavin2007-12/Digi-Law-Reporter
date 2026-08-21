@@ -21,7 +21,7 @@ export default function AdminPublishedCases() {
           title: c.title || '',
           citation: Array.isArray(c.citations) && c.citations.length > 0
             ? `${c.citations[0].year} (${c.citations[0].month}) DLR (${c.citations[0].court}) #${c.citations[0].number}`
-            : (c.case_number || 'Published Precedent'),
+            : (c.case_number || '—'),
           year: c.year || '',
           judgmentDate: c.judgment_date ? new Date(c.judgment_date).toISOString().split('T')[0] : ''
         }));

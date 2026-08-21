@@ -119,7 +119,7 @@
       "email": "kavinselvaraj12@gmail.com",
       "role": "MAIN_ADMIN",
       "password": "Kavin4455",
-      "password_hash": "$2b$10$oEUGDwx2X7MrQFEDLUlexeHQYj3I0rLbPuxe5r5m3/pjMnyScrXqK"
+      "password_hash": "$2b$10$BrBdfc9hTP/Ad5lfbIn7QeIcSYvlwhMsOKyt6ypI3SlpkuIg8I0sK"
     },
     {
       "id": "1787037038819",
@@ -132,6 +132,40 @@
     }
   ],
   "cases": [
+    {
+      "id": 1787292651598,
+      "case_number": "",
+      "caseNumber": "",
+      "title": "SHAURYA SUNIL KUMAR SINGH vs. CENTRAL BUREAU OF INVESTIGATION",
+      "petitioner": "SHAURYA SUNIL KUMAR SINGH",
+      "petitioner_name": "SHAURYA SUNIL KUMAR SINGH",
+      "respondent": "CENTRAL BUREAU OF INVESTIGATION",
+      "respondent_name": "CENTRAL BUREAU OF INVESTIGATION",
+      "court": "Supreme Court of India",
+      "court_name": "Supreme Court of India",
+      "judgment_date": "2026-06-21",
+      "judgmentDate": "2026-06-21",
+      "year": "2026",
+      "act": "",
+      "section": "",
+      "head_note": "<p>Non-filing of additional copies of the charge-sheet under Section 193(8) would not vitiate the charge sheet/police report itself. Once the charge sheet is filed, in compliance with the form prescribed under Section 193(3) BNSS, within the prescribed period, the right to default bail ceases. (Para No.23) <strong>2026 (7) DLR (SC) 3</strong></p>",
+      "summary": "<p>Non-filing of additional copies of the charge-sheet under Section 193(8) would not vitiate the charge sheet/police report itself. Once the charge sheet is filed, in compliance with the form prescribed under Section 193(3) BNSS, within the prescribed period, the right to default bail ceases. (Para No.23) <strong>2026 (7) DLR (SC) 3</strong></p>",
+      "headNote": "<p>Non-filing of additional copies of the charge-sheet under Section 193(8) would not vitiate the charge sheet/police report itself. Once the charge sheet is filed, in compliance with the form prescribed under Section 193(3) BNSS, within the prescribed period, the right to default bail ceases. (Para No.23) <strong>2026 (7) DLR (SC) 3</strong></p>",
+      "judgment_text": "<p style=\"text-align: left;\">J U D G M E N T</p><p style=\"text-align: justify;\">SANJAY KAROL, J.</p><p style=\"text-align: justify;\">1. Leave granted.</p><p style=\"text-align: justify;\">2. The present appeal has been preferred against the impugned judgment and order dated 06.02.2026 in CRA No. 475 of 2025 passed by the High Court of Judicature at Bombay, whereby the plea of the appellant - accused for default bail came to be dismissed in connection with FIR No. RC0682025E00041 dated04.07.2025 registered under Sections 61(2) read with 318, 336 and 340 of the Bharatiya Nyaya Sanhita, 20232 ; Section 7 of the Prevention of Corruption Act, 1988 and Section 66 of the Information Technology Act, 2000.</p><p style=\"text-align: justify;\">3. The subject FIR came to be registered against (i) SP Cargo and Courier Services Pvt. Ltd; (ii) Sudhir Palande; (iii) Unknown private persons, and (iv) Unknown bank officials. The case set in the FIR is that reliable information was received by the Central Bureau of Investigation3 , Mumbai that unknown cyber criminals are using sophisticated digital means to extort money from individuals. This has included using tools for impersonation and creating forged documents. Further, they are being assisted by bank officials for the deposit of the cyber fraud proceeds into their bank accounts. The bank officials were abusing their official positions by opening and operating mule accounts based on forged KYC documents, without proper verification.</p><p></p>",
+      "content": "<p style=\"text-align: left;\">J U D G M E N T</p><p style=\"text-align: justify;\">SANJAY KAROL, J.</p><p style=\"text-align: justify;\">1. Leave granted.</p><p style=\"text-align: justify;\">2. The present appeal has been preferred against the impugned judgment and order dated 06.02.2026 in CRA No. 475 of 2025 passed by the High Court of Judicature at Bombay, whereby the plea of the appellant - accused for default bail came to be dismissed in connection with FIR No. RC0682025E00041 dated04.07.2025 registered under Sections 61(2) read with 318, 336 and 340 of the Bharatiya Nyaya Sanhita, 20232 ; Section 7 of the Prevention of Corruption Act, 1988 and Section 66 of the Information Technology Act, 2000.</p><p style=\"text-align: justify;\">3. The subject FIR came to be registered against (i) SP Cargo and Courier Services Pvt. Ltd; (ii) Sudhir Palande; (iii) Unknown private persons, and (iv) Unknown bank officials. The case set in the FIR is that reliable information was received by the Central Bureau of Investigation3 , Mumbai that unknown cyber criminals are using sophisticated digital means to extort money from individuals. This has included using tools for impersonation and creating forged documents. Further, they are being assisted by bank officials for the deposit of the cyber fraud proceeds into their bank accounts. The bank officials were abusing their official positions by opening and operating mule accounts based on forged KYC documents, without proper verification.</p><p></p>",
+      "judgmentText": "<p style=\"text-align: left;\">J U D G M E N T</p><p style=\"text-align: justify;\">SANJAY KAROL, J.</p><p style=\"text-align: justify;\">1. Leave granted.</p><p style=\"text-align: justify;\">2. The present appeal has been preferred against the impugned judgment and order dated 06.02.2026 in CRA No. 475 of 2025 passed by the High Court of Judicature at Bombay, whereby the plea of the appellant - accused for default bail came to be dismissed in connection with FIR No. RC0682025E00041 dated04.07.2025 registered under Sections 61(2) read with 318, 336 and 340 of the Bharatiya Nyaya Sanhita, 20232 ; Section 7 of the Prevention of Corruption Act, 1988 and Section 66 of the Information Technology Act, 2000.</p><p style=\"text-align: justify;\">3. The subject FIR came to be registered against (i) SP Cargo and Courier Services Pvt. Ltd; (ii) Sudhir Palande; (iii) Unknown private persons, and (iv) Unknown bank officials. The case set in the FIR is that reliable information was received by the Central Bureau of Investigation3 , Mumbai that unknown cyber criminals are using sophisticated digital means to extort money from individuals. This has included using tools for impersonation and creating forged documents. Further, they are being assisted by bank officials for the deposit of the cyber fraud proceeds into their bank accounts. The bank officials were abusing their official positions by opening and operating mule accounts based on forged KYC documents, without proper verification.</p><p></p>",
+      "status": "Draft",
+      "citations": [
+        {
+          "id": 1787292062970,
+          "year": "2026",
+          "month": "07",
+          "court": "sc",
+          "number": "3",
+          "equivalentText": "2026 INSC 666"
+        }
+      ]
+    },
     {
       "id": 1787202270090,
       "case_number": "CRIMINAL APPEAL NO.1523 OF 2014 [Arising out of Special Leave Petition (Crl.) No.8783 of 2013]",

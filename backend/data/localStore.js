@@ -324,8 +324,8 @@ class LocalStore {
     const store = this.read();
     if (!store.cases) store.cases = [];
     
-    const num = caseData.caseNumber || caseData.case_number || 'CA ' + Date.now().toString().slice(-4);
-    const titleVal = caseData.title || (caseData.petitioner && caseData.respondent ? `${caseData.petitioner} vs. ${caseData.respondent}` : num);
+    const num = (caseData.caseNumber || caseData.case_number || '').trim();
+    const titleVal = (caseData.title || '').trim() || (caseData.petitioner && caseData.respondent ? `${caseData.petitioner} vs. ${caseData.respondent}` : (num || 'Untitled Case Record'));
     const dateVal = caseData.judgmentDate || caseData.judgment_date || new Date().toISOString().split('T')[0];
     const yearVal = caseData.year || (dateVal ? dateVal.substring(0, 4) : '2026');
     const headNoteVal = caseData.headNote || caseData.summary || caseData.head_note || '';

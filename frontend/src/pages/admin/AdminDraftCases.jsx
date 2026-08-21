@@ -21,7 +21,7 @@ export default function AdminDraftCases() {
           title: c.title || '',
           citation: Array.isArray(c.citations) && c.citations.length > 0
             ? `${c.citations[0].year} (${c.citations[0].month}) DLR (${c.citations[0].court}) #${c.citations[0].number}`
-            : (c.case_number || 'Draft Precedent'),
+            : (c.case_number || '—'),
           year: c.year || '',
           updatedAt: c.updated_at ? new Date(c.updated_at).toISOString().split('T')[0] : 'Today'
         }));
