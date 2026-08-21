@@ -128,7 +128,7 @@
       "email": "kavinselvaraj12@gmail.com",
       "role": "MAIN_ADMIN",
       "password": "Kavin4455",
-      "password_hash": "$2b$10$uC5zcs5qNK5WX.KqrynNQO7r8p.p.Z6PUO67ec3J2UfgHzu4birBy"
+      "password_hash": "$2b$10$pqeOCye8FFlmIiWvVoKaGebuPBF7oItgy8YBjqVCBCocNyYug8Ybi"
     },
     {
       "id": "1787037038819",
@@ -302,6 +302,15 @@
       "createdAt": 1787294254380,
       "expiresAt": 1787297854380,
       "lastActivity": 1787294254380
+    },
+    {
+      "sessionId": "511ffa7aab27de9c6b641294c33607a3001ae5110b873a1f2b77a17af5ffd120",
+      "adminId": "1",
+      "email": "kavinselvaraj12@gmail.com",
+      "role": "MAIN_ADMIN",
+      "createdAt": 1787303633896,
+      "expiresAt": 1787307233896,
+      "lastActivity": 1787303633896
     }
   ]
 }

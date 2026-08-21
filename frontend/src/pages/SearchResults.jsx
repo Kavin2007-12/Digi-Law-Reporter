@@ -806,7 +806,7 @@ export default function SearchResults() {
           {selectedCase ? (
             <>
               {/* CASE DETAILS ACTION TOOLBAR BAR */}
-              <div className="bg-[#1E4D6E] text-white px-3 py-1.5 flex sm:flex-nowrap flex-wrap items-center justify-between gap-2 shrink-0 shadow-md z-10 no-print">
+              <div className="bg-[#1E4D6E] text-white px-2 sm:px-3 py-1.5 flex items-center justify-between gap-1 sm:gap-2 shrink-0 shadow-md z-10 no-print">
                 
                 {/* Navigation Pill (|< < Pencil > >|) - Hidden on mobile view only */}
                 <div className="hidden sm:flex items-center bg-[#153852] rounded-full px-2 py-0.5 gap-1 border border-blue-400/30">
@@ -854,189 +854,199 @@ export default function SearchResults() {
                   </button>
                 </div>
 
-                {/* Right Action Icons (Copy, Save, Search, Share, Font Size, Print, Download, Audio) */}
-                <div className="flex items-center gap-1 sm:gap-2">
+                {/* Right Action Icons (Centered Font Size & Right-Aligned Print/Download/Share/Audio on Mobile) */}
+                <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-1 sm:gap-2">
                   
-                  {/* 1. Copy Icon */}
-                  <button 
-                    onClick={() => handleCopyCitation(`${selectedCase.title}\nCitation: ${selectedCase.citation || 'N/A'}\nCourt: ${selectedCase.court_name || ''}`)}
-                    className="p-1.5 hover:bg-blue-800/80 rounded transition-colors text-white cursor-pointer"
-                    title="Copy Citation & Judgment Title"
-                  >
-                    {copiedCitation ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
-                  </button>
-
-                  {/* 2. Save Case / Bookmark Icon */}
-                  <button 
-                    onClick={(e) => handleToggleSaveCase(selectedCase, e)}
-                    className={`p-1.5 rounded transition-colors cursor-pointer ${
-                      savedCases.some(c => String(c.id) === String(selectedCase.id))
-                        ? 'bg-emerald-600 text-white font-bold shadow-xs'
-                        : 'hover:bg-blue-800/80 text-white'
-                    }`}
-                    title={savedCases.some(c => String(c.id) === String(selectedCase.id)) ? "Saved Case (Click to remove)" : "Save Case / Bookmark"}
-                  >
-                    {savedCases.some(c => String(c.id) === String(selectedCase.id)) ? (
-                      <BookmarkCheck size={16} className="text-emerald-200" />
-                    ) : (
-                      <Bookmark size={16} />
-                    )}
-                  </button>
-
-                  {/* 3. Search inside Judgment Document */}
-                  <div className="relative flex items-center">
+                  {/* Left Mobile Group: Copy, Save/Bookmark, Search */}
+                  <div className="flex items-center gap-1 sm:gap-2">
+                    {/* 1. Copy Icon */}
                     <button 
-                      onClick={() => setShowDocSearch(!showDocSearch)}
-                      className={`p-1.5 rounded transition-colors cursor-pointer ${showDocSearch ? 'bg-blue-800 text-yellow-300' : 'hover:bg-blue-800/80 text-white'}`}
-                      title="Find / Search in Judgment Text"
+                      onClick={() => handleCopyCitation(`${selectedCase.title}\nCitation: ${selectedCase.citation || 'N/A'}\nCourt: ${selectedCase.court_name || ''}`)}
+                      className="p-1.5 hover:bg-blue-800/80 rounded transition-colors text-white cursor-pointer"
+                      title="Copy Citation & Judgment Title"
                     >
-                      <Search size={16} />
+                      {copiedCitation ? <Check size={16} className="text-emerald-400" /> : <Copy size={16} />}
                     </button>
 
-                    {showDocSearch && (
-                      <div className="absolute left-0 sm:left-auto sm:right-0 top-9 bg-slate-900 border border-slate-700 p-1.5 rounded-lg shadow-xl flex items-center gap-1 z-50 w-44 sm:w-[240px]">
-                        <input
-                          type="text"
-                          value={searchWithinDoc}
-                          onChange={(e) => setSearchWithinDoc(e.target.value)}
-                          placeholder="Search text..."
-                          className="bg-slate-800 text-white text-[11px] px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-blue-500 flex-1 min-w-0 placeholder:text-[10px]"
-                          autoFocus
-                        />
-                        <X size={14} className="text-slate-400 cursor-pointer hover:text-white shrink-0 p-0.5" onClick={() => setShowDocSearch(false)} />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* 5. Font Size Toggle (A+/A-) */}
-                  <div className="flex items-center bg-[#153852] rounded px-1.5 py-0.5 border border-blue-400/30 text-xs font-mono font-bold">
+                    {/* 2. Save Case / Bookmark Icon */}
                     <button 
-                      onClick={() => setFontSize(prev => Math.max(10, prev - 1))}
-                      className="px-1 hover:text-yellow-300 transition-colors cursor-pointer"
-                      title="Decrease Font Size"
+                      onClick={(e) => handleToggleSaveCase(selectedCase, e)}
+                      className={`p-1.5 rounded transition-colors cursor-pointer ${
+                        savedCases.some(c => String(c.id) === String(selectedCase.id))
+                          ? 'bg-emerald-600 text-white font-bold shadow-xs'
+                          : 'hover:bg-blue-800/80 text-white'
+                      }`}
+                      title={savedCases.some(c => String(c.id) === String(selectedCase.id)) ? "Saved Case (Click to remove)" : "Save Case / Bookmark"}
                     >
-                      A-
-                    </button>
-                    <span className="px-1 text-[11px] text-blue-200">{fontSize}px</span>
-                    <button 
-                      onClick={() => setFontSize(prev => Math.min(32, prev + 1))}
-                      className="px-1 hover:text-yellow-300 transition-colors cursor-pointer"
-                      title="Increase Font Size"
-                    >
-                      A+
-                    </button>
-                  </div>
-
-                  {/* 6. Print Icon (Uses Single Source-of-Truth PDF Generator) */}
-                  <button 
-                    onClick={() => printCaseAsPDF(selectedCase, 'printable-judgment-document', showToast)}
-                    className="p-1.5 hover:bg-blue-800/80 rounded transition-colors text-white cursor-pointer"
-                    title="Print Official Legal Document"
-                    aria-label="Print document"
-                  >
-                    <Printer size={16} />
-                  </button>
-
-                  {/* 7. Download PDF Icon */}
-                  <button 
-                    onClick={() => downloadCaseAsPDF(selectedCase, 'printable-judgment-document', showToast)}
-                    className="p-1.5 hover:bg-blue-800/80 rounded transition-colors text-white cursor-pointer"
-                    title="Download Judgment PDF Document"
-                    aria-label="Download PDF document"
-                  >
-                    <Download size={16} />
-                  </button>
-
-                  {/* 8. Share Case with Popover Menu */}
-                  <div className="relative flex items-center" ref={shareMenuRef}>
-                    <button 
-                      onClick={() => setIsShareMenuOpen(prev => !prev)}
-                      className={`p-1.5 rounded transition-colors text-white cursor-pointer ${isShareMenuOpen ? 'bg-blue-800 text-yellow-300' : 'hover:bg-blue-800/80'}`}
-                      title="Share Document"
-                      aria-label="Share document"
-                      aria-expanded={isShareMenuOpen}
-                      aria-haspopup="true"
-                    >
-                      <Share2 size={16} />
+                      {savedCases.some(c => String(c.id) === String(selectedCase.id)) ? (
+                        <BookmarkCheck size={16} className="text-emerald-200" />
+                      ) : (
+                        <Bookmark size={16} />
+                      )}
                     </button>
 
-                    {/* Share Popover Menu */}
-                    {isShareMenuOpen && (
-                      <div 
-                        role="menu"
-                        aria-label="Share options"
-                        className="absolute right-0 top-9 bg-slate-900 border border-slate-700/90 rounded-xl shadow-2xl p-2 z-50 min-w-[190px] text-xs font-sans space-y-1 animate-in fade-in zoom-in-95"
+                    {/* 3. Search inside Judgment Document */}
+                    <div className="relative flex items-center">
+                      <button 
+                        onClick={() => setShowDocSearch(!showDocSearch)}
+                        className={`p-1.5 rounded transition-colors cursor-pointer ${showDocSearch ? 'bg-blue-800 text-yellow-300' : 'hover:bg-blue-800/80 text-white'}`}
+                        title="Find / Search in Judgment Text"
                       >
-                        <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 mb-1">
-                          Share Document
+                        <Search size={16} />
+                      </button>
+
+                      {showDocSearch && (
+                        <div className="absolute left-0 sm:left-auto sm:right-0 top-9 bg-slate-900 border border-slate-700 p-1.5 rounded-lg shadow-xl flex items-center gap-1 z-50 w-44 sm:w-[240px]">
+                          <input
+                            type="text"
+                            value={searchWithinDoc}
+                            onChange={(e) => setSearchWithinDoc(e.target.value)}
+                            placeholder="Search text..."
+                            className="bg-slate-800 text-white text-[11px] px-2 py-1 rounded border border-slate-700 focus:outline-none focus:border-blue-500 flex-1 min-w-0 placeholder:text-[10px]"
+                            autoFocus
+                          />
+                          <X size={14} className="text-slate-400 cursor-pointer hover:text-white shrink-0 p-0.5" onClick={() => setShowDocSearch(false)} />
                         </div>
-
-                        {/* WhatsApp */}
-                        <button
-                          role="menuitem"
-                          aria-label="Share on WhatsApp"
-                          onClick={() => handleShareClick('whatsapp')}
-                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-emerald-400 transition-colors font-medium cursor-pointer text-left"
-                        >
-                          <WhatsappIcon />
-                          <span>WhatsApp</span>
-                        </button>
-
-                        {/* LinkedIn */}
-                        <button
-                          role="menuitem"
-                          aria-label="Share on LinkedIn"
-                          onClick={() => handleShareClick('linkedin')}
-                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-blue-400 transition-colors font-medium cursor-pointer text-left"
-                        >
-                          <LinkedInIcon />
-                          <span>LinkedIn</span>
-                        </button>
-
-                        {/* X / Twitter */}
-                        <button
-                          role="menuitem"
-                          aria-label="Share on X (Twitter)"
-                          onClick={() => handleShareClick('twitter')}
-                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white transition-colors font-medium cursor-pointer text-left"
-                        >
-                          <TwitterXIcon />
-                          <span>X / Twitter</span>
-                        </button>
-
-                        {/* Email */}
-                        <button
-                          role="menuitem"
-                          aria-label="Share via Email"
-                          onClick={() => handleShareClick('email')}
-                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-red-400 transition-colors font-medium cursor-pointer text-left"
-                        >
-                          <Mail size={15} className="text-red-400 shrink-0" />
-                          <span>Email</span>
-                        </button>
-
-                        {/* Copy Link */}
-                        <button
-                          role="menuitem"
-                          aria-label="Copy document link"
-                          onClick={() => handleShareClick('copy')}
-                          className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-yellow-400 transition-colors font-medium cursor-pointer text-left border-t border-slate-800/80 mt-1 pt-1.5"
-                        >
-                          {copySuccess ? <Check size={15} className="text-emerald-400 shrink-0" /> : <Copy size={15} className="text-yellow-400 shrink-0" />}
-                          <span>{copySuccess ? 'Link copied' : 'Copy Link'}</span>
-                        </button>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
 
-                  {/* 9. Audio Speaker Text-to-Speech Icon */}
-                  <button 
-                    onClick={handleToggleAudio}
-                    className={`p-1.5 rounded transition-colors cursor-pointer ${isSpeaking ? 'bg-yellow-400 text-slate-950 font-bold animate-pulse' : 'hover:bg-blue-800/80 text-white'}`}
-                    title="Listen to Audio Judgment (Text-to-Speech)"
-                  >
-                    {isSpeaking ? <VolumeX size={16} /> : <Volume2 size={16} />}
-                  </button>
+                  {/* Center Mobile Group: Font Size Toggle (A+/A-) */}
+                  <div className="flex items-center justify-center">
+                    <div className="flex items-center bg-[#153852] rounded px-1.5 py-0.5 border border-blue-400/30 text-xs font-mono font-bold">
+                      <button 
+                        onClick={() => setFontSize(prev => Math.max(10, prev - 1))}
+                        className="px-1 hover:text-yellow-300 transition-colors cursor-pointer"
+                        title="Decrease Font Size"
+                      >
+                        A-
+                      </button>
+                      <span className="px-1 text-[11px] text-blue-200">{fontSize}px</span>
+                      <button 
+                        onClick={() => setFontSize(prev => Math.min(32, prev + 1))}
+                        className="px-1 hover:text-yellow-300 transition-colors cursor-pointer"
+                        title="Increase Font Size"
+                      >
+                        A+
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Right Mobile Group: Print, Download, Share, Audio */}
+                  <div className="flex items-center gap-1 sm:gap-2 justify-end">
+                    {/* 6. Print Icon */}
+                    <button 
+                      onClick={() => printCaseAsPDF(selectedCase, 'printable-judgment-document', showToast)}
+                      className="p-1.5 hover:bg-blue-800/80 rounded transition-colors text-white cursor-pointer"
+                      title="Print Official Legal Document"
+                      aria-label="Print document"
+                    >
+                      <Printer size={16} />
+                    </button>
+
+                    {/* 7. Download PDF Icon */}
+                    <button 
+                      onClick={() => downloadCaseAsPDF(selectedCase, 'printable-judgment-document', showToast)}
+                      className="p-1.5 hover:bg-blue-800/80 rounded transition-colors text-white cursor-pointer"
+                      title="Download Judgment PDF Document"
+                      aria-label="Download PDF document"
+                    >
+                      <Download size={16} />
+                    </button>
+
+                    {/* 8. Share Case with Popover Menu */}
+                    <div className="relative flex items-center" ref={shareMenuRef}>
+                      <button 
+                        onClick={() => setIsShareMenuOpen(prev => !prev)}
+                        className={`p-1.5 rounded transition-colors text-white cursor-pointer ${isShareMenuOpen ? 'bg-blue-800 text-yellow-300' : 'hover:bg-blue-800/80'}`}
+                        title="Share Document"
+                        aria-label="Share document"
+                        aria-expanded={isShareMenuOpen}
+                        aria-haspopup="true"
+                      >
+                        <Share2 size={16} />
+                      </button>
+
+                      {/* Share Popover Menu */}
+                      {isShareMenuOpen && (
+                        <div 
+                          role="menu"
+                          aria-label="Share options"
+                          className="absolute right-0 top-9 bg-slate-900 border border-slate-700/90 rounded-xl shadow-2xl p-2 z-50 min-w-[190px] text-xs font-sans space-y-1 animate-in fade-in zoom-in-95"
+                        >
+                          <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-800 mb-1">
+                            Share Document
+                          </div>
+
+                          {/* WhatsApp */}
+                          <button
+                            role="menuitem"
+                            aria-label="Share on WhatsApp"
+                            onClick={() => handleShareClick('whatsapp')}
+                            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white transition-colors font-medium cursor-pointer text-left"
+                          >
+                            <WhatsappIcon />
+                            <span>WhatsApp</span>
+                          </button>
+
+                          {/* LinkedIn */}
+                          <button
+                            role="menuitem"
+                            aria-label="Share on LinkedIn"
+                            onClick={() => handleShareClick('linkedin')}
+                            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white transition-colors font-medium cursor-pointer text-left"
+                          >
+                            <LinkedInIcon />
+                            <span>LinkedIn</span>
+                          </button>
+
+                          {/* X / Twitter */}
+                          <button
+                            role="menuitem"
+                            aria-label="Share on X (Twitter)"
+                            onClick={() => handleShareClick('twitter')}
+                            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white transition-colors font-medium cursor-pointer text-left"
+                          >
+                            <TwitterXIcon />
+                            <span>X / Twitter</span>
+                          </button>
+
+                          {/* Email */}
+                          <button
+                            role="menuitem"
+                            aria-label="Share via Email"
+                            onClick={() => handleShareClick('email')}
+                            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white transition-colors font-medium cursor-pointer text-left"
+                          >
+                            <Mail size={15} className="text-sky-400 shrink-0" />
+                            <span>Email</span>
+                          </button>
+
+                          <div className="border-t border-slate-800 my-1"></div>
+
+                          {/* Copy Link */}
+                          <button
+                            role="menuitem"
+                            aria-label="Copy document link"
+                            onClick={() => handleShareClick('copy')}
+                            className="w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-slate-200 hover:bg-slate-800 hover:text-white transition-colors font-medium cursor-pointer text-left"
+                          >
+                            {copySuccess ? <Check size={15} className="text-emerald-400 shrink-0" /> : <Copy size={15} className="text-yellow-400 shrink-0" />}
+                            <span>{copySuccess ? 'Link copied' : 'Copy Link'}</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 9. Audio Speaker Text-to-Speech Icon */}
+                    <button 
+                      onClick={handleToggleAudio}
+                      className={`p-1.5 rounded transition-colors cursor-pointer ${isSpeaking ? 'bg-yellow-400 text-slate-950 font-bold animate-pulse' : 'hover:bg-blue-800/80 text-white'}`}
+                      title="Listen to Audio Judgment (Text-to-Speech)"
+                    >
+                      {isSpeaking ? <VolumeX size={16} /> : <Volume2 size={16} />}
+                    </button>
+                  </div>
 
                 </div>
               </div>
