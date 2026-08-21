@@ -26,15 +26,7 @@ export default function AdminDashboard() {
   const navigate = useNavigate();
   const [selectedYear, setSelectedYear] = useState('');
   const [selectedMonth, setSelectedMonth] = useState('');
-
-  const [stats, setStats] = useState({
-    totalCases: 0,
-    publishedCases: 0,
-    draftCases: 0,
-    totalUsers: 3
-  });
-
-  const [recentCases, setRecentCases] = useState([]);
+  const [allCases, setAllCases] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -45,29 +37,7 @@ export default function AdminDashboard() {
         const casesData = await casesRes.json();
 
         if (casesData.success && Array.isArray(casesData.data)) {
-          const allCases = casesData.data;
-          const published = allCases.filter(c => c.status === 'Published').length;
-          const draft = allCases.filter(c => c.status === 'Draft').length;
-
-          setStats(prev => ({
-            ...prev,
-            totalCases: allCases.length,
-            publishedCases: published,
-            draftCases: draft
-          }));
-
-          const recent = allCases.slice(0, 5).map(c => ({
-            id: c.id,
-            caseNumber: c.case_number || '',
-            title: c.title || '',
-            court: c.court || 'Supreme Court of India',
-            judgmentDate: c.judgment_date ? new Date(c.judgment_date).toISOString().split('T')[0] : '',
-            status: c.status || 'Published',
-            citation: Array.isArray(c.citations) && c.citations.length > 0
-              ? `${c.citations[0].year} (${c.citations[0].month}) DLR (${c.citations[0].court}) #${c.citations[0].number}`
-              : (c.case_number || 'N/A')
-          }));
-          setRecentCases(recent);
+          setAllCases(casesData.data);
         }
       } catch (err) {
         console.error('Error fetching dashboard stats:', err);
@@ -78,6 +48,65 @@ export default function AdminDashboard() {
 
     fetchDashboardData();
   }, []);
+
+  // Filter cases dynamically by selectedYear and selectedMonth
+  const filteredCases = React.useMemo(() => {
+    return allCases.filter(c => {
+      // 1. Year filter
+      let caseYear = '';
+      if (c.year) {
+        caseYear = String(c.year);
+      } else if (c.judgment_date) {
+        const dateObj = new Date(c.judgment_date);
+        if (!isNaN(dateObj.getTime())) caseYear = String(dateObj.getFullYear());
+      }
+      const matchesYear = !selectedYear || caseYear === String(selectedYear);
+
+      // 2. Month filter
+      let caseMonth = '';
+      if (c.judgment_date) {
+        const dateStr = String(c.judgment_date);
+        if (dateStr.includes('-')) {
+          caseMonth = dateStr.split('-')[1].padStart(2, '0');
+        } else {
+          const dateObj = new Date(c.judgment_date);
+          if (!isNaN(dateObj.getTime())) caseMonth = String(dateObj.getMonth() + 1).padStart(2, '0');
+        }
+      }
+      const matchesMonth = !selectedMonth || caseMonth === String(selectedMonth);
+
+      return matchesYear && matchesMonth;
+    });
+  }, [allCases, selectedYear, selectedMonth]);
+
+  // Compute dynamic stats from filteredCases
+  const stats = React.useMemo(() => {
+    const total = filteredCases.length;
+    const published = filteredCases.filter(c => (c.status || 'Published') === 'Published').length;
+    const draft = filteredCases.filter(c => c.status === 'Draft').length;
+
+    return {
+      totalCases: total,
+      publishedCases: published,
+      draftCases: draft,
+      totalUsers: 3
+    };
+  }, [filteredCases]);
+
+  // Compute dynamic recent cases list from filteredCases
+  const recentCases = React.useMemo(() => {
+    return filteredCases.slice(0, 5).map(c => ({
+      id: c.id,
+      caseNumber: c.case_number || '',
+      title: c.title || '',
+      court: c.court || c.court_name || 'Supreme Court of India',
+      judgmentDate: c.judgment_date ? new Date(c.judgment_date).toISOString().split('T')[0] : '',
+      status: c.status || 'Published',
+      citation: Array.isArray(c.citations) && c.citations.length > 0
+        ? `${c.citations[0].year} (${c.citations[0].month}) DLR (${c.citations[0].court}) #${c.citations[0].number}`
+        : (c.case_number || 'N/A')
+    }));
+  }, [filteredCases]);
 
   return (
     <div className="max-w-6xl mx-auto space-y-10 pb-16 font-jakarta text-[#0B1727]">

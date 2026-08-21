@@ -87,7 +87,17 @@ export default function AdminCases() {
       (c.petitioner || '').toLowerCase().includes(searchTerm.toLowerCase());
     
     const matchesStatus = !selectedStatus || c.status === selectedStatus;
-    const matchesYear = !selectedYear || String(c.year) === String(selectedYear);
+    const matchesYear = (() => {
+      if (!selectedYear) return true;
+      let caseYear = '';
+      if (c.year) {
+        caseYear = String(c.year);
+      } else if (c.judgmentDate) {
+        const d = new Date(c.judgmentDate);
+        if (!isNaN(d.getTime())) caseYear = String(d.getFullYear());
+      }
+      return caseYear === String(selectedYear);
+    })();
     
     const matchesMonth = (() => {
       if (!selectedMonth) return true;
