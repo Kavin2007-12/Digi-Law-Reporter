@@ -187,21 +187,26 @@ export const createAdmin = async (req, res) => {
       return res.status(400).json({ status: 'error', message: 'Name, Username, and Password are required' });
     }
 
+    if (typeof password !== 'string' || password.length < 8) {
+      return res.status(400).json({ status: 'error', message: 'Password must be at least 8 characters long.' });
+    }
+
     const password_hash = await bcrypt.hash(password, 10);
     
     const newAdmin = await userRepository.createAdmin({
-      name,
+      name: name.trim(),
       username: username.toLowerCase().trim(),
-      password,
       password_hash,
       role: role || 'EXTRA_ADMIN',
       created_by: req.user?.id || 1
     });
 
+    const { password: p, password_hash: ph, ...sanitized } = newAdmin || {};
+
     res.json({
       status: 'success',
       message: 'Sub-admin created successfully',
-      data: newAdmin
+      data: sanitized
     });
 
   } catch (error) {
@@ -212,10 +217,14 @@ export const createAdmin = async (req, res) => {
 
 export const getAdmins = async (req, res) => {
   try {
-    const admins = await userRepository.getAdmins();
+    const rawAdmins = await userRepository.getAdmins();
+    const sanitizedAdmins = (rawAdmins || []).map(a => {
+      const { password, password_hash, ...clean } = a;
+      return clean;
+    });
     res.json({
       status: 'success',
-      data: admins
+      data: sanitizedAdmins
     });
   } catch (error) {
     logger.error('Admin get users error', error);
@@ -336,16 +345,17 @@ export const updateAdminPassword = async (req, res) => {
 
     const updated = await userRepository.updateAdminCredentials(id, { 
       username: username ? String(username).trim().toLowerCase() : undefined, 
-      password: password ? String(password).trim() : undefined,
       password_hash: passwordHash 
     });
+
+    const { password: p, password_hash: ph, ...sanitized } = updated || {};
 
     logger.info(`Admin credentials updated for ID ${id}`);
 
     return res.json({
       status: 'success',
       message: 'Admin details updated successfully',
-      data: updated
+      data: sanitized
     });
   } catch (error) {
     logger.error(`Admin update password error for ID ${req.params.id}`, error);

@@ -1,6 +1,7 @@
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import bcrypt from 'bcrypt';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -159,24 +160,30 @@ class LocalStore {
   // Admin methods
   getAdmins() {
     const store = this.read();
-    return store.admins || defaultStore.admins;
+    const admins = store.admins || defaultStore.admins;
+    return admins.map(a => {
+      const { password, password_hash, ...sanitized } = a;
+      return sanitized;
+    });
   }
 
   addAdmin(adminData) {
     const store = this.read();
     if (!store.admins) store.admins = [];
+    const passwordHash = adminData.password_hash || (adminData.password ? bcrypt.hashSync(adminData.password, 10) : '');
     const newAdmin = {
       id: Date.now().toString(),
       name: adminData.name,
-      username: adminData.username.toLowerCase(),
-      email: `${adminData.username.toLowerCase()}@digilawreporter.in`,
-      password: adminData.password,
+      username: adminData.username.toLowerCase().trim(),
+      email: `${adminData.username.toLowerCase().trim()}@digilawreporter.in`,
+      password_hash: passwordHash,
       role: adminData.role || 'EXTRA_ADMIN',
       created_at: new Date().toISOString()
     };
     store.admins.push(newAdmin);
     this.write(store);
-    return newAdmin;
+    const { password, password_hash, ...sanitized } = newAdmin;
+    return sanitized;
   }
 
   updateAdminPassword(id, newPassword) {
@@ -193,10 +200,17 @@ class LocalStore {
       if (store.admins[idx].role === 'MAIN_ADMIN') {
         store.admins[idx].email = 'kavinselvaraj12@gmail.com';
       }
-      if (password) store.admins[idx].password = password;
-      if (password_hash) store.admins[idx].password_hash = password_hash;
+      if (password) {
+        store.admins[idx].password_hash = bcrypt.hashSync(password, 10);
+        delete store.admins[idx].password;
+      }
+      if (password_hash) {
+        store.admins[idx].password_hash = password_hash;
+        delete store.admins[idx].password;
+      }
       this.write(store);
-      return store.admins[idx];
+      const { password: p, password_hash: ph, ...sanitized } = store.admins[idx];
+      return sanitized;
     }
     return null;
   }
