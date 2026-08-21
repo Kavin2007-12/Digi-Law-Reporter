@@ -59,6 +59,35 @@ export default function About() {
   return (
     <div className="flex-1 w-full bg-[#FAFBFF] font-jakarta">
       
+      {/* Top Hero Banner with Custom Background Image */}
+      <section 
+        className="relative bg-cover bg-center bg-no-repeat py-12 md:py-16 px-4 sm:px-6 lg:px-8 border-b border-slate-200/80 overflow-hidden shadow-xs"
+        style={{ backgroundImage: `url('/about_bg.jpg')` }}
+      >
+        <div className="absolute inset-0 bg-white/75 backdrop-blur-[1px]"></div>
+
+        <div className="relative max-w-5xl mx-auto text-center space-y-4">
+          <span className="text-primary-700 font-extrabold tracking-widest uppercase text-[11px] px-3.5 py-1 bg-white/90 border border-primary-200/80 rounded-full inline-block shadow-2xs">
+            AUTHENTIC LEGAL PRECEDENT INDEX
+          </span>
+
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-[#0B1727] tracking-tight font-cinzel leading-tight">
+            {about.pageHeading || 'Pioneering Digital Legal Intelligence & Supreme Court Precedents'}
+          </h1>
+
+          <p className="text-slate-700 text-sm sm:text-base font-semibold max-w-3xl mx-auto leading-relaxed">
+            {about.pageSubheading || 'Empowering Advocates, Judiciary Members & Legal Researchers with Authentic Case Law Insights'}
+          </p>
+
+          {(about.aboutParagraph1 || about.aboutParagraph2) && (
+            <div className="pt-3 max-w-3xl mx-auto space-y-2 text-xs sm:text-sm text-slate-600 leading-relaxed font-medium bg-white/60 p-4 rounded-xl border border-white/80 shadow-2xs">
+              {about.aboutParagraph1 && <p>{about.aboutParagraph1}</p>}
+              {about.aboutParagraph2 && <p>{about.aboutParagraph2}</p>}
+            </div>
+          )}
+        </div>
+      </section>
+
       {/* Senior Founders & Managing Lawyers Showcase */}
       <section className="py-6 md:py-8 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
