@@ -257,20 +257,25 @@ export default function AdminCaseForm() {
   };
 
   const handleSave = async (targetStatus) => {
+    const finalStatus = targetStatus || formData.status || 'Published';
     try {
       const payload = {
-        caseNumber: formData.caseNumber,
+        caseNumber: formData.caseNumber || '',
         title: formData.title || (formData.petitioner && formData.respondent ? `${formData.petitioner} vs. ${formData.respondent}` : (formData.caseNumber || 'Case Record')),
-        petitioner: formData.petitioner,
-        respondent: formData.respondent,
-        court: formData.court,
-        judgmentDate: formData.judgmentDate,
+        petitioner: formData.petitioner || '',
+        respondent: formData.respondent || '',
+        court: formData.court || 'Supreme Court of India',
+        judgmentDate: formData.judgmentDate || '',
         year: formData.year || (formData.judgmentDate ? formData.judgmentDate.substring(0, 4) : '2026'),
-        act: formData.act,
-        section: formData.section,
-        headNote: formData.summary,
-        judgmentText: formData.judgmentText,
-        status: targetStatus,
+        act: formData.act || '',
+        section: formData.section || '',
+        headNote: formData.summary || '',
+        summary: formData.summary || '',
+        head_note: formData.summary || '',
+        judgmentText: formData.judgmentText || '',
+        content: formData.judgmentText || '',
+        judgment_text: formData.judgmentText || '',
+        status: finalStatus,
         citations: citationsList
       };
 
@@ -285,7 +290,7 @@ export default function AdminCaseForm() {
       const data = await res.json();
 
       if (data.success) {
-        showToast(isEditing ? `Case updated as "${targetStatus}"` : `Case precedent saved as "${targetStatus}"!`);
+        showToast(isEditing ? `Case record updated successfully!` : `Case precedent saved as "${finalStatus}"!`);
       } else {
         showToast(data.message || 'Error saving case record');
       }
@@ -333,7 +338,7 @@ export default function AdminCaseForm() {
           </p>
         </div>
 
-        {/* TOP RIGHT ACTION BUTTONS (Matching User Screenshot) */}
+        {/* TOP RIGHT ACTION BUTTONS */}
         <div className="flex items-center gap-2.5 shrink-0">
           <button
             type="button"
@@ -343,25 +348,56 @@ export default function AdminCaseForm() {
             Cancel
           </button>
 
-          <button
-            type="button"
-            onClick={() => handleSave('Draft')}
-            className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 font-bold border border-slate-300 rounded-lg text-xs transition-all shadow-2xs cursor-pointer"
-          >
-            Save Draft
-          </button>
-
-          <button
-            type="button"
-            onClick={() => handleSave('Published')}
-            className="px-5 py-2 bg-[#0B1727] hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all shadow-xs cursor-pointer"
-          >
-            {isEditing ? 'Update Case' : 'Publish Case'}
-          </button>
+          {isEditing ? (
+            <>
+              {formData.status === 'Draft' && (
+                <button
+                  type="button"
+                  onClick={() => handleSave('Published')}
+                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition-all shadow-2xs cursor-pointer"
+                >
+                  Publish Case
+                </button>
+              )}
+              {formData.status === 'Published' && (
+                <button
+                  type="button"
+                  onClick={() => handleSave('Draft')}
+                  className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white font-bold rounded-lg text-xs transition-all shadow-2xs cursor-pointer"
+                >
+                  Move to Draft
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => handleSave(formData.status)}
+                className="px-5 py-2 bg-[#0B1727] hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all shadow-xs cursor-pointer"
+              >
+                Update Case
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => handleSave('Draft')}
+                className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 font-bold border border-slate-300 rounded-lg text-xs transition-all shadow-2xs cursor-pointer"
+              >
+                Save Draft
+              </button>
+              <button
+                type="button"
+                onClick={() => handleSave('Published')}
+                className="px-5 py-2 bg-[#0B1727] hover:bg-slate-800 text-white font-bold rounded-lg text-xs transition-all shadow-xs cursor-pointer"
+              >
+                Publish Case
+              </button>
+            </>
+          )}
         </div>
       </div>
 
-      <form onSubmit={(e) => { e.preventDefault(); handleSave('Published'); }} className="bg-white border border-slate-200/80 rounded-xl p-8 shadow-xs space-y-10">
+      <form onSubmit={(e) => { e.preventDefault(); handleSave(isEditing ? formData.status : 'Published'); }} className="bg-white border border-slate-200/80 rounded-xl p-8 shadow-xs space-y-10">
         
         {/* SECTION 1: CASE INFORMATION */}
         <div className="space-y-5">

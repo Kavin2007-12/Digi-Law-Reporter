@@ -370,17 +370,17 @@ class LocalStore {
     const idx = store.cases.findIndex(c => String(c.id) === String(id));
     if (idx >= 0) {
       const existing = store.cases[idx];
-      const caseNum = caseData.caseNumber || caseData.case_number || existing.caseNumber || existing.case_number || '';
+      const caseNum = caseData.caseNumber !== undefined ? caseData.caseNumber : (caseData.case_number !== undefined ? caseData.case_number : (existing.caseNumber || existing.case_number || ''));
       const pet = caseData.petitioner !== undefined ? caseData.petitioner : (caseData.petitioner_name !== undefined ? caseData.petitioner_name : existing.petitioner);
       const resp = caseData.respondent !== undefined ? caseData.respondent : (caseData.respondent_name !== undefined ? caseData.respondent_name : existing.respondent);
       const crt = caseData.court !== undefined ? caseData.court : (caseData.court_name !== undefined ? caseData.court_name : existing.court);
-      const dt = caseData.judgmentDate || caseData.judgment_date || existing.judgmentDate || existing.judgment_date || '';
-      const yr = caseData.year || (dt ? dt.substring(0, 4) : (existing.year || '2026'));
+      const dt = caseData.judgmentDate !== undefined ? caseData.judgmentDate : (caseData.judgment_date !== undefined ? caseData.judgment_date : existing.judgmentDate);
+      const yr = caseData.year !== undefined ? caseData.year : (dt ? dt.substring(0, 4) : (existing.year || '2026'));
       const head = caseData.headNote !== undefined ? caseData.headNote : (caseData.summary !== undefined ? caseData.summary : (caseData.head_note !== undefined ? caseData.head_note : existing.head_note));
       const jText = caseData.judgmentText !== undefined ? caseData.judgmentText : (caseData.content !== undefined ? caseData.content : (caseData.judgment_text !== undefined ? caseData.judgment_text : existing.judgment_text));
-      const ttl = caseData.title || (pet && resp ? `${pet} vs. ${resp}` : (existing.title || caseNum));
-      const stat = caseData.status || existing.status || 'Published';
-      const cits = caseData.citations || existing.citations || [];
+      const ttl = caseData.title !== undefined && caseData.title.trim() ? caseData.title.trim() : (pet && resp ? `${pet} vs. ${resp}` : existing.title);
+      const stat = caseData.status !== undefined ? caseData.status : existing.status;
+      const cits = caseData.citations !== undefined ? caseData.citations : existing.citations;
 
       const updated = {
         ...existing,
