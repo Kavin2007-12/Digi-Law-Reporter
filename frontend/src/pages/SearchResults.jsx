@@ -470,7 +470,7 @@ export default function SearchResults() {
   const activeHighlightQuery = searchWithinDoc.trim() ? searchWithinDoc : query;
 
   return (
-    <div className="flex flex-col w-full h-screen bg-slate-900 text-slate-100 font-sans overflow-hidden">
+    <div className="flex flex-col w-full h-screen h-[100dvh] bg-slate-900 text-slate-100 font-sans overflow-hidden">
       
       {/* ========================================================================= */}
       {/* 1. TOP GLOBAL WORKSPACE HEADER BAR */}

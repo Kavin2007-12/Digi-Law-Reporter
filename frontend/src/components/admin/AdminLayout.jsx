@@ -359,7 +359,7 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content Body */}
-      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
+      <div className="flex-1 flex flex-col min-w-0 min-h-full">
         
         {/* Top Header Bar */}
         <header className="h-14 bg-white border-b border-slate-200/70 flex items-center justify-between px-4 sm:px-6 shrink-0 z-30 sticky top-0">

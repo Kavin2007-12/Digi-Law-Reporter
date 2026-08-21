@@ -14,7 +14,7 @@ export default function WhoCanBenefit() {
   ];
 
   return (
-    <section className="py-16 md:py-24 bg-white border-b border-slate-200">
+    <section className="py-10 md:py-14 bg-white border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
         <div className="mb-14 text-center max-w-3xl mx-auto space-y-3">

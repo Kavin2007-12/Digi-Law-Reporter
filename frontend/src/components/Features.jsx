@@ -100,7 +100,7 @@ export default function Features() {
   const current = features[activeFeature];
 
   return (
-    <section className="relative pt-10 md:pt-14 pb-16 md:pb-20 border-b border-slate-200 overflow-hidden bg-slate-50">
+    <section className="relative pt-8 md:pt-10 pb-10 md:pb-12 border-b border-slate-200 overflow-hidden bg-slate-50">
       
       {/* Subtle Supreme Court / Legal Environment Background Image */}
       <div 

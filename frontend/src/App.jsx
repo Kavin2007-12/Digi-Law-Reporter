@@ -46,7 +46,7 @@ function App() {
          <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#94a3b8 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.15 }}></div>
       </div>
       
-      <div className="relative z-10 flex flex-col min-h-screen">
+      <div className="relative z-10 flex flex-col flex-1 min-h-full">
         {!hideHeader && <Header />}
         
         <main className="flex-1 w-full flex flex-col">

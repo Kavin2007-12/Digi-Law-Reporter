@@ -241,7 +241,7 @@ VERIFIED BY DIGI LAW REPORTER DIGITAL LEGAL DIGEST
   const config = getSearchConfig();
 
   return (
-    <div className="min-h-screen bg-slate-50 py-10 md:py-16 px-4 sm:px-6 lg:px-8 font-jakarta">
+    <div className="flex-1 w-full bg-slate-50 py-6 md:py-8 px-4 sm:px-6 lg:px-8 font-jakarta">
       <div className="max-w-5xl mx-auto space-y-8">
         
         {/* Back Button to Return to Legal Research Dashboard */}

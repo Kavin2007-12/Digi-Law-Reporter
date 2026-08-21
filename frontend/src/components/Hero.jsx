@@ -15,7 +15,7 @@ export default function Hero() {
   };
 
   return (
-    <div className="relative pt-16 pb-20 md:py-24 border-b border-[#D4AF37]/30 overflow-hidden bg-slate-950 min-h-[85vh] flex items-center justify-center font-jakarta">
+    <div className="relative py-12 md:py-16 lg:py-20 border-b border-[#D4AF37]/30 overflow-hidden bg-slate-950 flex items-center justify-center font-jakarta">
       
       {/* Authentic Photo Background of Supreme Court of India */}
       <div 

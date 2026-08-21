@@ -201,7 +201,7 @@ export default function KeywordSearch() {
   };
 
   return (
-    <div className="flex flex-col w-full min-h-screen bg-slate-50 font-sans relative z-10">
+    <div className="flex flex-col w-full flex-1 bg-slate-50 font-sans relative z-10">
       
       {/* 1. Top Header (Dark Theme - RESEARCH+) */}
       <div className="bg-slate-900 w-full pt-6 md:pt-8 pb-6 md:pb-7 px-4 sm:px-6 relative z-20 shadow-md">

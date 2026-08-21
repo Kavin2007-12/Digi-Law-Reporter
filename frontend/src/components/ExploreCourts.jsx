@@ -9,7 +9,7 @@ export default function ExploreCourts() {
     {
       icon: <Landmark size={32} className="text-primary-600" />,
       title: "Supreme Court of India",
-      desc: "Comprehensive archive of Supreme Court judgments from 1950 to present with official reporter citations.",
+      desc: "Comprehensive archive of Supreme Court judgments from 1800 to present with official reporter citations.",
       query: "Supreme Court"
     },
     {
@@ -27,7 +27,7 @@ export default function ExploreCourts() {
   ];
 
   return (
-    <section className="py-20 bg-slate-50 relative overflow-hidden border-b border-slate-200">
+    <section className="py-10 md:py-14 bg-slate-50 relative overflow-hidden border-b border-slate-200">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         
         <div className="mb-14 text-center max-w-3xl mx-auto space-y-3">

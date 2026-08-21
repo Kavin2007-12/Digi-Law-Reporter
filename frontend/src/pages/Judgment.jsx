@@ -168,7 +168,7 @@ export default function Judgment() {
 
   if (loading) {
     return (
-      <div className="w-full min-h-[60vh] flex flex-col items-center justify-center space-y-4">
+      <div className="w-full flex-1 py-16 flex flex-col items-center justify-center space-y-4">
         <Loader2 size={36} className="text-blue-600 animate-spin" />
         <p className="text-sm font-semibold text-slate-600">Retrieving case record from backend database...</p>
       </div>
@@ -245,7 +245,7 @@ export default function Judgment() {
   };
 
   return (
-    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 font-jakarta">
+    <div className="w-full flex-1 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 font-jakarta">
       
       {/* Top Nav */}
       <button 

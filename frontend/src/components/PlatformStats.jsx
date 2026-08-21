@@ -37,8 +37,8 @@ export default function PlatformStats() {
     {
       icon: <Calendar size={20} />,
       title: "Year Range Filter",
-      desc: "Segment case law decisions across specific decades, landmark eras (1950–2024), or custom date ranges for historical analysis.",
-      tag: "1950 - 2024 ERAS",
+      desc: "Segment case law decisions across specific decades, landmark eras (1800–2026), or custom date ranges for historical analysis.",
+      tag: "1800 - 2026 ERAS",
       featurePill: "Landmark Decadal Era Segmentation"
     },
     {
@@ -51,7 +51,7 @@ export default function PlatformStats() {
   ];
 
   return (
-    <section className="relative pt-4 md:pt-6 pb-12 md:pb-16 border-b border-slate-200 overflow-hidden bg-slate-50 font-jakarta">
+    <section className="relative pt-4 md:pt-6 pb-8 md:pb-10 border-b border-slate-200 overflow-hidden bg-slate-50 font-jakarta">
       
       {/* Subtle Supreme Court / Legal Environment Background Image */}
       <div 

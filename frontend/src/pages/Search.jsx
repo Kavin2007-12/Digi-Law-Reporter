@@ -22,7 +22,7 @@ export default function SearchDashboard() {
   };
 
   return (
-    <div className="relative flex-1 flex flex-col items-center justify-center pt-12 md:pt-16 lg:pt-20 pb-12 md:pb-20 px-4 md:px-6 w-full min-h-[calc(100vh-64px)] overflow-hidden font-jakarta bg-slate-50">
+    <div className="relative flex-1 flex flex-col items-center justify-center py-8 sm:py-12 md:py-16 px-4 md:px-6 w-full font-jakarta bg-slate-50">
       
       {/* Exact User Uploaded Legal Search Background Image */}
       <div 
