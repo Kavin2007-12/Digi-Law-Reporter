@@ -666,13 +666,61 @@ export default function AdminSettings() {
 
         {/* SECTION 4: ACCOUNT SECURITY (UPDATE PASSWORD - MAIN ADMIN ONLY) */}
         <div className="bg-white border border-slate-200/80 rounded-xl p-6 sm:p-8 shadow-xs space-y-6">
-          <div className="pb-3 border-b border-slate-200">
-            <h2 className="text-xs font-extrabold uppercase tracking-widest text-[#0B1727]">Account Security</h2>
-            <p className="text-xs text-slate-500">
-              {currentAdminRole === 'MAIN_ADMIN' 
-                ? 'Change password & manage session' 
-                : 'Password management is restricted strictly to the Main Administrator'}
-            </p>
+          <div className="pb-3 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+              <h2 className="text-xs font-extrabold uppercase tracking-widest text-[#0B1727]">Account Security</h2>
+              <p className="text-xs text-slate-500">
+                {currentAdminRole === 'MAIN_ADMIN' 
+                  ? 'Change password & manage session' 
+                  : 'Password management is restricted strictly to the Main Administrator'}
+              </p>
+            </div>
+
+            {currentAdminRole === 'MAIN_ADMIN' && (
+              <button
+                type="button"
+                onClick={async () => {
+                  const cleanUsername = passwordForm.username.trim().toLowerCase();
+                  if (!cleanUsername) {
+                    showToast('Username cannot be empty');
+                    return;
+                  }
+                  if (passwordForm.newPass && passwordForm.newPass.length < 8) {
+                    showToast('New password must be at least 8 characters long');
+                    return;
+                  }
+                  if (passwordForm.newPass && passwordForm.newPass !== passwordForm.confirm) {
+                    showToast('Please enter matching new passwords');
+                    return;
+                  }
+
+                  try {
+                    const res = await fetch('http://localhost:5000/api/admin/admins/1/password', {
+                      method: 'PUT',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ 
+                        username: cleanUsername,
+                        password: passwordForm.newPass.trim() || undefined,
+                        currentPassword: passwordForm.current.trim() || undefined
+                      })
+                    });
+                    const data = await res.json();
+
+                    if (data.status === 'success' || res.ok) {
+                      showToast(data.message || 'Main Admin credentials updated successfully!');
+                      setPasswordForm({ username: cleanUsername, current: '', newPass: '', confirm: '' });
+                    } else {
+                      showToast(data.message || 'Error updating credentials');
+                    }
+                  } catch (e) {
+                    showToast('Error connecting to backend server');
+                  }
+                }}
+                className="w-full sm:w-auto px-4 py-2 bg-[#0B1727] hover:bg-slate-800 text-white font-bold text-xs rounded transition-colors cursor-pointer shrink-0 shadow-xs"
+              >
+                Save Account Credentials
+              </button>
+            )}
           </div>
 
           {currentAdminRole === 'MAIN_ADMIN' ? (
@@ -757,50 +805,7 @@ export default function AdminSettings() {
                 </div>
               </div>
 
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-3 border-t border-slate-100">
-                <button
-                  onClick={async () => {
-                    const cleanUsername = passwordForm.username.trim().toLowerCase();
-                    if (!cleanUsername) {
-                      showToast('Username cannot be empty');
-                      return;
-                    }
-                    if (passwordForm.newPass && passwordForm.newPass.length < 8) {
-                      showToast('New password must be at least 8 characters long');
-                      return;
-                    }
-                    if (passwordForm.newPass && passwordForm.newPass !== passwordForm.confirm) {
-                      showToast('Please enter matching new passwords');
-                      return;
-                    }
-
-                    try {
-                      const res = await fetch('http://localhost:5000/api/admin/admins/1/password', {
-                        method: 'PUT',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ 
-                          username: cleanUsername,
-                          password: passwordForm.newPass.trim() || undefined,
-                          currentPassword: passwordForm.current.trim() || undefined
-                        })
-                      });
-                      const data = await res.json();
-
-                      if (data.status === 'success' || res.ok) {
-                        showToast(data.message || 'Main Admin credentials updated successfully!');
-                        setPasswordForm({ username: cleanUsername, current: '', newPass: '', confirm: '' });
-                      } else {
-                        showToast(data.message || 'Error updating credentials');
-                      }
-                    } catch (e) {
-                      showToast('Error connecting to backend server');
-                    }
-                  }}
-                  className="w-full sm:w-auto px-4 py-2 bg-[#0B1727] hover:bg-slate-800 text-white font-bold text-xs rounded transition-colors cursor-pointer"
-                >
-                  Save Account Credentials
-                </button>
-
+              <div className="flex items-center justify-end pt-3 border-t border-slate-100">
                 <button
                   onClick={handleLogout}
                   className="w-full sm:w-auto px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 border border-red-200 font-bold text-xs rounded transition-colors flex items-center justify-center gap-2 cursor-pointer"
