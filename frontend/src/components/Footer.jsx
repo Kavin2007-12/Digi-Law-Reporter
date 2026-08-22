@@ -30,19 +30,19 @@ export default function Footer() {
             <h4 className="font-bold mb-4 text-sm text-white uppercase tracking-wider border-b border-primary-800 pb-2">Quick Navigation</h4>
             <ul className="space-y-2.5 text-xs text-blue-200/80">
               <li><Link to="/" className="hover:text-white transition-colors">Home</Link></li>
-              <li><Link to="/search" className="hover:text-white transition-colors">Search Judgments</Link></li>
-              <li><Link to="/search?mode=keyword" className="hover:text-white transition-colors">Keyword Search</Link></li>
-              <li><Link to="/search?mode=citation" className="hover:text-white transition-colors">Citation Search</Link></li>
+              <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
+              <li><Link to="/contact" className="hover:text-white transition-colors">Contact</Link></li>
+              <li><Link to="/login" className="hover:text-white transition-colors">Login</Link></li>
             </ul>
           </div>
 
           <div>
             <h4 className="font-bold mb-4 text-sm text-white uppercase tracking-wider border-b border-primary-800 pb-2">Jurisdiction</h4>
             <ul className="space-y-2.5 text-xs text-blue-200/80">
-              <li><Link to="/search?q=Supreme+Court" className="hover:text-white transition-colors">Supreme Court of India</Link></li>
-              <li><Link to="/search?q=Delhi+High+Court" className="hover:text-white transition-colors">Delhi High Court</Link></li>
-              <li><Link to="/search?q=Bombay+High+Court" className="hover:text-white transition-colors">Bombay High Court</Link></li>
-              <li><Link to="/search?q=Tribunal" className="hover:text-white transition-colors">Appellate Tribunals</Link></li>
+              <li>Supreme Court of India</li>
+              <li>Delhi High Court</li>
+              <li>Bombay High Court</li>
+              <li>Appellate Tribunals</li>
             </ul>
           </div>
 
