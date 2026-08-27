@@ -24,9 +24,15 @@ import AdminUsers from './pages/admin/AdminUsers';
 import AdminSettings from './pages/admin/AdminSettings';
 import AdminManagement from './pages/admin/AdminManagement';
 import AdminLayout from './components/admin/AdminLayout';
+import MobileApp from './mobile/MobileApp';
 
 function App() {
   const location = useLocation();
+  const isMobilePort = window.location.port === '5174';
+
+  if (isMobilePort) {
+    return <MobileApp />;
+  }
   const isAuthPage = location.pathname === '/login' || location.pathname === '/signup';
   const hideFooter = isAuthPage || location.pathname.startsWith('/search') || location.pathname.startsWith('/admin');
   const hideHeader = location.pathname.startsWith('/admin') || location.pathname.startsWith('/search/results');
