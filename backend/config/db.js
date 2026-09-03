@@ -7,7 +7,7 @@ dotenv.config();
 const { Pool } = pkg;
 
 const poolConfig = process.env.DATABASE_URL
-  ? { connectionString: process.env.DATABASE_URL, max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 2000 }
+  ? { connectionString: process.env.DATABASE_URL, max: 20, idleTimeoutMillis: 30000, connectionTimeoutMillis: 300 }
   : {
       user: process.env.DB_USER || 'postgres',
       host: process.env.DB_HOST || 'localhost',
@@ -16,10 +16,23 @@ const poolConfig = process.env.DATABASE_URL
       port: parseInt(process.env.DB_PORT || '5432', 10),
       max: 20,
       idleTimeoutMillis: 30000,
-      connectionTimeoutMillis: 2000
+      connectionTimeoutMillis: 300
     };
 
-const pool = new Pool(poolConfig);
+export const pool = new Pool(poolConfig);
+
+export let isDbOnline = false;
+
+pool.connect()
+  .then(client => {
+    isDbOnline = true;
+    client.release();
+    logger.info('PostgreSQL Database Connected Successfully.');
+  })
+  .catch(err => {
+    isDbOnline = false;
+    logger.warn('PostgreSQL Offline: Instant localStore fallback activated.');
+  });
 
 pool.on('connect', () => {
   logger.debug('New connection established with PostgreSQL database.');

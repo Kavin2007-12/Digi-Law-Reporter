@@ -302,82 +302,9 @@ class _CitationBuilderBoxState extends State<_CitationBuilderBox> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceWhite,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.borderSlate),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x06000000),
-            blurRadius: 8,
-            offset: Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header: Brand & Citation Search Badge
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0F172A),
-                      borderRadius: BorderRadius.circular(5),
-                    ),
-                    child: const Text(
-                      'DLR',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'Digital Law Reporter',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w800,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEFF6FF),
-                  borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFFBFDBFE)),
-                ),
-                child: const Row(
-                  children: [
-                    Text(
-                      'Citation Search ',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.primaryBlue,
-                      ),
-                    ),
-                    Text(
-                      '*',
-                      style: TextStyle(fontSize: 10, color: AppColors.errorRed, fontWeight: FontWeight.bold),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
 
           // Citation Formula Fields Container
           Container(
@@ -413,7 +340,7 @@ class _CitationBuilderBoxState extends State<_CitationBuilderBox> {
                       ),
                     ),
                     const SizedBox(width: 6),
-                    // Reporter Selector
+                    // Fixed DLR Reporter Badge
                     Expanded(
                       flex: 3,
                       child: Column(
@@ -426,30 +353,17 @@ class _CitationBuilderBoxState extends State<_CitationBuilderBox> {
                           const SizedBox(height: 3),
                           Container(
                             height: 32,
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: const Color(0xFF0F172A),
                               borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: AppColors.borderSlate),
                             ),
-                            child: DropdownButtonHideUnderline(
-                              child: DropdownButton<String>(
-                                value: _selectedReporter,
-                                isExpanded: true,
-                                style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.textPrimary),
-                                items: _reporters.map((rep) {
-                                  return DropdownMenuItem<String>(
-                                    value: rep,
-                                    child: Text(rep),
-                                  );
-                                }).toList(),
-                                onChanged: (val) {
-                                  if (val != null) {
-                                    setState(() {
-                                      _selectedReporter = val;
-                                    });
-                                  }
-                                },
+                            child: const Text(
+                              'DLR',
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w900,
+                                color: Colors.white,
                               ),
                             ),
                           ),
@@ -519,8 +433,7 @@ class _CitationBuilderBoxState extends State<_CitationBuilderBox> {
             ],
           ),
         ],
-      ),
-    );
+      );
   }
 }
 
@@ -586,7 +499,7 @@ class _LabeledInput extends StatelessWidget {
   }
 }
 
-/// Structured Party Name Search Builder Box Widget (Extra Compact Mobile Version)
+/// Structured Party Name Search Builder Box Widget (Dynamic Backend Court Loading)
 class _PartyNameSearchBox extends StatefulWidget {
   final Function(String query, String court) onSearch;
   final VoidCallback onClear;
@@ -605,13 +518,6 @@ class _PartyNameSearchBoxState extends State<_PartyNameSearchBox> {
   final _partyController = TextEditingController();
   String _selectedCourt = 'All Courts';
 
-  final List<String> _courts = const [
-    'All Courts',
-    'Supreme Court of India',
-    'High Court',
-    'Tribunals',
-  ];
-
   @override
   void dispose() {
     _partyController.dispose();
@@ -626,6 +532,20 @@ class _PartyNameSearchBoxState extends State<_PartyNameSearchBox> {
 
   @override
   Widget build(BuildContext context) {
+    final searchProvider = Provider.of<SearchProvider>(context);
+
+    // Dynamically fetch and extract unique court names from backend database cases
+    final List<String> availableCourts = ['All Courts'];
+    for (final c in searchProvider.cases) {
+      if (c.court.isNotEmpty && !availableCourts.contains(c.court)) {
+        availableCourts.add(c.court);
+      }
+    }
+
+    if (!availableCourts.contains(_selectedCourt)) {
+      _selectedCourt = 'All Courts';
+    }
+
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -655,7 +575,7 @@ class _PartyNameSearchBoxState extends State<_PartyNameSearchBox> {
           ),
           const SizedBox(height: 8),
 
-          // 1. Court Dropdown Selector
+          // 1. Dynamic Court Dropdown Selector (Loaded from DB)
           Container(
             height: 32,
             padding: const EdgeInsets.symmetric(horizontal: 10),
@@ -670,7 +590,7 @@ class _PartyNameSearchBoxState extends State<_PartyNameSearchBox> {
                 isExpanded: true,
                 icon: const Icon(Icons.keyboard_arrow_down, size: 16, color: AppColors.textSecondary),
                 style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w600, color: AppColors.textPrimary),
-                items: _courts.map((court) {
+                items: availableCourts.map((court) {
                   return DropdownMenuItem<String>(
                     value: court,
                     child: Text(court),

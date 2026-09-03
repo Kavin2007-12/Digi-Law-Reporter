@@ -1,8 +1,17 @@
-import { query } from '../config/db.js';
+import { query, isDbOnline } from '../config/db.js';
 import logger from '../utils/logger.js';
 import localStore from '../data/localStore.js';
 
 export const getHomeStatsFromDb = async () => {
+  if (!isDbOnline) {
+    const cases = localStore.getCases('Published');
+    const users = localStore.getUsers();
+    return {
+      totalPublishedCases: cases.length,
+      totalActiveUsers: users.length,
+      recentCases: cases.slice(0, 6)
+    };
+  }
   try {
     const totalCasesRes = await query(`SELECT COUNT(*) FROM cases WHERE status = 'Published'`);
     const totalUsersRes = await query(`SELECT COUNT(*) FROM users WHERE status = 'Active'`);
@@ -20,7 +29,6 @@ export const getHomeStatsFromDb = async () => {
       recentCases: recentCasesRes.rows
     };
   } catch (error) {
-    logger.warn('PostgreSQL offline for getHomeStatsFromDb, reading from localStore');
     const cases = localStore.getCases('Published');
     const users = localStore.getUsers();
     return {
@@ -34,6 +42,10 @@ export const getHomeStatsFromDb = async () => {
 export const searchCasesFromDb = async (params) => {
   const rawTerm = (params.keyword || params.q || params.citation || params.party || '').trim();
   const tab = (params.tab || 'keyword').toLowerCase().trim();
+
+  if (!isDbOnline) {
+    return localStore.searchCases(rawTerm, tab);
+  }
 
   try {
     let sql = `

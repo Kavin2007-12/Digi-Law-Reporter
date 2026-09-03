@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'providers/auth_provider.dart';
-import 'providers/search_provider.dart';
-import 'providers/bookmark_provider.dart';
-import 'theme/app_theme.dart';
-import 'screens/splash_screen.dart';
+import 'package:digi_law_reporter_mobile/providers/auth_provider.dart';
+import 'package:digi_law_reporter_mobile/providers/search_provider.dart';
+import 'package:digi_law_reporter_mobile/providers/bookmark_provider.dart';
+import 'package:digi_law_reporter_mobile/theme/app_theme.dart';
+import 'package:digi_law_reporter_mobile/screens/splash_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -12,7 +12,7 @@ void main() {
 }
 
 class DigiLawReporterApp extends StatelessWidget {
-  const DigiLawReporterApp({Key? key}) : super(key: key);
+  const DigiLawReporterApp({super.key});
 
   @override
   Widget build(BuildContext context) {

@@ -79,16 +79,31 @@ class JudgmentRepository {
   }
 
   /**
-   * Search judgments using Full Text Search and GIN index
+   * Search judgments using Full Text Search and GIN index with ILIKE fallback
    * Supports pagination
    */
-  async searchJudgments(searchTerm, limit = 20, offset = 0) {
+  async searchJudgments(searchTerm = '', limit = 20, offset = 0) {
     try {
-      // Split search term by spaces and join with logical AND (&) for tsquery
-      // Example: "supreme court" -> "supreme & court"
-      // Using 'simple' config to prevent stemming of Indian names/sections
+      const rawTerm = String(searchTerm || '').trim();
+      const cleanTerm = rawTerm.replace(/[()#:&|\-!\\/]/g, ' ').trim();
+      const terms = cleanTerm.split(/\s+/).filter(Boolean);
       
-      const formattedTerm = searchTerm.trim().split(/\s+/).join(' & ');
+      if (terms.length === 0) {
+        // Return recent database judgments if search query is empty
+        const sql = `
+          SELECT 
+            id, title, court_name, judgment_date, citation, 
+            petitioner_name, respondent_name, act_name, section_number, 
+            topics, head_note, content, pdf_file_path
+          FROM judgments 
+          ORDER BY judgment_date DESC 
+          LIMIT $1 OFFSET $2
+        `;
+        const { rows } = await query(sql, [limit, offset]);
+        return rows;
+      }
+
+      const formattedTerm = terms.join(' & ');
 
       const sql = `
         SELECT 
@@ -97,15 +112,43 @@ class JudgmentRepository {
           topics, head_note, content, pdf_file_path
         FROM judgments 
         WHERE search_vector @@ to_tsquery('simple', $1)
-        ORDER BY ts_rank(search_vector, to_tsquery('simple', $1)) DESC, judgment_date DESC
-        LIMIT $2 OFFSET $3
+           OR title ILIKE $2
+           OR citation ILIKE $2
+           OR petitioner_name ILIKE $2
+           OR respondent_name ILIKE $2
+        ORDER BY judgment_date DESC
+        LIMIT $3 OFFSET $4
       `;
 
-      const { rows } = await query(sql, [formattedTerm, limit, offset]);
+      try {
+        const { rows } = await query(sql, [formattedTerm, `%${cleanTerm}%`, limit, offset]);
+        if (rows && rows.length > 0) return rows;
+      } catch (tsErr) {
+        logger.warn('tsquery search failed, attempting ILIKE fallback:', tsErr.message);
+      }
+
+      // Fallback ILIKE search across all fields if tsquery returns 0 matches or fails
+      const fallbackSql = `
+        SELECT 
+          id, title, court_name, judgment_date, citation, 
+          petitioner_name, respondent_name, act_name, section_number, 
+          topics, head_note, content, pdf_file_path
+        FROM judgments 
+        WHERE title ILIKE $1 
+           OR citation ILIKE $1 
+           OR petitioner_name ILIKE $1 
+           OR respondent_name ILIKE $1
+           OR head_note ILIKE $1
+           OR content ILIKE $1
+        ORDER BY judgment_date DESC
+        LIMIT $2 OFFSET $3
+      `;
+      const { rows } = await query(fallbackSql, [`%${cleanTerm}%`, limit, offset]);
       return rows;
+
     } catch (error) {
-      logger.error(`JudgmentRepository.searchJudgments failed for term: ${searchTerm}`, error);
-      throw error;
+      logger.error('JudgmentRepository.searchJudgments failed', error);
+      return [];
     }
   }
 }

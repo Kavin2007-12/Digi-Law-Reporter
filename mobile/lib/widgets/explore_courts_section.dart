@@ -60,56 +60,65 @@ class ExploreCourtsSection extends StatelessWidget {
           ),
           const SizedBox(height: 8),
 
-          // Clean Static Court Cards without Hover Overlay
-          SizedBox(
-            height: 88,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              children: [
-                _CourtCardItem(
-                  title: 'Supreme Court',
-                  subtitle: 'Full Archive',
-                  range: '1950–Present',
-                  icon: Icons.account_balance,
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MainNavigationScreen(initialIndex: 1),
-                      ),
-                    );
-                  },
-                ),
-                _CourtCardItem(
-                  title: 'High Courts',
-                  subtitle: 'All States',
-                  range: '1950–Present',
-                  icon: Icons.gavel,
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MainNavigationScreen(initialIndex: 1),
-                      ),
-                    );
-                  },
-                ),
-                _CourtCardItem(
-                  title: 'Tribunals',
-                  subtitle: 'NCLAT, NGT',
-                  range: '& more',
-                  icon: Icons.balance,
-                  onTap: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => const MainNavigationScreen(initialIndex: 1),
-                      ),
-                    );
-                  },
-                ),
-              ],
+          // Fixed 3-Column Non-Scrolling Row Layout
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: SizedBox(
+              height: 88,
+              child: Row(
+                children: [
+                  Expanded(
+                    child: _CourtCardItem(
+                      title: 'Supreme Court',
+                      subtitle: 'Full Archive',
+                      range: '1950–Present',
+                      icon: Icons.account_balance,
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MainNavigationScreen(initialIndex: 1),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _CourtCardItem(
+                      title: 'High Courts',
+                      subtitle: 'All States',
+                      range: '1950–Present',
+                      icon: Icons.gavel,
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MainNavigationScreen(initialIndex: 1),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: _CourtCardItem(
+                      title: 'Tribunals',
+                      subtitle: 'NCLAT, NGT',
+                      range: '& more',
+                      icon: Icons.balance,
+                      onTap: () {
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const MainNavigationScreen(initialIndex: 1),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],
@@ -137,8 +146,6 @@ class _CourtCardItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 118,
-      margin: const EdgeInsets.only(right: 8),
       decoration: BoxDecoration(
         color: AppColors.surfaceWhite,
         borderRadius: BorderRadius.circular(12),
@@ -168,7 +175,7 @@ class _CourtCardItem extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(
                         color: const Color(0xFFEFF6FF),
                         borderRadius: BorderRadius.circular(6),
@@ -176,12 +183,12 @@ class _CourtCardItem extends StatelessWidget {
                       child: Icon(
                         icon,
                         color: AppColors.primaryBlue,
-                        size: 14,
+                        size: 13,
                       ),
                     ),
                     const Icon(
                       Icons.arrow_forward_ios,
-                      size: 9,
+                      size: 8,
                       color: AppColors.textMuted,
                     ),
                   ],
@@ -194,7 +201,7 @@ class _CourtCardItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 10.5,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
                       ),
@@ -205,7 +212,7 @@ class _CourtCardItem extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 9,
+                        fontSize: 8.5,
                         color: AppColors.textMuted,
                       ),
                     ),

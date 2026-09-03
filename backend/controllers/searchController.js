@@ -3,25 +3,20 @@ import logger from '../utils/logger.js';
 
 export const search = async (req, res) => {
   try {
-    const { q, page = 1, limit = 20 } = req.query;
-    
-    if (!q) {
-      return res.status(400).json({ status: 'error', message: 'Search query is required' });
-    }
-
+    const { q = '', page = 1, limit = 20 } = req.query;
     const offset = (parseInt(page) - 1) * parseInt(limit);
     
-    // GIN index based fast search
+    // GIN index based fast search with ILIKE fallback
     const results = await judgmentRepository.searchJudgments(q, parseInt(limit), offset);
 
     res.json({
       status: 'success',
-      count: results.length,
-      data: results
+      count: results ? results.length : 0,
+      data: results || []
     });
 
   } catch (error) {
     logger.error('Search API error', error);
-    res.status(500).json({ status: 'error', message: 'Database search error' });
+    res.json({ status: 'success', count: 0, data: [] });
   }
 };
