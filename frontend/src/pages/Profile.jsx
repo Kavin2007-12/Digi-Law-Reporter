@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { User, Phone, Bookmark, Trash2, ArrowRight, ShieldCheck, Scale, LogOut, Search, Clock, FileText, CheckCircle2 } from 'lucide-react';
+import { User, Phone, Bookmark, Trash2, ArrowRight, ShieldCheck, Scale, LogOut, Search } from 'lucide-react';
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -58,10 +58,10 @@ export default function Profile() {
 
   if (loading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="flex items-center gap-3 bg-white px-6 py-3.5 rounded-2xl border border-slate-200 shadow-sm text-slate-700 font-bold text-xs">
-          <Scale className="animate-spin text-blue-600" size={18} />
-          <span>Loading Profile Dashboard...</span>
+      <div className="min-h-[50vh] flex items-center justify-center">
+        <div className="flex items-center gap-2.5 text-slate-500 font-medium text-xs">
+          <Scale className="animate-spin text-blue-600" size={16} />
+          <span>Loading User Profile...</span>
         </div>
       </div>
     );
@@ -69,158 +69,132 @@ export default function Profile() {
 
   if (!user) {
     return (
-      <div className="max-w-md mx-auto my-16 p-8 bg-white rounded-3xl border border-slate-200/90 shadow-xl text-center space-y-4">
-        <div className="w-14 h-14 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mx-auto border border-blue-100">
-          <User size={28} />
+      <div className="max-w-sm mx-auto my-16 p-6 bg-white rounded-xl border border-slate-200 text-center space-y-3">
+        <div className="w-12 h-12 bg-slate-100 text-slate-500 rounded-lg flex items-center justify-center mx-auto">
+          <User size={22} />
         </div>
         <div className="space-y-1">
-          <h2 className="text-lg font-bold text-slate-900">Account Access Required</h2>
-          <p className="text-xs text-slate-500 leading-relaxed">
-            Please log in to view your user profile and manage your saved legal judgments.
+          <h2 className="text-base font-bold text-slate-900">Sign In Required</h2>
+          <p className="text-xs text-slate-500">
+            Please log in to view your user profile and access saved case law bookmarks.
           </p>
         </div>
         <Link 
           to="/login"
-          className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-6 py-3 rounded-xl shadow-xs transition-all"
+          className="inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors"
         >
-          <span>Log In to Account</span>
-          <ArrowRight size={16} />
+          <span>Log In</span>
+          <ArrowRight size={14} />
         </Link>
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-8 space-y-7">
+    <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
       
-      {/* 1. EXECUTIVE USER PROFILE HEADER CARD */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-xs transition-all relative overflow-hidden">
-        
-        {/* Subtle Accent Glow */}
-        <div className="absolute top-0 right-0 w-48 h-48 bg-blue-50/50 rounded-full blur-2xl pointer-events-none"></div>
-
-        <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-5">
-          
-          {/* Left: Avatar & Identity Details */}
-          <div className="flex items-center gap-4">
-            {/* User Initial Avatar Circle */}
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-700 to-blue-600 text-white font-black text-2xl flex items-center justify-center shadow-md shadow-blue-600/20 border-2 border-white flex-shrink-0">
-              {user.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
-            </div>
-
-            <div className="space-y-1">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-xl font-black text-slate-900 capitalize tracking-tight">
-                  {user.name || 'Legal Advocate'}
-                </h1>
-                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-200/80">
-                  <CheckCircle2 size={12} className="text-emerald-600" /> Verified Practitioner
-                </span>
-              </div>
-
-              <p className="text-xs text-slate-500 flex items-center gap-1.5 font-medium">
-                <Phone size={13} className="text-slate-400" />
-                <span>{user.mobile || 'Mobile Verified'}</span>
-              </p>
-            </div>
+      {/* CONCEPT 2: MINIMALIST ACCOUNT HEADER */}
+      <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-2xs flex items-center justify-between gap-4">
+        <div className="flex items-center gap-3.5">
+          {/* Avatar Initial Circle */}
+          <div className="w-12 h-12 rounded-full bg-blue-600 text-white font-bold text-base flex items-center justify-center flex-shrink-0">
+            {user.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
           </div>
 
-          {/* Right: Log Out Button */}
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={handleLogout}
-              className="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100/90 text-red-600 font-bold text-xs px-4 py-2.5 rounded-xl border border-red-200/80 transition-all cursor-pointer active:scale-95 shadow-2xs"
-              title="Log Out of Account"
-            >
-              <LogOut size={14} />
-              <span>Log Out</span>
-            </button>
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-bold text-slate-900 capitalize">
+                {user.name || 'Legal Practitioner'}
+              </h1>
+              <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200/80">
+                Verified
+              </span>
+            </div>
+            <p className="text-xs text-slate-500 font-medium">
+              {user.mobile || 'Mobile Verified'}
+            </p>
           </div>
-
         </div>
+
+        {/* Minimal Log Out Button */}
+        <button 
+          onClick={handleLogout}
+          className="text-xs font-semibold text-slate-600 hover:text-red-600 border border-slate-200 hover:border-red-200 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+          title="Log Out of Account"
+        >
+          <LogOut size={13} />
+          <span>Log Out</span>
+        </button>
       </div>
 
-      {/* 2. SAVED JUDGMENTS SECTION */}
-      <div className="space-y-4 pt-1">
-        
-        {/* Section Header */}
-        <div className="flex items-center justify-between border-b border-slate-200/90 pb-3">
-          <div className="flex items-center gap-2.5">
-            <div className="bg-blue-600 text-white p-1.5 rounded-lg shadow-2xs">
-              <Bookmark size={16} />
-            </div>
-            <h2 className="text-sm font-extrabold text-slate-900 uppercase tracking-wider">
-              Saved Judgments & Bookmarks
+      {/* SAVED JUDGMENTS SECTION */}
+      <div className="space-y-3.5 pt-1">
+        <div className="flex items-center justify-between border-b border-slate-200 pb-2.5">
+          <div className="flex items-center gap-2">
+            <Bookmark size={16} className="text-blue-600" />
+            <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+              Saved Judgments ({savedCases.length})
             </h2>
           </div>
-
-          <span className="bg-blue-50 text-blue-700 text-xs font-black px-3 py-1 rounded-full border border-blue-100">
-            {savedCases.length} {savedCases.length === 1 ? 'Case' : 'Cases'} Saved
-          </span>
         </div>
 
-        {/* Empty State */}
         {savedCases.length === 0 ? (
-          <div className="bg-white p-10 rounded-3xl border border-slate-200/90 text-center space-y-4 shadow-2xs">
-            <div className="w-14 h-14 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center mx-auto border border-slate-200/80">
-              <Bookmark size={26} />
-            </div>
+          <div className="bg-white p-8 rounded-xl border border-slate-200 text-center space-y-3">
+            <Bookmark size={22} className="text-slate-300 mx-auto" />
             <div className="space-y-1">
-              <h3 className="text-sm font-bold text-slate-800">No Saved Judgments Yet</h3>
-              <p className="text-xs text-slate-500 max-w-sm mx-auto leading-relaxed">
-                When searching precedents, click the bookmark icon on any judgment to save it directly to your profile.
+              <h3 className="text-xs font-bold text-slate-700">No saved judgments</h3>
+              <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+                Bookmark judgments in the search portal to view them here.
               </p>
             </div>
             <Link 
               to="/search"
-              className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs transition-all"
+              className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700"
             >
-              <Search size={14} />
-              <span>Go to Legal Search</span>
+              <span>Go to Search</span>
+              <ArrowRight size={12} />
             </Link>
           </div>
         ) : (
-          /* Single-Column Vertical List */
-          <div className="flex flex-col space-y-3.5">
+          /* Concept 2: Minimalist Single Column List with Left Border */
+          <div className="flex flex-col space-y-2.5">
             {savedCases.map((item, idx) => (
               <div 
                 key={item.id || idx}
-                className="group bg-white p-5 rounded-2xl border border-slate-200/90 border-l-4 border-l-blue-600 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all duration-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                className="group bg-white p-4 rounded-xl border border-slate-200 border-l-2 border-l-slate-300 hover:border-l-blue-600 hover:border-slate-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-3"
               >
-                {/* Case Info Left */}
-                <div className="space-y-2 flex-1">
+                <div className="space-y-1.5 flex-1">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="bg-blue-50 text-blue-700 font-extrabold text-[11px] px-3 py-0.5 rounded-md border border-blue-100/90">
+                    <span className="text-[11px] font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded border border-blue-100">
                       {item.citation || 'Official Citation'}
                     </span>
                     {item.court && (
-                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider bg-slate-100 px-2.5 py-0.5 rounded-md">
+                      <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider bg-slate-100 px-2 py-0.5 rounded">
                         {item.court}
                       </span>
                     )}
                   </div>
 
-                  <h3 className="font-bold text-sm text-slate-900 leading-snug group-hover:text-blue-700 transition-colors">
+                  <h3 className="font-semibold text-xs text-slate-900 group-hover:text-blue-700 transition-colors leading-relaxed">
                     {item.title || `${item.petitioner || ''} vs ${item.respondent || ''}`}
                   </h3>
                 </div>
 
-                {/* Case Actions Right */}
-                <div className="flex items-center gap-2.5 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 flex-shrink-0 justify-between sm:justify-end">
+                <div className="flex items-center gap-2 flex-shrink-0 justify-between sm:justify-end border-t sm:border-t-0 border-slate-100 pt-2 sm:pt-0">
                   <Link 
                     to={`/judgment/${item.id}`}
-                    className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-blue-600 hover:text-blue-700 px-2.5 py-1 rounded hover:bg-blue-50 transition-colors"
                   >
-                    <span>Read Full Judgment</span>
-                    <ArrowRight size={14} />
+                    <span>View Judgment</span>
+                    <ArrowRight size={12} />
                   </Link>
 
                   <button 
                     onClick={() => handleRemoveSavedCase(item.id)}
-                    className="text-slate-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-red-200/80"
-                    title="Remove from saved"
+                    className="text-slate-400 hover:text-red-600 p-1 transition-colors cursor-pointer"
+                    title="Remove bookmark"
                   >
-                    <Trash2 size={16} />
+                    <Trash2 size={14} />
                   </button>
                 </div>
               </div>
