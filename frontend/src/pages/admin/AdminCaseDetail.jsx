@@ -133,7 +133,7 @@ export default function AdminCaseDetail() {
 
           <Link
             to={`/admin/cases/${caseData.id}/edit`}
-            className="flex items-center gap-1.5 bg-primary-600 hover:bg-primary-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-md transition-all active:scale-98"
+            className="flex items-center gap-1.5 bg-[#0B1727] hover:bg-slate-800 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-xs transition-all active:scale-98"
           >
             <Edit3 size={15} />
             <span>Edit Case</span>

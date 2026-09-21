@@ -579,7 +579,7 @@ export default function AdminSettings() {
                 <button
                   type="button"
                   onClick={handleAddTeamMember}
-                  className="px-3.5 py-1.5 bg-primary-600 hover:bg-primary-700 text-white font-bold text-xs rounded flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                  className="px-4 py-2 bg-[#0B1727] hover:bg-slate-800 text-white font-bold text-xs rounded-lg flex items-center gap-1.5 transition-all cursor-pointer shadow-xs"
                 >
                   <Plus size={14} />
                   <span>Add Team Member</span>
