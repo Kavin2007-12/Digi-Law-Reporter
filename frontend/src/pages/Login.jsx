@@ -62,23 +62,23 @@ export default function Login() {
   };
 
   return (
-    <div className="flex-1 flex items-center justify-center p-4 sm:p-6 py-6 md:py-10 w-full font-jakarta relative">
+    <div className="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 py-2 w-full font-jakarta relative">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 15 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-white rounded-3xl shadow-2xl border border-slate-200 overflow-hidden relative"
+        className="w-full max-w-sm bg-white rounded-2xl shadow-xl border border-slate-200 overflow-hidden relative"
       >
-        <div className="p-8 md:p-10 pt-10">
+        <div className="p-6 sm:p-7">
           
           {/* Header */}
-          <div className="text-center mb-8">
-            <div className="w-14 h-14 bg-primary-50 text-primary-600 border border-primary-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-sm">
-              <LogIn size={26} />
+          <div className="text-center mb-5">
+            <div className="w-11 h-11 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl flex items-center justify-center mx-auto mb-2 shadow-2xs">
+              <LogIn size={20} />
             </div>
-            <h2 className="text-2xl md:text-3xl font-black text-slate-900 mb-1.5 font-cinzel">
+            <h2 className="text-lg md:text-xl font-black text-slate-900 mb-1">
               Quick Search Access
             </h2>
-            <p className="text-slate-500 text-xs md:text-sm font-normal">
+            <p className="text-slate-500 text-xs font-normal">
               Enter your Name & Mobile Number to start searching precedents instantly.
             </p>
           </div>
@@ -89,7 +89,7 @@ export default function Login() {
                 initial={{ opacity: 0, height: 0 }}
                 animate={{ opacity: 1, height: 'auto' }}
                 exit={{ opacity: 0, height: 0 }}
-                className="mb-6 bg-red-50 border-l-4 border-red-500 p-3.5 rounded-r-xl"
+                className="mb-4 bg-red-50 border-l-4 border-red-500 p-2.5 rounded-r-lg"
               >
                 <p className="text-red-700 text-xs font-semibold">{error}</p>
               </motion.div>
@@ -97,37 +97,37 @@ export default function Login() {
           </AnimatePresence>
 
           {/* Form */}
-          <form onSubmit={handleLoginSubmit} className="space-y-5">
+          <form onSubmit={handleLoginSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-2">
+              <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-700 mb-1">
                 Full Name
               </label>
               <div className="relative">
-                <User size={18} className="absolute left-4 top-3.5 text-slate-400" />
+                <User size={16} className="absolute left-3.5 top-3 text-slate-400" />
                 <input 
                   type="text" 
                   required 
                   value={formData.name} 
                   onChange={e => setFormData({...formData, name: e.target.value})} 
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-sm font-semibold text-slate-900" 
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs font-semibold text-slate-900" 
                   placeholder="e.g. Adv. Rajesh Sharma" 
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-700 mb-2">
+              <label className="block text-[11px] font-extrabold uppercase tracking-wider text-slate-700 mb-1">
                 Mobile Number
               </label>
               <div className="relative">
-                <Phone size={18} className="absolute left-4 top-3.5 text-slate-400" />
+                <Phone size={16} className="absolute left-3.5 top-3 text-slate-400" />
                 <input 
                   type="tel" 
                   required 
                   maxLength={10}
                   value={formData.mobile} 
                   onChange={e => setFormData({...formData, mobile: e.target.value.replace(/\D/g, '')})} 
-                  className="w-full pl-11 pr-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-sm font-semibold text-slate-900" 
+                  className="w-full pl-10 pr-3.5 py-2.5 rounded-lg border border-slate-200 focus:ring-2 focus:ring-blue-600 focus:border-blue-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs font-semibold text-slate-900" 
                   placeholder="e.g. 9876543210" 
                 />
               </div>
@@ -136,17 +136,17 @@ export default function Login() {
             <button 
               type="submit" 
               disabled={loading} 
-              className="w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-4 rounded-xl transition-all active:scale-[0.98] shadow-lg hover:shadow-primary-500/25 flex justify-center items-center gap-2 mt-4 text-base"
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-xl transition-all active:scale-[0.98] shadow-md shadow-blue-600/20 flex justify-center items-center gap-2 mt-2 text-xs cursor-pointer"
             >
               {loading ? 'Accessing Portal...' : 'Login to Search'}
             </button>
           </form>
 
           {/* Footer note */}
-          <div className="mt-8 pt-5 border-t border-slate-100 text-center">
-            <div className="inline-flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-              <ShieldCheck size={14} className="text-emerald-500" />
-              <span>No registration needed. Instant guest & practitioner access.</span>
+          <div className="mt-5 pt-4 border-t border-slate-100 text-center">
+            <div className="inline-flex items-center gap-1.5 text-[11px] text-slate-500 font-medium">
+              <ShieldCheck size={13} className="text-emerald-500" />
+              <span>No registration needed. Instant practitioner access.</span>
             </div>
           </div>
 
