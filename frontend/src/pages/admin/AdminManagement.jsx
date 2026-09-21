@@ -245,7 +245,7 @@ export default function AdminManagement() {
           className="inline-flex items-center gap-2 bg-[#0B1727] hover:bg-slate-800 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-all shadow-xs cursor-pointer active:scale-95 shrink-0"
         >
           <Plus size={16} />
-          <span>+ Add Admin</span>
+          <span>Add Admin</span>
         </button>
       </div>
 
