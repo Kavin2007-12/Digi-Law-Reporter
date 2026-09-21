@@ -36,9 +36,29 @@ export default function Header() {
   ];
 
   return (
-    <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs print:hidden">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-14">
+    <>
+      {/* Official Top Utility Bar */}
+      <div className="bg-slate-900 text-slate-300 text-[11px] py-1.5 px-4 border-b border-slate-800 print:hidden hidden sm:block">
+        <div className="max-w-7xl mx-auto flex items-center justify-between font-medium">
+          <div className="flex items-center gap-3">
+            <span className="flex items-center gap-1.5 text-blue-400 font-bold uppercase tracking-wider text-[10px]">
+              <Shield size={12} />
+              <span>Official Citation Repository</span>
+            </span>
+            <span className="text-slate-700">•</span>
+            <span className="text-slate-400 text-[10px]">Supreme Court & High Courts of India</span>
+          </div>
+          <div className="flex items-center gap-4 text-slate-400 text-[10px]">
+            <span className="font-semibold text-slate-300">Digital Law Reporter Portal</span>
+            <span className="text-slate-700">•</span>
+            <span>Verified Precedents</span>
+          </div>
+        </div>
+      </div>
+
+      <header className="sticky top-0 z-50 w-full bg-white/95 backdrop-blur-md border-b border-slate-200 shadow-xs print:hidden">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-14">
            
            {/* Left: Original Logo Image */}
            <div className="flex items-center">
@@ -180,6 +200,7 @@ export default function Header() {
         </div>
       )}
     </header>
+    </>
   );
 }
 
