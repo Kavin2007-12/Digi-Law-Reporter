@@ -65,6 +65,7 @@ export default function AdminCaseForm() {
   const [viewMode, setViewMode] = useState('form'); // 'form' or 'document'
   const [pdfPreviewUrl, setPdfPreviewUrl] = useState(null);
   const [showOriginalPdfModal, setShowOriginalPdfModal] = useState(false);
+  const [isSplitView, setIsSplitView] = useState(false);
 
   // Load existing case details when editing
   useEffect(() => {
@@ -767,9 +768,9 @@ export default function AdminCaseForm() {
 
       {/* VIEW MODE 2: EDITABLE PDF DOCUMENT PAPER VIEW */}
       {viewMode === 'document' && (
-        <div className="bg-slate-200/90 p-4 sm:p-8 rounded-2xl shadow-xl space-y-6">
+        <div className="bg-slate-200/90 p-4 sm:p-6 rounded-2xl shadow-xl space-y-6">
           
-          {/* Document Top Bar */}
+          {/* Document Top Action Bar */}
           <div className="bg-[#0B1727] text-white p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-md">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/30">
@@ -777,24 +778,35 @@ export default function AdminCaseForm() {
               </div>
               <div>
                 <h3 className="text-xs font-extrabold uppercase tracking-wider text-white">
-                  {pdfFileName ? `Extracted PDF: ${pdfFileName}` : 'Editable Legal PDF Paper View'}
+                  {pdfFileName ? `PDF Document: ${pdfFileName}` : 'Editable Legal PDF Document'}
                 </h3>
                 <p className="text-[11px] text-slate-400 font-medium">
-                  Directly edit any field or text below. Changes apply instantly to the precedent record.
+                  Continuous editable document view. Tables, headings, and paragraphs rendered for direct editing.
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-2.5">
               {pdfPreviewUrl && (
-                <button
-                  type="button"
-                  onClick={() => setShowOriginalPdfModal(true)}
-                  className="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg text-xs transition-colors flex items-center gap-1.5 border border-slate-700 shadow-2xs cursor-pointer"
-                >
-                  <Eye size={14} className="text-blue-400" />
-                  <span>View Original PDF</span>
-                </button>
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setIsSplitView(!isSplitView)}
+                    className={`px-3.5 py-2 font-bold rounded-lg text-xs transition-colors flex items-center gap-1.5 border shadow-2xs cursor-pointer ${isSplitView ? 'bg-blue-600 text-white border-blue-500' : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'}`}
+                  >
+                    <Eye size={14} className="text-blue-300" />
+                    <span>{isSplitView ? 'Full Editor View' : 'Side-by-Side PDF View'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setShowOriginalPdfModal(true)}
+                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg text-xs transition-colors flex items-center gap-1.5 border border-slate-700 shadow-2xs cursor-pointer"
+                  >
+                    <ExternalLink size={14} className="text-slate-300" />
+                    <span>Pop-out PDF</span>
+                  </button>
+                </>
               )}
 
               <button
@@ -817,168 +829,123 @@ export default function AdminCaseForm() {
             </div>
           </div>
 
-          {/* Authentic Document Paper Sheet */}
-          <div className="bg-white rounded-sm shadow-xl border border-slate-300/80 p-8 sm:p-14 space-y-8 font-serif text-[#0B1727] relative min-h-[750px]">
+          {/* Main Layout: Split Side-by-Side or Full Canvas */}
+          <div className={`grid gap-6 ${isSplitView && pdfPreviewUrl ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
             
-            {/* Header / Court Title */}
-            <div className="text-center space-y-3 pb-6 border-b-2 border-slate-900">
-              <span className="text-[11px] font-mono uppercase tracking-widest font-extrabold text-slate-500 block">
-                IN THE HIGH COURT / SUPREME COURT OF JUDICATURE
-              </span>
-              
-              <input
-                type="text"
-                value={formData.court}
-                onChange={(e) => handleChange('court', e.target.value)}
-                placeholder="Court Name..."
-                className="w-full text-center text-lg sm:text-xl font-bold font-cinzel text-[#0B1727] bg-transparent hover:bg-amber-50/50 border-b border-dashed border-slate-300 focus:border-blue-600 rounded px-2 py-1 outline-none transition-all"
-              />
-
-              <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-sans font-bold text-slate-600 pt-2">
-                <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200">
-                  <span className="text-slate-500">Case No:</span>
-                  <input
-                    type="text"
-                    value={formData.caseNumber}
-                    onChange={(e) => handleChange('caseNumber', e.target.value)}
-                    className="bg-transparent font-mono font-bold text-slate-900 outline-none w-36"
-                  />
+            {/* Left Column (When Side-by-Side View is enabled): Original PDF Viewer */}
+            {isSplitView && pdfPreviewUrl && (
+              <div className="bg-slate-900 rounded-xl p-3 shadow-xl border border-slate-800 flex flex-col h-[800px]">
+                <div className="flex items-center justify-between text-xs text-slate-300 font-bold pb-2 border-b border-slate-800 mb-2 px-1">
+                  <span className="flex items-center gap-2">
+                    <File size={14} className="text-blue-400" />
+                    <span>Original PDF Document Viewer</span>
+                  </span>
+                  <span className="text-[10px] text-slate-500 font-mono">Reference View</span>
                 </div>
+                <iframe
+                  src={pdfPreviewUrl}
+                  title="Original PDF Document"
+                  className="w-full flex-1 rounded-lg border border-slate-700 bg-white"
+                />
+              </div>
+            )}
 
-                <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1.5 rounded-md border border-slate-200">
-                  <span className="text-slate-500">Date:</span>
-                  <input
-                    type="date"
-                    value={formData.judgmentDate || ''}
-                    onChange={(e) => {
-                      const newDate = e.target.value;
-                      const derivedYear = newDate ? newDate.substring(0, 4) : '';
-                      setFormData(prev => ({ ...prev, judgmentDate: newDate, year: derivedYear }));
-                    }}
-                    className="bg-transparent font-sans font-bold text-slate-900 outline-none cursor-pointer"
-                  />
+            {/* Right/Main Column: Single Continuous Editable PDF Document Sheet */}
+            <div className="bg-white rounded-sm shadow-xl border border-slate-300/80 p-6 sm:p-10 space-y-6 font-serif text-[#0B1727] relative min-h-[750px]">
+              
+              {/* Document Header Metadata Bar */}
+              <div className="text-center space-y-3 pb-6 border-b-2 border-slate-900 font-sans">
+                <span className="text-[11px] font-mono uppercase tracking-widest font-extrabold text-slate-500 block">
+                  IN THE HIGH COURT / SUPREME COURT OF JUDICATURE
+                </span>
+                
+                <input
+                  type="text"
+                  value={formData.court}
+                  onChange={(e) => handleChange('court', e.target.value)}
+                  placeholder="Court Name..."
+                  className="w-full text-center text-lg sm:text-xl font-bold font-cinzel text-[#0B1727] bg-transparent hover:bg-amber-50/50 border-b border-dashed border-slate-300 focus:border-blue-600 rounded px-2 py-1 outline-none transition-all"
+                />
+
+                <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-bold text-slate-600 pt-1">
+                  <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-md border border-slate-200">
+                    <span className="text-slate-500">Case No:</span>
+                    <input
+                      type="text"
+                      value={formData.caseNumber}
+                      onChange={(e) => handleChange('caseNumber', e.target.value)}
+                      className="bg-transparent font-mono font-bold text-slate-900 outline-none w-36"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-md border border-slate-200">
+                    <span className="text-slate-500">Date:</span>
+                    <input
+                      type="date"
+                      value={formData.judgmentDate || ''}
+                      onChange={(e) => {
+                        const newDate = e.target.value;
+                        const derivedYear = newDate ? newDate.substring(0, 4) : '';
+                        setFormData(prev => ({ ...prev, judgmentDate: newDate, year: derivedYear }));
+                      }}
+                      className="bg-transparent font-bold text-slate-900 outline-none cursor-pointer"
+                    />
+                  </div>
                 </div>
               </div>
-            </div>
 
-            {/* Case Title & Parties */}
-            <div className="space-y-4 bg-slate-50/80 p-6 rounded-xl border border-slate-200">
-              <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-slate-400 block">
-                Parties to the Precedent
-              </span>
-
-              <div className="space-y-3 font-sans">
+              {/* Case Title / Parties Summary */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-sans bg-slate-50 p-4 rounded-xl border border-slate-200">
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 uppercase block">Petitioner / Appellant</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-400 block mb-0.5">Petitioner / Appellant</label>
                   <input
                     type="text"
                     value={formData.petitioner}
                     onChange={(e) => handleChange('petitioner', e.target.value)}
-                    className="w-full font-bold text-sm text-slate-900 bg-white border border-slate-300 rounded-lg px-3.5 py-2 outline-none focus:border-blue-600"
+                    className="w-full font-bold text-xs text-slate-900 bg-white border border-slate-300 rounded px-3 py-1.5 outline-none focus:border-blue-600"
                   />
                 </div>
 
-                <div className="text-center font-bold text-xs text-slate-400 italic">
-                  — VERSUS —
-                </div>
-
                 <div>
-                  <label className="text-[11px] font-bold text-slate-500 uppercase block">Respondent</label>
+                  <label className="text-[10px] font-extrabold uppercase text-slate-400 block mb-0.5">Respondent</label>
                   <input
                     type="text"
                     value={formData.respondent}
                     onChange={(e) => handleChange('respondent', e.target.value)}
-                    className="w-full font-bold text-sm text-slate-900 bg-white border border-slate-300 rounded-lg px-3.5 py-2 outline-none focus:border-blue-600"
+                    className="w-full font-bold text-xs text-slate-900 bg-white border border-slate-300 rounded px-3 py-1.5 outline-none focus:border-blue-600"
                   />
                 </div>
               </div>
-            </div>
 
-            {/* Statutory Act & Section Details */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 font-sans bg-slate-50/50 p-4 rounded-xl border border-slate-200">
-              <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase block mb-1">Act / Statute</label>
-                <input
-                  type="text"
-                  value={formData.act}
-                  onChange={(e) => handleChange('act', e.target.value)}
-                  placeholder="e.g. Constitution of India"
-                  className="w-full font-semibold text-xs text-slate-900 bg-white border border-slate-300 rounded-lg px-3 py-2 outline-none focus:border-blue-600"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-bold text-slate-500 uppercase block mb-1">Section / Provision</label>
-                <input
-                  type="text"
-                  value={formData.section}
-                  onChange={(e) => handleChange('section', e.target.value)}
-                  placeholder="e.g. Article 21"
-                  className="w-full font-semibold text-xs text-slate-900 bg-white border border-slate-300 rounded-lg px-3 py-2 outline-none focus:border-blue-600"
-                />
-              </div>
-            </div>
-
-            {/* Citations List inside Paper View */}
-            <div className="space-y-3 font-sans pt-2 border-t border-slate-200">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#0B1727]">
-                  CITATIONS ({citationsList.length})
-                </h4>
-              </div>
-
-              {citationsList.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
-                  {citationsList.map(cit => (
-                    <div key={cit.id} className="inline-flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg text-xs font-bold font-mono text-blue-900">
-                      <span>{cit.year} ({cit.month}) DLR ({cit.court}) #{cit.number}</span>
-                      <button onClick={() => handleRemoveCitation(cit.id)} className="text-blue-400 hover:text-red-600">
-                        <X size={13} />
-                      </button>
-                    </div>
-                  ))}
+              {/* Single Continuous Editable PDF Document Canvas */}
+              <div className="space-y-3 font-serif pt-2">
+                <div className="flex items-center justify-between font-sans pb-1 border-b border-slate-200">
+                  <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#0B1727]">
+                    EDITABLE PDF DOCUMENT CANVAS
+                  </h4>
+                  <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+                    Tables & Text Formatting Ready
+                  </span>
                 </div>
-              ) : (
-                <p className="text-xs text-slate-400 italic font-medium">No citations added to document yet.</p>
-              )}
-            </div>
 
-            {/* Head Note Section */}
-            <div className="space-y-2 font-sans pt-4 border-t border-slate-200">
-              <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#0B1727]">
-                HEAD NOTE / SYNOPSIS
-              </h4>
-              <div className="rounded-xl border border-slate-300 overflow-hidden bg-white shadow-2xs">
-                <TiptapEditor 
-                  content={formData.summary} 
-                  onChange={(val) => handleChange('summary', val)} 
-                  placeholder="Enter or edit Head Note synopsis..." 
-                  minHeight="150px"
-                />
+                <div className="rounded-xl border border-slate-300 overflow-hidden bg-white shadow-2xs min-h-[500px]">
+                  <TiptapEditor 
+                    content={formData.judgmentText} 
+                    onChange={(val) => handleChange('judgmentText', val)} 
+                    placeholder="Extracted PDF document text will appear here for direct editing..." 
+                    minHeight="500px"
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Full Judgment Document Body */}
-            <div className="space-y-3 font-serif pt-4 border-t border-slate-200">
-              <h4 className="text-xs font-sans font-extrabold uppercase tracking-widest text-[#0B1727]">
-                FULL JUDGMENT TEXT
-              </h4>
-              <div className="rounded-xl border border-slate-300 overflow-hidden bg-white shadow-2xs min-h-[350px]">
-                <TiptapEditor 
-                  content={formData.judgmentText} 
-                  onChange={(val) => handleChange('judgmentText', val)} 
-                  placeholder="Enter or edit full judgment text..." 
-                  minHeight="350px"
-                />
-              </div>
             </div>
 
           </div>
 
-          {/* DOCUMENT PAPER BOTTOM ACTION BUTTONS */}
+          {/* Bottom Action Footer */}
           <div className="bg-[#0B1727] text-white rounded-xl p-4 shadow-xl border border-slate-800 flex items-center justify-between gap-3">
             <span className="text-xs text-slate-400 font-medium">
-              Review completed? Click Publish Case to push to database.
+              Review & editing completed? Click Publish Case to push to database.
             </span>
 
             <div className="flex items-center gap-3">

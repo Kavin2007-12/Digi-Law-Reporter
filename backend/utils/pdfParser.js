@@ -116,13 +116,11 @@ export const extractLegalDataFromPdf = async (pdfBuffer) => {
       citation = citMatch[0];
     }
 
-    // 6. Head Note Summary
+    // 6. Head Note Summary (Only if explicitly present in PDF, otherwise leave blank to prevent text duplication)
     let headNote = '';
-    const headNoteMatch = cleanedText.match(/(?:HEADNOTE|SUMMARY|SYNOPSIS|LAW STATED)[:\s]*([\s\S]{100,800}?)(?=\n\n|\nJUDGMENT|\nORDER|$)/i);
+    const headNoteMatch = cleanedText.match(/(?:HEADNOTE|SUMMARY|SYNOPSIS|LAW STATED)[:\s]*([\s\S]{100,600}?)(?=\n\n|\nJUDGMENT|\nORDER|$)/i);
     if (headNoteMatch) {
       headNote = headNoteMatch[1].trim();
-    } else {
-      headNote = lines.slice(0, 8).join(' ').substring(0, 450);
     }
 
     // 7. Case Number
@@ -131,6 +129,9 @@ export const extractLegalDataFromPdf = async (pdfBuffer) => {
     if (caseNumMatch) {
       caseNumber = caseNumMatch[0].replace(/^(CRIMINAL|CIVIL|WRIT|SPECIAL LEAVE)\s+/i, '').trim();
     }
+
+    // Convert raw text into clean structured HTML paragraphs, headings, and tables
+    const formattedHtml = convertPdfTextToHtml(rawText || cleanedText);
 
     return {
       success: true,
@@ -147,7 +148,7 @@ export const extractLegalDataFromPdf = async (pdfBuffer) => {
       citations: citations,
       summary: headNote,
       headNote: headNote,
-      judgmentText: cleanedText || 'PDF Legal Judgment Document Content Extracted Successfully.',
+      judgmentText: formattedHtml || cleanedText || 'PDF Legal Judgment Document Content Extracted Successfully.',
       totalPages: totalPages || 1
     };
 
@@ -156,3 +157,57 @@ export const extractLegalDataFromPdf = async (pdfBuffer) => {
     throw error;
   }
 };
+
+/**
+ * Helper to convert PDF plain text into formatted HTML with table and paragraph structure
+ */
+function convertPdfTextToHtml(rawText) {
+  if (!rawText) return '';
+  
+  const lines = rawText.split('\n');
+  let html = '';
+  let inTable = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) {
+      if (inTable) {
+        html += '</tbody></table>';
+        inTable = false;
+      }
+      continue;
+    }
+
+    // Check if line looks like a table row (multiple space clusters or tabs separating values)
+    const columns = line.split(/\s{2,}|\t+/);
+    if (columns.length >= 3 || (columns.length === 2 && /\d/.test(columns[1]) && columns[0].length < 40)) {
+      if (!inTable) {
+        html += '<table style="width:100%; border-collapse:collapse; margin: 12px 0; border: 1px solid #cbd5e1;"><tbody>';
+        inTable = true;
+      }
+      html += '<tr>' + columns.map(c => `<td style="border: 1px solid #cbd5e1; padding: 6px 10px; font-size: 13px;">${escapeHtml(c)}</td>`).join('') + '</tr>';
+    } else {
+      if (inTable) {
+        html += '</tbody></table>';
+        inTable = false;
+      }
+
+      // Check if line looks like a major legal heading
+      if (/^(IN THE SUPREME COURT|IN THE HIGH COURT|JUDGMENT|ORDER|REPORTABLE|CRIMINAL APPELLATE|CIVIL APPELLATE|VERSUS|APPELLANT|RESPONDENT|BEFORE:)/i.test(line) || (line.length < 60 && line === line.toUpperCase() && !/\./.test(line))) {
+        html += `<p style="font-weight: bold; font-size: 15px; margin-top: 14px; margin-bottom: 6px; text-transform: uppercase;">${escapeHtml(line)}</p>`;
+      } else {
+        html += `<p style="margin-bottom: 10px; line-height: 1.6; font-size: 14px;">${escapeHtml(line)}</p>`;
+      }
+    }
+  }
+
+  if (inTable) {
+    html += '</tbody></table>';
+  }
+
+  return html;
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
