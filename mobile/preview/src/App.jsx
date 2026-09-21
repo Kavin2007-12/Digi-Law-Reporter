@@ -450,9 +450,14 @@ export default function App() {
     setSavedCases(updated);
     setTimeout(() => setBookmarkToast(''), 2000);
 
+    // Dynamic Host Resolution for instant cross-device network speed
+    const apiHost = (typeof window !== 'undefined' && window.location && window.location.hostname) 
+      ? `http://${window.location.hostname}:5000/api` 
+      : 'http://localhost:5000/api';
+
     // Sync saved cases array directly to PostgreSQL / LocalStore Database API
     const userMobile = userProfile?.mobile || loginMobile || '9876543210';
-    fetch('http://localhost:5000/api/auth/saved-cases', {
+    fetch(`${apiHost}/auth/saved-cases`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier: userMobile, cases: updated })
@@ -590,9 +595,10 @@ export default function App() {
 
   const [appLoading, setAppLoading] = useState(false);
 
-  // Fetch Cases from Shared Backend REST API Strictly
+  // Fetch Cases from Shared Backend REST API Strictly (Dynamic Host Resolution)
   useEffect(() => {
-    fetch('http://localhost:5000/api/public/search')
+    const host = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+    fetch(`http://${host}:5000/api/public/search`)
       .then(res => res.json())
       .then(data => {
         const fetchedCases = data.cases || data.data || [];
@@ -637,7 +643,8 @@ export default function App() {
         if (u && u.mobile) {
           setIsLoggedIn(true);
           setUserProfile(u);
-          fetch(`http://localhost:5000/api/auth/saved-cases/${u.mobile}`)
+          const host = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
+          fetch(`http://${host}:5000/api/auth/saved-cases/${u.mobile}`)
             .then(res => res.json())
             .then(data => {
               if (data && Array.isArray(data.data)) {

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { User, Phone, Bookmark, Trash2, ArrowRight, ShieldCheck, Scale, LogOut, Search } from 'lucide-react';
+import { API_BASE_URL } from '../config/api';
 
 export default function Profile() {
   const [user, setUser] = useState(null);
@@ -15,9 +16,9 @@ export default function Profile() {
         const u = JSON.parse(savedUser);
         setUser(u);
         
-        // Fetch user's saved cases from database
+        // Fetch user's saved cases from database dynamically
         const userMobile = u.mobile || '9876543210';
-        fetch(`http://localhost:5000/api/auth/saved-cases/${userMobile}`)
+        fetch(`${API_BASE_URL}/auth/saved-cases/${userMobile}`)
           .then(res => res.json())
           .then(data => {
             if (data && Array.isArray(data.data)) {
@@ -49,7 +50,7 @@ export default function Profile() {
     setSavedCases(updated);
 
     const userMobile = user?.mobile || '9876543210';
-    fetch('http://localhost:5000/api/auth/saved-cases', {
+    fetch(`${API_BASE_URL}/auth/saved-cases`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ identifier: userMobile, cases: updated })
