@@ -91,7 +91,7 @@ export default function Profile() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
+    <div className="w-full px-4 sm:px-6 md:px-8 py-8 space-y-6">
       
       {/* CONCEPT 2: MINIMALIST ACCOUNT HEADER */}
       <div className="bg-white rounded-xl p-5 border border-slate-200 shadow-2xs flex items-center justify-between gap-4">
