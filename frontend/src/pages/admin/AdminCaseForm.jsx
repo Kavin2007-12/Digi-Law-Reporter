@@ -495,27 +495,27 @@ export default function AdminCaseForm() {
         </div>
       </div>
 
-      {/* UPLOAD PDF AUTO-CONVERT CARD (PREMIUM UPLOAD OPTION) */}
-      <div className="bg-gradient-to-r from-slate-900 via-[#0B1727] to-slate-900 rounded-2xl p-6 text-white shadow-md border border-slate-800 space-y-4">
+      {/* UPLOAD PDF AUTO-CONVERT CARD (WHITE BACKGROUND) */}
+      <div className="bg-white border border-slate-200/90 rounded-2xl p-6 shadow-2xs space-y-4">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <div className="p-3 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-xl">
+            <div className="p-3 bg-blue-50 text-blue-600 border border-blue-100 rounded-xl">
               <Sparkles size={24} />
             </div>
             <div>
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+              <h3 className="text-sm font-extrabold text-[#0B1727] flex items-center gap-2">
                 <span>Upload PDF Case Judgment</span>
-                <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-extrabold uppercase rounded-full border border-blue-400/30">
+                <span className="px-2.5 py-0.5 bg-blue-50 text-blue-700 text-[10px] font-extrabold uppercase tracking-wide rounded-full border border-blue-200">
                   Fast Text Extractor
                 </span>
               </h3>
-              <p className="text-xs text-slate-300 mt-0.5">
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
                 Upload any legal judgment PDF to extract text, parties, court & formatting cleanly into structured fields.
               </p>
             </div>
           </div>
 
-          <label className="shrink-0 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold rounded-lg shadow-sm cursor-pointer transition-all inline-flex items-center gap-2">
+          <label className="shrink-0 px-4 py-2.5 bg-[#0B1727] hover:bg-slate-800 text-white text-xs font-extrabold rounded-lg shadow-xs cursor-pointer transition-all inline-flex items-center gap-2">
             <Upload size={15} />
             <span>Upload PDF File</span>
             <input
