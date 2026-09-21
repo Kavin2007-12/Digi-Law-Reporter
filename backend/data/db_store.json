@@ -70,7 +70,7 @@
       "email": "9876543210@digilawreporter.in",
       "status": "Active",
       "joined_date": "2026-08-18",
-      "last_login": "2026-09-21T16:02:42.024Z",
+      "last_login": "2026-09-21T16:05:31.727Z",
       "saved_cases": []
     },
     {
@@ -90,8 +90,7 @@
       "username": "kavinselvaraj12@gmail.com",
       "email": "kavinselvaraj12@gmail.com",
       "role": "MAIN_ADMIN",
-      "password": "Kavin4455",
-      "password_hash": "$2b$10$TZLESTWhDRh2fR8HqAIDPuELoPY7dBL5sCpEI4lFyGpRbrgoXxTVa"
+      "password_hash": "$2b$10$BFsRVW42ij0SYqZSd4Lu8OUU7jIK8thShxMdqJpSMQ4sYncFkG2/a"
     },
     {
       "id": "1787037038819",
@@ -250,10 +249,10 @@
   "resetTokens": [
     {
       "adminId": "1",
-      "tokenHash": "a4a35881ad8d7c470237510da308c78c5f335d46af86f7fbf61375663a691071",
-      "expiresAt": "2026-08-21T06:34:53.589Z",
+      "tokenHash": "dbb942d2e7eb5aab4fdf100c57e83f8cb7e254b453d8e37445a754a4450ccd01",
+      "expiresAt": "2026-09-21T16:42:54.979Z",
       "used": false,
-      "createdAt": "2026-08-21T06:31:53.594Z"
+      "createdAt": "2026-09-21T16:39:54.982Z"
     }
   ],
   "adminSessions": [
@@ -267,13 +266,13 @@
       "lastActivity": 1787294254380
     },
     {
-      "sessionId": "509be0ab7df7af42d8c2ea77dc21a92b274bd7ced4204019a91558f29dc940bf",
+      "sessionId": "830fc9bd8922b7a87ea08c39aede76edb055dd62058f443e8d2c3bddf0a3f7ad",
       "adminId": "1",
       "email": "kavinselvaraj12@gmail.com",
       "role": "MAIN_ADMIN",
-      "createdAt": 1787304703355,
-      "expiresAt": 1787308303355,
-      "lastActivity": 1787304703355
+      "createdAt": 1790008801524,
+      "expiresAt": 1790012401524,
+      "lastActivity": 1790008801524
     }
   ]
 }

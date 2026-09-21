@@ -127,7 +127,7 @@ class UserRepository {
     }
 
     // Fallback: Check localStore admins
-    const admins = localStore.getAdmins();
+    const admins = localStore.getRawAdmins();
     return admins.find(a => 
       (a.email && a.email.toLowerCase() === clean) || 
       (a.username && a.username.toLowerCase() === clean) ||
@@ -150,7 +150,7 @@ class UserRepository {
       logger.warn(`PostgreSQL offline for findAdminById, checking localStore: ${adminId}`);
     }
 
-    const admins = localStore.getAdmins();
+    const admins = localStore.getRawAdmins();
     return admins.find(a => String(a.id) === String(adminId)) || null;
   }
 

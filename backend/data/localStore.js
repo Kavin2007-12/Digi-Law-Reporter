@@ -167,6 +167,11 @@ class LocalStore {
     });
   }
 
+  getRawAdmins() {
+    const store = this.read();
+    return store.admins || defaultStore.admins || [];
+  }
+
   addAdmin(adminData) {
     const store = this.read();
     if (!store.admins) store.admins = [];
