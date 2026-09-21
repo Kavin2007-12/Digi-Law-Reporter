@@ -977,19 +977,24 @@ export default function AdminCaseForm() {
                 </div>
               )}
 
-              {/* Full Judgment Document Body */}
+              {/* Full Judgment Document Canvas (Directly Editable on Document Page) */}
               <div className="space-y-2 font-serif pt-2 border-t border-slate-200">
-                <span className="text-xs font-sans font-extrabold uppercase tracking-widest text-[#0B1727] block">
-                  FULL JUDGMENT TEXT & TABLES
-                </span>
-                <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs min-h-[600px]">
-                  <TiptapEditor 
-                    content={formData.judgmentText} 
-                    onChange={(val) => handleChange('judgmentText', val)} 
-                    placeholder="Extracted PDF document text will appear here for direct editing..." 
-                    minHeight="600px"
-                  />
+                <div className="flex items-center justify-between font-sans pb-1">
+                  <span className="text-xs font-sans font-extrabold uppercase tracking-widest text-[#0B1727] block">
+                    PDF DOCUMENT CONTENT (CLICK ANYWHERE ON PAGE TO EDIT)
+                  </span>
+                  <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-200">
+                    Direct PDF Page Editor
+                  </span>
                 </div>
+
+                <div 
+                  contentEditable={true}
+                  suppressContentEditableWarning={true}
+                  onBlur={(e) => handleChange('judgmentText', e.currentTarget.innerHTML)}
+                  dangerouslySetInnerHTML={{ __html: formData.judgmentText }}
+                  className="w-full min-h-[650px] p-6 bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/30 font-serif text-slate-900 text-sm leading-relaxed space-y-4 shadow-inner overflow-x-auto"
+                />
               </div>
 
             </div>
