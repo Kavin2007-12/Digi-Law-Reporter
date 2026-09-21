@@ -32,6 +32,7 @@ export default function Header() {
     { label: 'Home', path: '/' },
     { label: 'About', path: '/about' },
     { label: 'Contact', path: '/contact' },
+    { label: 'Search Portal', path: '/search' },
   ];
 
   return (
@@ -86,37 +87,19 @@ export default function Header() {
               {!isAuthPage && (
                 user ? (
                   <div className="flex items-center gap-2 sm:gap-3">
-                    {/* 1. Distinct User Profile Box */}
+                    {/* Clean Circular User Avatar Button (Opens Profile directly) */}
                     <Link 
                       to="/profile"
-                      className="flex items-center gap-2 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200/90 px-2.5 sm:px-3.5 py-1.5 rounded-2xl transition-all shadow-2xs group cursor-pointer"
+                      className="w-9 h-9 rounded-full bg-blue-600 hover:bg-blue-700 text-white font-black text-sm flex items-center justify-center shadow-md shadow-blue-500/20 transition-all cursor-pointer hover:scale-105 active:scale-95 border-2 border-slate-100"
                       title={`Logged in as ${user.name || 'User'} - Click to open My Profile`}
                     >
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
-                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                      </div>
-                      <span className="text-blue-700 group-hover:text-blue-800 font-bold text-xs md:text-sm capitalize max-w-[80px] sm:max-w-none truncate">
-                        {user.name ? user.name.split(' ')[0] : 'User'}
-                      </span>
+                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </Link>
-
-                    {/* 2. Search Portal Box (Desktop) */}
-                    {location.pathname !== '/search' && (
-                      <Link 
-                        to="/search" 
-                        className="hidden md:flex items-center gap-2 bg-blue-100/90 hover:bg-blue-200/90 border border-blue-200/90 text-blue-700 px-3.5 py-1.5 rounded-2xl transition-all shadow-2xs group cursor-pointer"
-                        title="Click to go to Legal Search Portal"
-                      >
-                        <span className="text-blue-700 font-extrabold text-[11px] md:text-xs tracking-wider">
-                          SEARCH PORTAL
-                        </span>
-                      </Link>
-                    )}
 
                     {/* Logout Button (Desktop) */}
                     <button 
                       onClick={handleLogout} 
-                      className="hidden md:block text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-xl transition-colors ml-0.5"
+                      className="hidden md:block text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-xl transition-colors ml-0.5 cursor-pointer"
                       title="Logout"
                     >
                       <LogOut size={17} />
