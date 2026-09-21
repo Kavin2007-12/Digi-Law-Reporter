@@ -93,56 +93,51 @@ export default function Profile() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-8 space-y-8">
       
-      {/* 1. EXECUTIVE HERO CARD WITH GRADIENT BACKGROUND */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-xl border border-slate-800">
-        
-        {/* Subtle Background Glow Spheres */}
-        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
-        <div className="absolute bottom-0 left-1/3 w-60 h-60 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
-
-        <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+      {/* 1. CLEAN MODERN PROFILE CARD (LIGHT THEME) */}
+      <div className="bg-white rounded-2xl p-6 border border-slate-200/90 shadow-sm transition-all">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           
-          {/* User Details Left Column */}
-          <div className="flex items-center gap-5">
-            {/* Avatar Circle */}
-            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white font-black text-2xl sm:text-3xl flex items-center justify-center shadow-lg shadow-blue-500/30 border-2 border-white/20 flex-shrink-0">
+          {/* Left Column: Avatar & User Info */}
+          <div className="flex items-center gap-4">
+            {/* User Initial Avatar Circle */}
+            <div className="w-16 h-16 rounded-2xl bg-blue-600 text-white font-black text-2xl flex items-center justify-center shadow-md shadow-blue-500/20 border-2 border-blue-50 flex-shrink-0">
               {user.name ? user.name.substring(0, 2).toUpperCase() : 'U'}
             </div>
 
-            <div className="space-y-1.5">
-              <div className="flex items-center gap-2.5 flex-wrap">
-                <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white capitalize">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-xl font-bold text-slate-900 capitalize">
                   {user.name || 'Legal Advocate'}
                 </h1>
-                <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 text-[10px] font-bold px-2.5 py-0.5 rounded-full border border-emerald-500/30 backdrop-blur-md">
+                <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-200">
                   <ShieldCheck size={12} /> Verified Member
                 </span>
               </div>
 
-              <p className="text-xs text-slate-300 flex items-center gap-2 font-medium">
-                <Phone size={14} className="text-blue-400" />
+              <p className="text-xs text-slate-500 flex items-center gap-1.5 font-medium">
+                <Phone size={14} className="text-slate-400" />
                 <span>{user.mobile || 'Mobile Verified'}</span>
               </p>
             </div>
           </div>
 
-          {/* Action Buttons Right Column */}
+          {/* Right Column: Actions */}
           <div className="flex items-center gap-3 w-full md:w-auto">
             <Link 
               to="/search"
-              className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold px-5 py-3 rounded-xl shadow-lg shadow-blue-600/30 transition-all active:scale-95 cursor-pointer"
+              className="flex-1 md:flex-initial inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-5 py-2.5 rounded-xl shadow-xs transition-all active:scale-95 cursor-pointer"
             >
-              <Search size={15} />
+              <Search size={14} />
               <span>Open Search Portal</span>
               <ArrowRight size={14} />
             </Link>
 
             <button 
               onClick={handleLogout}
-              className="inline-flex items-center gap-1.5 bg-red-500/10 hover:bg-red-500/20 text-red-300 hover:text-white font-bold text-xs px-4 py-3 rounded-xl border border-red-500/30 transition-all cursor-pointer active:scale-95"
+              className="inline-flex items-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-600 hover:text-red-700 font-bold text-xs px-4 py-2.5 rounded-xl border border-red-200 transition-all cursor-pointer active:scale-95"
               title="Log Out of Account"
             >
-              <LogOut size={15} />
+              <LogOut size={14} />
               <span>Log Out</span>
             </button>
           </div>
