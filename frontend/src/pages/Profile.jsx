@@ -169,54 +169,46 @@ export default function Profile() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <div className="flex flex-col space-y-4">
             {savedCases.map((item, idx) => (
               <div 
                 key={item.id || idx}
-                className="group bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-blue-400 hover:shadow-lg transition-all duration-300 flex flex-col justify-between space-y-4"
+                className="group bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-blue-400 hover:shadow-md transition-all duration-300 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
               >
-                <div className="space-y-3">
-                  {/* Top Bar: Citation & Remove */}
-                  <div className="flex items-center justify-between gap-2">
+                <div className="space-y-2 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <span className="bg-blue-50 text-blue-700 font-extrabold text-[11px] px-3 py-1 rounded-lg border border-blue-100/90 shadow-2xs">
                       {item.citation || 'Official Citation'}
                     </span>
-                    
-                    <button 
-                      onClick={() => handleRemoveSavedCase(item.id)}
-                      className="text-slate-400 hover:text-red-600 hover:bg-red-50 p-1.5 rounded-lg transition-colors cursor-pointer"
-                      title="Remove from saved"
-                    >
-                      <Trash2 size={15} />
-                    </button>
+                    {item.court && (
+                      <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider bg-slate-100 px-2.5 py-1 rounded-md">
+                        {item.court}
+                      </span>
+                    )}
                   </div>
 
-                  {/* Title */}
-                  <h3 className="font-bold text-sm text-slate-900 leading-snug group-hover:text-blue-700 transition-colors line-clamp-2">
+                  <h3 className="font-bold text-sm text-slate-900 leading-snug group-hover:text-blue-700 transition-colors">
                     {item.title || `${item.petitioner || ''} vs ${item.respondent || ''}`}
                   </h3>
-
-                  {/* Court Name */}
-                  {item.court && (
-                    <span className="inline-block text-[10px] font-black text-slate-500 uppercase tracking-wider bg-slate-100 px-2.5 py-0.5 rounded-md">
-                      {item.court}
-                    </span>
-                  )}
                 </div>
 
-                {/* Footer Action Link */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-semibold flex items-center gap-1">
-                    <Clock size={12} /> Bookmarked
-                  </span>
-
+                {/* Right Action Controls */}
+                <div className="flex items-center gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-100 flex-shrink-0 justify-between sm:justify-end">
                   <Link 
                     to={`/judgment/${item.id}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-extrabold text-blue-600 group-hover:text-blue-700 group-hover:translate-x-0.5 transition-all"
+                    className="inline-flex items-center gap-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 font-extrabold text-xs px-4 py-2.5 rounded-xl border border-blue-200/80 transition-all group-hover:bg-blue-600 group-hover:text-white"
                   >
                     <span>Read Full Judgment</span>
                     <ArrowRight size={14} />
                   </Link>
+
+                  <button 
+                    onClick={() => handleRemoveSavedCase(item.id)}
+                    className="text-slate-400 hover:text-red-600 hover:bg-red-50 p-2 rounded-xl transition-colors cursor-pointer border border-transparent hover:border-red-200"
+                    title="Remove from saved"
+                  >
+                    <Trash2 size={16} />
+                  </button>
                 </div>
               </div>
             ))}
