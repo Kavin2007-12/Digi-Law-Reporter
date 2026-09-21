@@ -766,22 +766,22 @@ export default function AdminCaseForm() {
         </form>
       )}
 
-      {/* VIEW MODE 2: EDITABLE PDF DOCUMENT PAPER VIEW */}
+      {/* VIEW MODE 2: AUTHENTIC CLEAN WHITE PDF DOCUMENT PAPER VIEW */}
       {viewMode === 'document' && (
-        <div className="bg-slate-200/90 p-4 sm:p-6 rounded-2xl shadow-xl space-y-6">
+        <div className="bg-white space-y-6 animate-in fade-in">
           
-          {/* Document Top Action Bar */}
-          <div className="bg-[#0B1727] text-white p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-md">
+          {/* Document Top Clean Action Bar */}
+          <div className="bg-white border border-slate-200 p-4 rounded-xl flex flex-wrap items-center justify-between gap-4 shadow-2xs">
             <div className="flex items-center gap-3">
-              <div className="p-2 bg-emerald-500/20 text-emerald-400 rounded-lg border border-emerald-500/30">
+              <div className="p-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
                 <FileText size={18} />
               </div>
               <div>
-                <h3 className="text-xs font-extrabold uppercase tracking-wider text-white">
+                <h3 className="text-xs font-extrabold uppercase tracking-wider text-[#0B1727]">
                   {pdfFileName ? `PDF Document: ${pdfFileName}` : 'Editable Legal PDF Document'}
                 </h3>
-                <p className="text-[11px] text-slate-400 font-medium">
-                  Continuous editable document view. Tables, headings, and paragraphs rendered for direct editing.
+                <p className="text-[11px] text-slate-500 font-medium">
+                  Directly edit document text or tables on the PDF paper below, then click Publish Case.
                 </p>
               </div>
             </div>
@@ -792,18 +792,18 @@ export default function AdminCaseForm() {
                   <button
                     type="button"
                     onClick={() => setIsSplitView(!isSplitView)}
-                    className={`px-3.5 py-2 font-bold rounded-lg text-xs transition-colors flex items-center gap-1.5 border shadow-2xs cursor-pointer ${isSplitView ? 'bg-blue-600 text-white border-blue-500' : 'bg-slate-800 hover:bg-slate-700 text-slate-200 border-slate-700'}`}
+                    className={`px-3.5 py-2 font-bold rounded-lg text-xs transition-colors flex items-center gap-1.5 border shadow-2xs cursor-pointer ${isSplitView ? 'bg-blue-600 text-white border-blue-500' : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-300'}`}
                   >
-                    <Eye size={14} className="text-blue-300" />
+                    <Eye size={14} className={isSplitView ? 'text-white' : 'text-blue-600'} />
                     <span>{isSplitView ? 'Full Editor View' : 'Side-by-Side PDF View'}</span>
                   </button>
 
                   <button
                     type="button"
                     onClick={() => setShowOriginalPdfModal(true)}
-                    className="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg text-xs transition-colors flex items-center gap-1.5 border border-slate-700 shadow-2xs cursor-pointer"
+                    className="px-3 py-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold rounded-lg text-xs transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
                   >
-                    <ExternalLink size={14} className="text-slate-300" />
+                    <ExternalLink size={14} className="text-slate-500" />
                     <span>Pop-out PDF</span>
                   </button>
                 </>
@@ -812,7 +812,7 @@ export default function AdminCaseForm() {
               <button
                 type="button"
                 onClick={() => handleSave('Draft')}
-                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg text-xs transition-colors cursor-pointer flex items-center gap-1.5 border border-slate-700"
+                className="px-4 py-2 bg-white hover:bg-slate-50 text-slate-800 font-bold rounded-lg text-xs transition-colors cursor-pointer flex items-center gap-1.5 border border-slate-300 shadow-2xs"
               >
                 <Save size={14} />
                 <span>Save Draft</span>
@@ -821,7 +821,7 @@ export default function AdminCaseForm() {
               <button
                 type="button"
                 onClick={() => handleSave('Published')}
-                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-lg text-xs transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                className="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-lg text-xs transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
               >
                 <Send size={14} />
                 <span>Publish Case</span>
@@ -829,18 +829,18 @@ export default function AdminCaseForm() {
             </div>
           </div>
 
-          {/* Main Layout: Split Side-by-Side or Full Canvas */}
+          {/* Main Layout: Split Side-by-Side or Pure White Paper Sheet */}
           <div className={`grid gap-6 ${isSplitView && pdfPreviewUrl ? 'grid-cols-1 lg:grid-cols-2' : 'grid-cols-1'}`}>
             
             {/* Left Column (When Side-by-Side View is enabled): Original PDF Viewer */}
             {isSplitView && pdfPreviewUrl && (
-              <div className="bg-slate-900 rounded-xl p-3 shadow-xl border border-slate-800 flex flex-col h-[800px]">
+              <div className="bg-slate-900 rounded-xl p-3 shadow-xl border border-slate-800 flex flex-col h-[850px]">
                 <div className="flex items-center justify-between text-xs text-slate-300 font-bold pb-2 border-b border-slate-800 mb-2 px-1">
                   <span className="flex items-center gap-2">
                     <File size={14} className="text-blue-400" />
                     <span>Original PDF Document Viewer</span>
                   </span>
-                  <span className="text-[10px] text-slate-500 font-mono">Reference View</span>
+                  <span className="text-[10px] text-slate-400 font-mono">Reference PDF</span>
                 </div>
                 <iframe
                   src={pdfPreviewUrl}
@@ -850,10 +850,10 @@ export default function AdminCaseForm() {
               </div>
             )}
 
-            {/* Right/Main Column: Pure Editable PDF Document Sheet */}
-            <div className="bg-white rounded-sm shadow-xl border border-slate-300/80 p-6 sm:p-10 space-y-4 font-serif text-[#0B1727] relative min-h-[750px]">
+            {/* Right/Main Column: Authentic Clean White PDF Paper Sheet */}
+            <div className="bg-white rounded-xl shadow-2xl border border-slate-200/90 p-8 sm:p-12 space-y-6 font-serif text-[#0B1727] min-h-[850px]">
               
-              {/* Document View Title & Status */}
+              {/* Document Header Indicator */}
               <div className="flex items-center justify-between font-sans pb-3 border-b border-slate-200">
                 <div className="flex items-center gap-2">
                   <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -861,18 +861,18 @@ export default function AdminCaseForm() {
                     EDITABLE PDF DOCUMENT WORKSPACE
                   </h4>
                 </div>
-                <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                <span className="text-[11px] font-bold text-emerald-800 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
                   Full Text & Tables Editable
                 </span>
               </div>
 
               {/* Single Continuous Editable PDF Document Canvas */}
-              <div className="rounded-xl border border-slate-300 overflow-hidden bg-white shadow-2xs min-h-[650px]">
+              <div className="rounded-xl border border-slate-200 overflow-hidden bg-white shadow-2xs min-h-[700px]">
                 <TiptapEditor 
                   content={formData.judgmentText} 
                   onChange={(val) => handleChange('judgmentText', val)} 
                   placeholder="Extracted PDF document text will appear here for direct editing..." 
-                  minHeight="650px"
+                  minHeight="700px"
                 />
               </div>
 
@@ -881,16 +881,16 @@ export default function AdminCaseForm() {
           </div>
 
           {/* Bottom Action Footer */}
-          <div className="bg-[#0B1727] text-white rounded-xl p-4 shadow-xl border border-slate-800 flex items-center justify-between gap-3">
-            <span className="text-xs text-slate-400 font-medium">
-              Review & editing completed? Click Publish Case to push to database.
+          <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs flex items-center justify-between gap-3">
+            <span className="text-xs text-slate-500 font-medium">
+              Editing completed? Click Publish Case to push precedent record to database.
             </span>
 
             <div className="flex items-center gap-3">
               <button
                 type="button"
                 onClick={() => handleSave('Draft')}
-                className="px-5 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg text-xs transition-colors cursor-pointer flex items-center gap-1.5 border border-slate-700"
+                className="px-5 py-2.5 bg-white hover:bg-slate-50 text-slate-800 font-bold rounded-lg text-xs transition-colors cursor-pointer flex items-center gap-1.5 border border-slate-300 shadow-2xs"
               >
                 <Save size={14} />
                 <span>Save Draft</span>
@@ -899,7 +899,7 @@ export default function AdminCaseForm() {
               <button
                 type="button"
                 onClick={() => handleSave('Published')}
-                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-lg text-xs transition-all shadow-md cursor-pointer flex items-center gap-1.5"
+                className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-lg text-xs transition-all shadow-xs cursor-pointer flex items-center gap-1.5"
               >
                 <Send size={15} />
                 <span>Publish Case</span>
