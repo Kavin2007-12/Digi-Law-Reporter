@@ -391,25 +391,27 @@ export default function AdminCaseForm() {
         </button>
 
         <div className="flex items-center gap-3">
-          {/* View Mode Selector Tabs */}
-          <div className="bg-slate-200/80 p-0.5 rounded-lg flex items-center gap-1 text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setViewMode('form')}
-              className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${viewMode === 'form' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
-            >
-              <Edit3 size={13} />
-              <span>Edit Form</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode('document')}
-              className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${viewMode === 'document' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
-            >
-              <Eye size={13} />
-              <span>PDF Paper View</span>
-            </button>
-          </div>
+          {/* View Mode Selector Tabs (Shown ONLY after adding a PDF or when editing) */}
+          {(isEditing || pdfFileName || pdfPreviewUrl) && (
+            <div className="bg-slate-200/80 p-0.5 rounded-lg flex items-center gap-1 text-xs font-bold">
+              <button
+                type="button"
+                onClick={() => setViewMode('form')}
+                className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${viewMode === 'form' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
+              >
+                <Edit3 size={13} />
+                <span>Edit Form</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('document')}
+                className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 cursor-pointer ${viewMode === 'document' ? 'bg-white text-slate-900 shadow-2xs' : 'text-slate-600 hover:text-slate-900'}`}
+              >
+                <Eye size={13} />
+                <span>PDF Paper View</span>
+              </button>
+            </div>
+          )}
 
           <span className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
             {isEditing ? `Edit Case #${id}` : 'Legal Document Record Form'}
