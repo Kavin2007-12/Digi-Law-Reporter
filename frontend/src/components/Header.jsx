@@ -32,7 +32,7 @@ export default function Header() {
     { label: 'Home', path: '/' },
     { label: 'About', path: '/about' },
     { label: 'Contact', path: '/contact' },
-    { label: 'Search Portal', path: '/search' },
+    ...(user ? [{ label: 'Search', path: '/search' }] : []),
   ];
 
   return (
