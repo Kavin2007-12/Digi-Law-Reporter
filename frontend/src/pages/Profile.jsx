@@ -150,45 +150,7 @@ export default function Profile() {
         </div>
       </div>
 
-      {/* 2. ANALYTICS & QUICK METRICS ROW */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        
-        {/* Metric 1: Saved Judgments */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center gap-4">
-          <div className="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center border border-blue-100 flex-shrink-0">
-            <Bookmark size={22} />
-          </div>
-          <div>
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Saved Cases</span>
-            <span className="text-xl font-black text-slate-900">{savedCases.length} Judgments</span>
-          </div>
-        </div>
-
-        {/* Metric 2: Access Plan */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center gap-4">
-          <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center border border-emerald-100 flex-shrink-0">
-            <Sparkles size={22} />
-          </div>
-          <div>
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Access Status</span>
-            <span className="text-xl font-black text-emerald-600">Full Access</span>
-          </div>
-        </div>
-
-        {/* Metric 3: Quick Navigation */}
-        <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-2xs flex items-center gap-4">
-          <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-xl flex items-center justify-center border border-indigo-100 flex-shrink-0">
-            <BookOpen size={22} />
-          </div>
-          <div>
-            <span className="text-[10px] font-extrabold text-slate-400 uppercase tracking-wider block">Repository</span>
-            <span className="text-xl font-black text-slate-900">Supreme & High Courts</span>
-          </div>
-        </div>
-
-      </div>
-
-      {/* 3. SAVED JUDGMENTS SECTION */}
+      {/* SAVED JUDGMENTS SECTION */}
       <div className="space-y-4 pt-2">
         <div className="flex items-center justify-between border-b border-slate-200/80 pb-3">
           <div className="flex items-center gap-2">
