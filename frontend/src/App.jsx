@@ -8,6 +8,7 @@ import Search from './pages/Search';
 import Judgment from './pages/Judgment';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+import Profile from './pages/Profile';
 import KeywordSearch from './pages/KeywordSearch';
 import Contact from './pages/Contact';
 
@@ -44,12 +45,12 @@ function App() {
 
   return (
     <div className="min-h-screen bg-[#FAFBFF] text-slate-900 font-sans relative selection:bg-primary-200 selection:text-primary-900 flex flex-col print:bg-white w-full max-w-full overflow-x-hidden">
-      {/* Premium Background Glows & Grid */}
+      {/* Optimized Background Glows */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 print:hidden">
-         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary-200/30 blur-[120px]"></div>
-         <div className="absolute top-[30%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/20 blur-[120px]"></div>
-         <div className="absolute bottom-[-10%] left-[20%] w-[50%] h-[40%] rounded-full bg-indigo-100/40 blur-[120px]"></div>
-         <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#94a3b8 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.15 }}></div>
+         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary-200/15 blur-[40px]"></div>
+         <div className="absolute top-[30%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/10 blur-[40px]"></div>
+         <div className="absolute bottom-[-10%] left-[20%] w-[50%] h-[40%] rounded-full bg-indigo-100/20 blur-[40px]"></div>
+         <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#94a3b8 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.12 }}></div>
       </div>
       
       <div className="relative z-10 flex flex-col flex-1 min-h-full">
@@ -63,6 +64,7 @@ function App() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/search" element={<Search />} />
             <Route path="/search/keyword" element={<KeywordSearch />} />
             <Route path="/search/results" element={<SearchResults />} />

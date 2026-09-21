@@ -88,9 +88,9 @@ export default function Header() {
                   <div className="flex items-center gap-2 sm:gap-3">
                     {/* 1. Distinct User Profile Box */}
                     <Link 
-                      to="/search"
+                      to="/profile"
                       className="flex items-center gap-2 bg-blue-50/80 hover:bg-blue-100/80 border border-blue-200/90 px-2.5 sm:px-3.5 py-1.5 rounded-2xl transition-all shadow-2xs group cursor-pointer"
-                      title={`Logged in as ${user.name || 'User'} - Click to open Search Portal`}
+                      title={`Logged in as ${user.name || 'User'} - Click to open My Profile`}
                     >
                       <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
                         {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
