@@ -95,15 +95,6 @@ export default function Header() {
                     >
                       {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </Link>
-
-                    {/* Logout Button (Desktop) */}
-                    <button 
-                      onClick={handleLogout} 
-                      className="hidden md:block text-slate-400 hover:text-red-500 p-2 hover:bg-red-50 rounded-xl transition-colors ml-0.5 cursor-pointer"
-                      title="Logout"
-                    >
-                      <LogOut size={17} />
-                    </button>
                   </div>
                 ) : (
                  <div className="flex items-center space-x-3">
