@@ -836,129 +836,196 @@ export default function AdminCaseForm() {
         </div>
       )}
 
-      {/* 2. EXTRACTED DATA REVIEW & EDIT POPUP MODAL */}
+      {/* 2. REALISTIC EDITABLE PDF DOCUMENT PAPER READER & PUBLISH MODAL */}
       {showExtractionModal && extractedCaseData && (
-        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] shadow-2xl border border-slate-200 flex flex-col my-auto animate-in zoom-in-95">
-            
-            {/* Modal Header */}
-            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50 rounded-t-2xl">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs">
-                  <FileCode size={20} />
-                </div>
-                <div>
-                  <h3 className="text-base font-extrabold text-[#0B1727]">
-                    Extracted Legal Case Preview & Editor
-                  </h3>
-                  <p className="text-xs text-slate-500 font-medium">
-                    Review extracted text below. Edit any detail before publishing.
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-50 bg-slate-950/85 backdrop-blur-md flex flex-col p-2 sm:p-6 overflow-y-auto">
+          
+          {/* TOP PDF VIEWER TOOLBAR */}
+          <div className="max-w-4xl w-full mx-auto bg-slate-900 text-white rounded-t-xl px-5 py-3.5 border-b border-slate-800 flex items-center justify-between shrink-0 shadow-lg">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-red-600/20 text-red-400 border border-red-500/30 rounded-lg">
+                <FileCode size={18} />
               </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-xs font-bold text-white tracking-wide">
+                    {pdfFileName || 'Extracted_Legal_Judgment.pdf'}
+                  </h3>
+                  <span className="px-2 py-0.5 bg-emerald-500/20 text-emerald-400 text-[10px] font-extrabold uppercase rounded-full border border-emerald-500/30">
+                    Live Editable PDF View
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 font-medium">
+                  Page 1 of {extractedCaseData.totalPages || 1} • Edit any text directly on the document sheet below
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5">
+              <button
+                type="button"
+                onClick={handleDirectPublishFromModal}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs rounded-lg transition-all shadow-sm cursor-pointer flex items-center gap-1.5"
+              >
+                <Send size={14} />
+                <span>Publish Case Now</span>
+              </button>
 
               <button
                 onClick={() => setShowExtractionModal(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
+                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800 transition-colors"
+                title="Close Viewer"
               >
                 <X size={18} />
               </button>
             </div>
+          </div>
 
-            {/* Modal Body (Editable Fields) */}
-            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+          {/* MAIN PDF PAPER SHEET CONTAINER */}
+          <div className="max-w-4xl w-full mx-auto bg-slate-200/90 p-4 sm:p-8 rounded-b-xl overflow-y-auto flex-1 shadow-2xl space-y-6">
+            
+            {/* WHITE PDF PAPER PAGE */}
+            <div className="bg-white rounded-sm shadow-xl border border-slate-300/80 p-8 sm:p-14 space-y-8 font-serif text-[#0B1727] relative min-h-[750px]">
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Case Number</label>
+              {/* Official Watermark Background Styling */}
+              <div className="absolute top-10 right-10 opacity-5 pointer-events-none text-slate-900 font-cinzel font-black text-6xl select-none">
+                DLR LEGAL
+              </div>
+
+              {/* PDF Document Header / Court Title (Editable) */}
+              <div className="text-center space-y-3 pb-6 border-b-2 border-slate-900">
+                <span className="text-[11px] font-mono uppercase tracking-widest font-extrabold text-slate-500 block">
+                  IN THE HIGH COURT / SUPREME COURT OF JUDICATURE
+                </span>
+                
+                <input
+                  type="text"
+                  value={extractedCaseData.court || ''}
+                  onChange={(e) => setExtractedCaseData({ ...extractedCaseData, court: e.target.value })}
+                  placeholder="Court Name..."
+                  className="w-full text-center text-lg sm:text-xl font-bold font-cinzel text-[#0B1727] bg-amber-50/50 hover:bg-amber-50 border border-transparent hover:border-amber-300 focus:border-blue-600 focus:bg-white rounded px-2 py-1 outline-none transition-all"
+                />
+
+                <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-sans font-bold text-slate-600 pt-2">
+                  <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-md border border-slate-200">
+                    <span className="text-slate-400">Case No:</span>
+                    <input
+                      type="text"
+                      value={extractedCaseData.caseNumber || ''}
+                      onChange={(e) => setExtractedCaseData({ ...extractedCaseData, caseNumber: e.target.value })}
+                      className="bg-transparent font-mono font-bold text-slate-900 outline-none w-32"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-1.5 bg-slate-100 px-3 py-1 rounded-md border border-slate-200">
+                    <span className="text-slate-400">Date:</span>
+                    <input
+                      type="date"
+                      value={extractedCaseData.judgmentDate || ''}
+                      onChange={(e) => setExtractedCaseData({ ...extractedCaseData, judgmentDate: e.target.value })}
+                      className="bg-transparent font-sans font-bold text-slate-900 outline-none cursor-pointer"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Case Title & Parties Section (Editable) */}
+              <div className="space-y-4 bg-slate-50/70 p-6 rounded-xl border border-slate-200">
+                <span className="text-[10px] font-sans font-extrabold uppercase tracking-widest text-slate-400 block">
+                  Parties to the Precedent
+                </span>
+
+                <div className="space-y-3 font-sans">
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-500 uppercase block">Petitioner / Appellant</label>
+                    <input
+                      type="text"
+                      value={extractedCaseData.petitioner || ''}
+                      onChange={(e) => setExtractedCaseData({ ...extractedCaseData, petitioner: e.target.value })}
+                      className="w-full font-bold text-sm text-slate-900 bg-white border border-slate-300 rounded-lg px-3 py-2 outline-none focus:border-blue-600"
+                    />
+                  </div>
+
+                  <div className="text-center font-bold text-xs text-slate-400 italic">
+                    — VERSUS —
+                  </div>
+
+                  <div>
+                    <label className="text-[11px] font-bold text-slate-500 uppercase block">Respondent</label>
+                    <input
+                      type="text"
+                      value={extractedCaseData.respondent || ''}
+                      onChange={(e) => setExtractedCaseData({ ...extractedCaseData, respondent: e.target.value })}
+                      className="w-full font-bold text-sm text-slate-900 bg-white border border-slate-300 rounded-lg px-3 py-2 outline-none focus:border-blue-600"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Legal Reference Citations & Act Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 font-sans text-xs">
+                <div className="p-4 bg-amber-50/40 border border-amber-200/80 rounded-xl space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-amber-800 block">Legal Citation</span>
                   <input
                     type="text"
-                    value={extractedCaseData.caseNumber || ''}
-                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, caseNumber: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
+                    value={extractedCaseData.citation || ''}
+                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, citation: e.target.value })}
+                    className="w-full font-mono font-bold text-slate-900 bg-white border border-amber-300 rounded px-2.5 py-1.5 outline-none"
                   />
                 </div>
 
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Court Name</label>
-                  <input
-                    type="text"
-                    value={extractedCaseData.court || ''}
-                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, court: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Petitioner / Appellant</label>
-                  <input
-                    type="text"
-                    value={extractedCaseData.petitioner || ''}
-                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, petitioner: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Respondent</label>
-                  <input
-                    type="text"
-                    value={extractedCaseData.respondent || ''}
-                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, respondent: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Judgment Date</label>
-                  <input
-                    type="date"
-                    value={extractedCaseData.judgmentDate || ''}
-                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, judgmentDate: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
-                  />
-                </div>
-
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Act / Section</label>
+                <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl space-y-1">
+                  <span className="text-[10px] font-extrabold uppercase tracking-wider text-slate-500 block">Statute Act & Section</span>
                   <input
                     type="text"
                     value={`${extractedCaseData.act || ''} ${extractedCaseData.section || ''}`.trim()}
                     onChange={(e) => setExtractedCaseData({ ...extractedCaseData, act: e.target.value })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
+                    className="w-full font-bold text-slate-900 bg-white border border-slate-300 rounded px-2.5 py-1.5 outline-none"
                   />
                 </div>
               </div>
 
-              {/* Head Note / Summary */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Extracted Head Note / Summary</label>
+              {/* Head Note / Synopsis Paper Section (Editable) */}
+              <div className="space-y-2 font-sans">
+                <div className="flex items-center justify-between">
+                  <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#0B1727]">
+                    HEAD NOTE / SYNOPSIS
+                  </h4>
+                  <span className="text-[10px] font-bold text-slate-400">Editable Document Section</span>
+                </div>
                 <textarea
-                  rows={3}
+                  rows={4}
                   value={extractedCaseData.summary || ''}
                   onChange={(e) => setExtractedCaseData({ ...extractedCaseData, summary: e.target.value })}
-                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900 text-xs"
+                  className="w-full p-4 bg-amber-50/30 hover:bg-amber-50/60 focus:bg-white border border-amber-200 rounded-xl text-xs font-serif leading-relaxed text-slate-900 outline-none focus:border-blue-600 transition-colors shadow-2xs"
                 />
               </div>
 
-              {/* Full Judgment Converted Text */}
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Full Converted Text from PDF</label>
+              {/* Full Judgment Text Paper Section (Editable) */}
+              <div className="space-y-2 font-serif pt-4 border-t border-slate-200">
+                <div className="flex items-center justify-between font-sans">
+                  <h4 className="text-xs font-extrabold uppercase tracking-widest text-[#0B1727]">
+                    FULL JUDGMENT TEXT
+                  </h4>
+                  <span className="text-[10px] font-bold text-slate-400">Preserving Original Layout & Paragraph Alignment</span>
+                </div>
+
                 <textarea
-                  rows={10}
+                  rows={14}
                   value={extractedCaseData.judgmentText || ''}
                   onChange={(e) => setExtractedCaseData({ ...extractedCaseData, judgmentText: e.target.value })}
-                  className="w-full p-3 bg-slate-900 text-slate-100 font-mono text-xs rounded-lg border border-slate-700"
+                  className="w-full p-5 bg-slate-900 text-slate-100 font-mono text-xs rounded-xl border border-slate-800 shadow-inner outline-none focus:border-blue-500 leading-relaxed"
                 />
               </div>
 
             </div>
 
-            {/* Modal Footer Actions */}
-            <div className="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex flex-wrap items-center justify-between gap-3">
-              <label className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold rounded-xl text-xs cursor-pointer inline-flex items-center gap-1.5 transition-colors">
-                <RefreshCw size={14} />
-                <span>Upload Another PDF</span>
+            {/* STICKY BOTTOM ACTION CONTROLS */}
+            <div className="bg-slate-900 text-white rounded-xl p-4 shadow-xl border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+              
+              <label className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-bold rounded-lg text-xs cursor-pointer inline-flex items-center gap-2 transition-colors">
+                <RefreshCw size={15} />
+                <span>Upload Different PDF</span>
                 <input
                   type="file"
                   accept=".pdf"
@@ -972,28 +1039,30 @@ export default function AdminCaseForm() {
                 />
               </label>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-3">
                 <button
                   type="button"
                   onClick={handleApplyExtractedToForm}
-                  className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold rounded-lg text-xs transition-colors cursor-pointer inline-flex items-center gap-2 border border-slate-700"
                 >
-                  <Edit3 size={14} />
-                  <span>Apply to Form & Edit</span>
+                  <Edit3 size={15} />
+                  <span>Apply to Form & Edit Further</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={handleDirectPublishFromModal}
-                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5"
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold rounded-lg text-xs transition-all shadow-md cursor-pointer inline-flex items-center gap-2"
                 >
-                  <Send size={14} />
+                  <Send size={15} />
                   <span>Publish Case Now</span>
                 </button>
               </div>
+
             </div>
 
           </div>
+
         </div>
       )}
 
