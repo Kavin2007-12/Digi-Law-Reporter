@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { 
   ArrowLeft, Upload, FileText, CheckCircle2, X, Plus, AlertTriangle, 
-  Sparkles, Loader2, Edit3, Send, Check, FileCode, Eye, Save
+  Sparkles, Loader2, Edit3, Send, Check, FileCode, Eye, Save, ExternalLink, File
 } from 'lucide-react';
 import TiptapEditor from '../../components/admin/TiptapEditor';
 import { API_BASE_URL } from '../../config/api';
