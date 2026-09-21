@@ -595,8 +595,21 @@ export default function App() {
 
   const [appLoading, setAppLoading] = useState(false);
 
-  // Fetch Cases from Shared Backend REST API Strictly (Dynamic Host Resolution)
+  // 0ms Instant Cache Engine with Stale-While-Revalidate Sync
   useEffect(() => {
+    // Phase 1: 0ms Instant Local Cache Hydration
+    try {
+      const cachedData = localStorage.getItem('dlr_cached_cases');
+      if (cachedData) {
+        const parsed = JSON.parse(cachedData);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setCases(parsed);
+          setAppLoading(false); // 0ms Instant display!
+        }
+      }
+    } catch (e) {}
+
+    // Phase 2: Background Revalidation (0ms UI latency)
     const host = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
     fetch(`http://${host}:5000/api/public/search`)
       .then(res => res.json())
@@ -616,7 +629,11 @@ export default function App() {
           year: item.year || (item.judgment_date ? new Date(item.judgment_date).getFullYear() : ''),
           title: item.title || `${item.petitioner_name || ''}${item.respondent_name ? ' vs. ' + item.respondent_name : ''}`
         }));
+        
         setCases(mappedCases);
+        try {
+          localStorage.setItem('dlr_cached_cases', JSON.stringify(mappedCases));
+        } catch (e) {}
         
         const courtsList = ['All Courts'];
         mappedCases.forEach(c => {
@@ -625,12 +642,11 @@ export default function App() {
           }
         });
         setAvailableCourts(courtsList);
-        setTimeout(() => setAppLoading(false), 900);
+        setAppLoading(false);
       })
       .catch(err => {
         console.error("Backend REST API offline or no database connection:", err);
-        setCases([]);
-        setTimeout(() => setAppLoading(false), 900);
+        setAppLoading(false);
       });
   }, []);
 

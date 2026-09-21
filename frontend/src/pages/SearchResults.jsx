@@ -360,9 +360,10 @@ export default function SearchResults() {
       setLoading(true);
       try {
         const activeTabCode = searchParams.get('tab') || 'keyword';
+        const host = (typeof window !== 'undefined' && window.location && window.location.hostname) ? window.location.hostname : 'localhost';
         const searchUrl = query && query.trim()
-          ? `http://localhost:5000/api/public/search?keyword=${encodeURIComponent(query.trim())}&tab=${encodeURIComponent(activeTabCode)}`
-          : `http://localhost:5000/api/public/search?tab=${encodeURIComponent(activeTabCode)}`;
+          ? `http://${host}:5000/api/public/search?keyword=${encodeURIComponent(query.trim())}&tab=${encodeURIComponent(activeTabCode)}`
+          : `http://${host}:5000/api/public/search?tab=${encodeURIComponent(activeTabCode)}`;
 
         const res = await fetch(searchUrl);
         const data = await res.json();
