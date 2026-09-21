@@ -83,3 +83,25 @@ export const toggleCaseStatus = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error updating status' });
   }
 };
+
+// POST /api/cases/extract-pdf
+export const extractPdfCase = async (req, res) => {
+  try {
+    if (!req.file || !req.file.buffer) {
+      return res.status(400).json({ success: false, message: 'Please select a valid PDF file to upload.' });
+    }
+
+    const { extractLegalDataFromPdf } = await import('../utils/pdfParser.js');
+    const extractedData = await extractLegalDataFromPdf(req.file.buffer);
+
+    res.json({
+      success: true,
+      message: 'PDF successfully extracted into text & metadata structure',
+      data: extractedData
+    });
+
+  } catch (error) {
+    logger.error('PDF extraction failed:', error);
+    res.status(500).json({ success: false, message: 'Failed to extract text from PDF document: ' + error.message });
+  }
+};

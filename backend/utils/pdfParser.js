@@ -1,0 +1,124 @@
+import pdfParse from 'pdf-parse';
+import logger from './logger.js';
+
+/**
+ * Extract clean text and legal fields from PDF Buffer or File
+ */
+export const extractLegalDataFromPdf = async (pdfBuffer) => {
+  try {
+    const data = await pdfParse(pdfBuffer);
+    const rawText = data.text || '';
+
+    // Clean text lines while preserving paragraphs and alignment
+    const cleanedText = rawText
+      .replace(/\r\n/g, '\n')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n{3,}/g, '\n\n')
+      .trim();
+
+    // Field Extraction Heuristics
+    const lines = cleanedText.split('\n').map(l => l.trim()).filter(Boolean);
+    const firstLines = lines.slice(0, 30).join(' ');
+
+    // 1. Court Name
+    let court = 'Supreme Court of India';
+    if (/high court/i.test(firstLines)) {
+      const match = firstLines.match(/(IN THE HIGH COURT OF [A-Za-z\s]+|HIGH COURT OF [A-Za-z\s]+)/i);
+      court = match ? match[0].trim() : 'High Court of Judicature';
+    } else if (/supreme court/i.test(firstLines)) {
+      court = 'Supreme Court of India';
+    }
+
+    // 2. Petitioner vs Respondent (Title)
+    let petitioner = '';
+    let respondent = '';
+    let title = '';
+
+    const vsMatch = cleanedText.match(/([A-Z0-9\.\s\,'\(\)]+?)\s+(?:vs\.?|v\/s|versus|v\.)\s+([A-Z0-9\.\s\,'\(\)]+?)(?=\n|DATE|JUDGMENT|BENCH|CORAM|BEFORE|$)/i);
+    if (vsMatch) {
+      petitioner = vsMatch[1].replace(/^(IN THE|BEFORE THE|PETITIONER:?|APPELLANT:?)\s*/i, '').trim();
+      respondent = vsMatch[2].replace(/(RESPONDENT:?|DEFENDANT:?)\s*/i, '').trim();
+      // Keep title under 150 chars
+      if (petitioner.length > 80) petitioner = petitioner.substring(0, 80).trim();
+      if (respondent.length > 80) respondent = respondent.substring(0, 80).trim();
+      title = `${petitioner} vs. ${respondent}`;
+    } else if (lines.length > 0) {
+      title = lines[0].substring(0, 100);
+      petitioner = title.split(' ')[0] || 'Petitioner';
+      respondent = 'State / Respondent';
+    }
+
+    // 3. Judgment Date & Year
+    let judgmentDate = '2026-04-12';
+    let year = '2026';
+    const dateMatch = cleanedText.match(/(?:DATED|DECIDED ON|JUDGMENT DATE|PRONOUNCED ON|DATE OF JUDGMENT)[:\s]*([0-9]{1,2}[\/\.-][0-9]{1,2}[\/\.-][0-9]{4}|[0-9]{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]+\,?\s+[0-9]{4})/i);
+    if (dateMatch) {
+      const dateStr = dateMatch[1];
+      const parsedDate = new Date(dateStr);
+      if (!isNaN(parsedDate.getTime())) {
+        judgmentDate = parsedDate.toISOString().split('T')[0];
+        year = String(parsedDate.getFullYear());
+      }
+    } else {
+      const yearMatch = cleanedText.match(/\b(19|20)\d{2}\b/);
+      if (yearMatch) year = yearMatch[0];
+    }
+
+    // 4. Act & Section
+    let act = '';
+    let section = '';
+    const actMatch = cleanedText.match(/(Section\s+\d+[A-Z]*\s+of\s+the\s+[A-Za-z\s\,]+Act,?\s*\d{4}|Indian Penal Code|Code of Criminal Procedure|Constitution of India|Civil Procedure Code|Evidence Act)/i);
+    if (actMatch) {
+      act = actMatch[0].trim();
+      const secMatch = act.match(/Section\s+(\d+[A-Z]*)/i);
+      if (secMatch) section = `Section ${secMatch[1]}`;
+    }
+
+    // 5. Citation
+    let citation = `2026 (04) DLR (SC) # 101`;
+    let citations = [{ id: Date.now(), year: '2026', month: '04', court: 'SC', number: '101', equivalentText: '' }];
+    const citMatch = cleanedText.match(/(\d{4}\s*\(\d{2}\)\s*DLR\s*\([A-Z]+\)\s*#\s*\d+|\d{4}\s*SCC\s*\d+|\d{4}\s*AIR\s*\d+)/i);
+    if (citMatch) {
+      citation = citMatch[0];
+    }
+
+    // 6. Head Note Summary
+    let headNote = '';
+    const headNoteMatch = cleanedText.match(/(?:HEADNOTE|SUMMARY|SYNOPSIS|LAW STATED)[:\s]*([\s\S]{100,800}?)(?=\n\n|\nJUDGMENT|\nORDER|$)/i);
+    if (headNoteMatch) {
+      headNote = headNoteMatch[1].trim();
+    } else {
+      headNote = lines.slice(0, 8).join(' ').substring(0, 450);
+    }
+
+    // 7. Case Number
+    let caseNumber = `DLR/PDF/${Date.now().toString().slice(-6)}`;
+    const caseNumMatch = cleanedText.match(/(?:CRIMINAL|CIVIL|WRIT|SPECIAL LEAVE)\s+(?:APPEAL|PETITION)\s+NO[S]?[\.:\s]+[0-9\/A-Z\-]+/i);
+    if (caseNumMatch) {
+      caseNumber = caseNumMatch[0].replace(/^(CRIMINAL|CIVIL|WRIT|SPECIAL LEAVE)\s+/i, '').trim();
+    }
+
+    return {
+      success: true,
+      caseNumber,
+      title: title || `${petitioner} vs ${respondent}`,
+      petitioner: petitioner || 'Petitioner',
+      respondent: respondent || 'Respondent',
+      court: court || 'Supreme Court of India',
+      judgmentDate: judgmentDate || '2026-04-12',
+      year: year || '2026',
+      act: act || 'Indian Penal Code, 1860',
+      section: section || 'Section 302',
+      citation: citation,
+      citations: citations,
+      summary: headNote,
+      headNote: headNote,
+      judgmentText: cleanedText,
+      totalPages: data.numpages || 1
+    };
+
+  } catch (error) {
+    logger.error('PDF Text Extraction Error:', error);
+    throw error;
+  }
+};

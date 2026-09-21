@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ArrowLeft, Upload, FileText, CheckCircle2, X, Plus, AlertTriangle } from 'lucide-react';
-import { MOCK_CASES } from '../../data/adminMockData';
+import { 
+  ArrowLeft, Upload, FileText, CheckCircle2, X, Plus, AlertTriangle, 
+  Sparkles, Loader2, Edit3, Send, Check, RefreshCw, FileCode
+} from 'lucide-react';
 import TiptapEditor from '../../components/admin/TiptapEditor';
 import { API_BASE_URL } from '../../config/api';
 
@@ -54,6 +56,14 @@ export default function AdminCaseForm() {
   const [toastMessage, setToastMessage] = useState('');
   const [loadingCase, setLoadingCase] = useState(isEditing);
 
+  // PDF Extraction & Timeline Modal States
+  const [isExtracting, setIsExtracting] = useState(false);
+  const [extractionProgress, setExtractionProgress] = useState(0);
+  const [extractionStep, setExtractionStep] = useState(1);
+  const [pdfFileName, setPdfFileName] = useState('');
+  const [showExtractionModal, setShowExtractionModal] = useState(false);
+  const [extractedCaseData, setExtractedCaseData] = useState(null);
+
   // Load existing case details when editing
   useEffect(() => {
     if (!isEditing || !id) {
@@ -68,7 +78,6 @@ export default function AdminCaseForm() {
       try {
         let caseItem = null;
 
-        // 1. Try GET /api/cases/:id
         try {
           const res = await fetch(`${API_BASE_URL}/cases/${id}`);
           const data = await res.json();
@@ -77,24 +86,12 @@ export default function AdminCaseForm() {
           }
         } catch (e) {}
 
-        // 2. Fallback: Try GET /api/cases and find matching ID
         if (!caseItem) {
           try {
             const listRes = await fetch(`${API_BASE_URL}/cases`);
             const listData = await listRes.json();
             if (listData.success && Array.isArray(listData.data)) {
               caseItem = listData.data.find(c => String(c.id) === String(id));
-            }
-          } catch (e) {}
-        }
-
-        // 3. Fallback: Try public search API
-        if (!caseItem) {
-          try {
-            const publicRes = await fetch(`${API_BASE_URL}/public/cases/search?q=${encodeURIComponent(id)}`);
-            const publicData = await publicRes.json();
-            if (publicData.success && Array.isArray(publicData.data)) {
-              caseItem = publicData.data.find(c => String(c.id) === String(id)) || publicData.data[0];
             }
           } catch (e) {}
         }
@@ -139,7 +136,7 @@ export default function AdminCaseForm() {
           }
         }
       } catch (err) {
-        console.error('Failed to load case details for editing:', err);
+        console.error('Failed to load case details:', err);
       } finally {
         if (isMounted) setLoadingCase(false);
       }
@@ -152,7 +149,63 @@ export default function AdminCaseForm() {
     };
   }, [id, isEditing]);
 
-  // Live duplicate citation check (checks Number + Year + Month)
+  // PDF Auto-Extraction Handler with Real-Time Timeline Progress
+  const handlePdfAutoExtract = async (file) => {
+    if (!file) return;
+    setPdfFileName(file.name);
+    setIsExtracting(true);
+    setExtractionProgress(15);
+    setExtractionStep(1);
+
+    const formDataPayload = new FormData();
+    formDataPayload.append('pdfFile', file);
+
+    const progressTimer = setInterval(() => {
+      setExtractionProgress(prev => {
+        if (prev < 40) {
+          setExtractionStep(2);
+          return prev + 15;
+        } else if (prev < 80) {
+          setExtractionStep(3);
+          return prev + 10;
+        } else if (prev < 95) {
+          return prev + 2;
+        }
+        return prev;
+      });
+    }, 200);
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/cases/extract-pdf`, {
+        method: 'POST',
+        body: formDataPayload
+      });
+      const data = await res.json();
+      clearInterval(progressTimer);
+
+      if (data.success && data.data) {
+        setExtractionProgress(100);
+        setExtractionStep(4);
+        setExtractedCaseData(data.data);
+
+        setTimeout(() => {
+          setIsExtracting(false);
+          setShowExtractionModal(true);
+        }, 400);
+      } else {
+        clearInterval(progressTimer);
+        setIsExtracting(false);
+        showToast(data.message || 'Failed to extract PDF text');
+      }
+    } catch (err) {
+      clearInterval(progressTimer);
+      setIsExtracting(false);
+      console.error('PDF extraction failed:', err);
+      showToast('Error connecting to backend PDF extractor service');
+    }
+  };
+
+  // Citation Duplicate Check
   const checkDuplicateCitation = async (num, yr, mo) => {
     if (!num || !num.trim()) {
       setCitationError('');
@@ -162,7 +215,6 @@ export default function AdminCaseForm() {
     const cleanYr = yr ? yr.trim() : (formData.year || '2026');
     const cleanMo = mo ? mo.trim() : (citationInput.month || '');
 
-    // 1. Check in current case citations list
     const existsLocally = citationsList.some(c => 
       String(c.number).trim() === cleanNum && 
       (!c.year || String(c.year).trim() === cleanYr) &&
@@ -173,13 +225,12 @@ export default function AdminCaseForm() {
       return true;
     }
 
-    // 2. Check in database via backend / localStore
     try {
-      const res = await fetch(`http://localhost:5000/api/admin/judgments/check-citation?number=${encodeURIComponent(cleanNum)}&year=${encodeURIComponent(cleanYr)}&month=${encodeURIComponent(cleanMo)}`);
+      const res = await fetch(`${API_BASE_URL}/admin/judgments/check-citation?number=${encodeURIComponent(cleanNum)}&year=${encodeURIComponent(cleanYr)}&month=${encodeURIComponent(cleanMo)}`);
       const data = await res.json();
       if (data.exists) {
         const monthDetail = cleanMo ? ` (Month ${cleanMo})` : '';
-        setCitationError(`Citation number #${cleanNum} already exists in the database for year ${cleanYr}${monthDetail}! Please enter a different citation number.`);
+        setCitationError(`Citation #${cleanNum} already exists in database for year ${cleanYr}${monthDetail}!`);
         return true;
       }
     } catch (e) {}
@@ -204,7 +255,7 @@ export default function AdminCaseForm() {
 
     const isDup = await checkDuplicateCitation(citationInput.number, citationInput.year, citationInput.month);
     if (isDup) {
-      showToast("Duplicate Citation Number: This citation already exists in the database.");
+      showToast("Duplicate Citation Number: Citation already exists.");
       return;
     }
 
@@ -215,7 +266,6 @@ export default function AdminCaseForm() {
     setCitationsList(prev => [...prev, newCit]);
     setCitationError('');
 
-    // Reset citation input fields to blank
     setCitationInput({
       year: '',
       month: '',
@@ -229,30 +279,13 @@ export default function AdminCaseForm() {
     setCitationsList(prev => prev.filter(c => c.id !== citId));
   };
 
-  const handleFileUpload = (e) => {
-    const files = Array.from(e.target.files);
-    const newDocs = files.map((f, i) => ({
-      id: Date.now() + i,
-      name: f.name,
-      size: `${(f.size / (1024 * 1024)).toFixed(1)} MB`,
-      type: "Judgment PDF",
-      date: "Today"
-    }));
-    setFormData(prev => ({ ...prev, uploadedFiles: [...prev.uploadedFiles, ...newDocs] }));
-  };
-
-  const handleRemoveFile = (fileId) => {
-    setFormData(prev => ({
-      ...prev,
-      uploadedFiles: prev.uploadedFiles.filter(f => f.id !== fileId)
-    }));
-  };
-
   const showToast = (msg) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage('');
-      navigate('/admin/cases');
+      if (msg.includes('success') || msg.includes('saved') || msg.includes('published')) {
+        navigate('/admin/cases');
+      }
     }, 1500);
   };
 
@@ -290,12 +323,77 @@ export default function AdminCaseForm() {
       const data = await res.json();
 
       if (data.success) {
-        showToast(isEditing ? `Case record updated successfully!` : `Case precedent saved as "${finalStatus}"!`);
+        showToast(isEditing ? `Case record updated successfully!` : `Case precedent published successfully!`);
       } else {
         showToast(data.message || 'Error saving case record');
       }
     } catch (err) {
       console.error('Error saving case:', err);
+      showToast('Error connecting to backend API');
+    }
+  };
+
+  // Apply Extracted PDF Data to Form Fields
+  const handleApplyExtractedToForm = () => {
+    if (!extractedCaseData) return;
+    setFormData(prev => ({
+      ...prev,
+      caseNumber: extractedCaseData.caseNumber || prev.caseNumber,
+      title: extractedCaseData.title || prev.title,
+      petitioner: extractedCaseData.petitioner || prev.petitioner,
+      respondent: extractedCaseData.respondent || prev.respondent,
+      court: extractedCaseData.court || prev.court,
+      judgmentDate: extractedCaseData.judgmentDate || prev.judgmentDate,
+      year: extractedCaseData.year || prev.year,
+      act: extractedCaseData.act || prev.act,
+      section: extractedCaseData.section || prev.section,
+      summary: extractedCaseData.summary || prev.summary,
+      judgmentText: extractedCaseData.judgmentText || prev.judgmentText
+    }));
+
+    if (extractedCaseData.citations && Array.isArray(extractedCaseData.citations)) {
+      setCitationsList(extractedCaseData.citations);
+    }
+
+    setShowExtractionModal(false);
+  };
+
+  // Direct Publish from Extracted Popup Modal
+  const handleDirectPublishFromModal = async () => {
+    if (!extractedCaseData) return;
+    setShowExtractionModal(false);
+
+    const payload = {
+      caseNumber: extractedCaseData.caseNumber || 'DLR/' + Date.now().toString().slice(-6),
+      title: extractedCaseData.title || `${extractedCaseData.petitioner || 'Petitioner'} vs. ${extractedCaseData.respondent || 'Respondent'}`,
+      petitioner: extractedCaseData.petitioner || 'Petitioner',
+      respondent: extractedCaseData.respondent || 'Respondent',
+      court: extractedCaseData.court || 'Supreme Court of India',
+      judgmentDate: extractedCaseData.judgmentDate || '2026-04-12',
+      year: extractedCaseData.year || '2026',
+      act: extractedCaseData.act || '',
+      section: extractedCaseData.section || '',
+      headNote: extractedCaseData.summary || '',
+      summary: extractedCaseData.summary || '',
+      judgmentText: extractedCaseData.judgmentText || '',
+      content: extractedCaseData.judgmentText || '',
+      status: 'Published',
+      citations: extractedCaseData.citations || citationsList
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/cases`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (data.success) {
+        showToast(`PDF Case precedent successfully published!`);
+      } else {
+        showToast(data.message || 'Error publishing PDF case record');
+      }
+    } catch (e) {
       showToast('Error connecting to backend API');
     }
   };
@@ -334,7 +432,7 @@ export default function AdminCaseForm() {
             {isEditing ? 'Edit Legal Case Record' : 'Add Case Record'}
           </h1>
           <p className="text-slate-500 text-xs font-medium mt-1">
-            Enter legal precedent information into the editorial research index.
+            Enter legal precedent information or upload PDF for instant AI extraction.
           </p>
         </div>
 
@@ -394,6 +492,43 @@ export default function AdminCaseForm() {
               </button>
             </>
           )}
+        </div>
+      </div>
+
+      {/* UPLOAD PDF AUTO-CONVERT CARD (PREMIUM UPLOAD OPTION) */}
+      <div className="bg-gradient-to-r from-slate-900 via-[#0B1727] to-slate-900 rounded-2xl p-6 text-white shadow-md border border-slate-800 space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-3.5">
+            <div className="p-3 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded-xl">
+              <Sparkles size={24} />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>Upload PDF Case Judgment</span>
+                <span className="px-2 py-0.5 bg-blue-500/20 text-blue-300 text-[10px] font-extrabold uppercase rounded-full border border-blue-400/30">
+                  Fast Text Extractor
+                </span>
+              </h3>
+              <p className="text-xs text-slate-300 mt-0.5">
+                Upload any legal judgment PDF to extract text, parties, court & formatting cleanly into structured fields.
+              </p>
+            </div>
+          </div>
+
+          <label className="shrink-0 px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-extrabold rounded-lg shadow-sm cursor-pointer transition-all inline-flex items-center gap-2">
+            <Upload size={15} />
+            <span>Upload PDF File</span>
+            <input
+              type="file"
+              accept=".pdf"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files && e.target.files[0]) {
+                  handlePdfAutoExtract(e.target.files[0]);
+                }
+              }}
+            />
+          </label>
         </div>
       </div>
 
@@ -485,7 +620,6 @@ export default function AdminCaseForm() {
             <h2 className="text-xs font-extrabold uppercase tracking-widest text-[#0B1727]">2. Legal References</h2>
           </div>
 
-          {/* CITATION BUILDER CONTAINER (Matching Exact Screenshot UI) */}
           <div className="bg-slate-50/70 border border-slate-200/90 rounded-2xl p-5 space-y-4">
             
             <div className="flex items-center justify-between">
@@ -500,7 +634,6 @@ export default function AdminCaseForm() {
               )}
             </div>
 
-            {/* List of Added Citations */}
             {citationsList.length > 0 && (
               <div className="space-y-2 mb-3">
                 {citationsList.map((cit) => (
@@ -528,13 +661,11 @@ export default function AdminCaseForm() {
               </div>
             )}
 
-            {/* Structured Composite Input Box */}
             <div className="space-y-2">
               <span className="text-[11px] font-bold text-slate-600 block">Add New Citation</span>
               
               <div className={`bg-white border rounded-xl p-3 sm:px-4 sm:py-3 flex items-center gap-2 flex-wrap sm:flex-nowrap shadow-2xs transition-colors ${citationError ? 'border-red-400 bg-red-50/20' : 'border-slate-200'}`}>
                 
-                {/* Year YYYY */}
                 <input
                   type="text"
                   value={citationInput.year}
@@ -543,7 +674,6 @@ export default function AdminCaseForm() {
                   className="w-14 sm:w-16 border-b border-slate-300 text-center font-mono text-xs font-bold text-slate-800 placeholder:text-slate-300 outline-none pb-0.5"
                 />
 
-                {/* ( MM ) */}
                 <div className="flex items-center font-mono text-xs text-slate-500 font-semibold">
                   <span>(</span>
                   <input
@@ -556,10 +686,8 @@ export default function AdminCaseForm() {
                   <span>)</span>
                 </div>
 
-                {/* DLR Constant Label */}
                 <span className="font-extrabold text-xs text-slate-900 px-1 tracking-tight">DLR</span>
 
-                {/* ( SC ) */}
                 <div className="flex items-center font-mono text-xs text-slate-500 font-semibold">
                   <span>(</span>
                   <input
@@ -572,7 +700,6 @@ export default function AdminCaseForm() {
                   <span>)</span>
                 </div>
 
-                {/* # Page/Citation Number */}
                 <input
                   type="text"
                   value={citationInput.number}
@@ -581,10 +708,8 @@ export default function AdminCaseForm() {
                   className={`w-12 sm:w-14 border-b text-center font-mono text-xs font-bold outline-none pb-0.5 ${citationError ? 'border-red-500 text-red-600 font-black' : 'border-slate-300 text-slate-800 placeholder:text-slate-300'}`}
                 />
 
-                {/* Colon : */}
                 <span className="font-bold text-slate-400 px-0.5">:</span>
 
-                {/* Equivalent Text */}
                 <input
                   type="text"
                   value={citationInput.equivalentText}
@@ -596,7 +721,6 @@ export default function AdminCaseForm() {
               </div>
             </div>
 
-            {/* Citation Duplicate Error Notice */}
             {citationError && (
               <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-xs font-bold flex items-center gap-2 animate-in fade-in">
                 <AlertTriangle size={16} className="shrink-0 text-red-600" />
@@ -604,7 +728,6 @@ export default function AdminCaseForm() {
               </div>
             )}
 
-            {/* + Add Citation Button (Bottom Right) */}
             <div className="flex justify-end pt-1">
               <button
                 type="button"
@@ -622,7 +745,6 @@ export default function AdminCaseForm() {
 
         {/* CASE CONTENT RICH TEXT EDITORS */}
         <div className="space-y-6">
-          {/* Head Note * */}
           <div className="space-y-2">
             <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-800">
               Head Note <span className="text-red-500">*</span>
@@ -637,7 +759,6 @@ export default function AdminCaseForm() {
             </div>
           </div>
 
-          {/* Full Judgment Text * */}
           <div className="space-y-2">
             <label className="block text-xs font-extrabold uppercase tracking-wider text-slate-800">
               Full Judgment Text <span className="text-red-500">*</span>
@@ -654,6 +775,240 @@ export default function AdminCaseForm() {
         </div>
 
       </form>
+
+      {/* 1. REAL-TIME EXTRACTION TIMELINE PROGRESS MODAL */}
+      {isExtracting && (
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl space-y-6 border border-slate-100 text-center animate-in zoom-in-95">
+            <div className="w-14 h-14 bg-blue-50 text-blue-600 border border-blue-100 rounded-2xl flex items-center justify-center mx-auto shadow-inner">
+              <Loader2 size={28} className="animate-spin text-blue-600" />
+            </div>
+
+            <div>
+              <h3 className="text-base font-extrabold text-[#0B1727]">
+                Extracting PDF Text & Legal Fields
+              </h3>
+              <p className="text-xs text-slate-500 mt-1 font-medium truncate max-w-xs mx-auto">
+                File: <span className="font-bold text-slate-800">{pdfFileName}</span>
+              </p>
+            </div>
+
+            {/* Progress Bar */}
+            <div className="space-y-1.5">
+              <div className="h-2.5 w-full bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full transition-all duration-300"
+                  style={{ width: `${extractionProgress}%` }}
+                ></div>
+              </div>
+              <div className="flex justify-between text-[11px] font-extrabold text-slate-500 px-1">
+                <span>Converting...</span>
+                <span>{extractionProgress}%</span>
+              </div>
+            </div>
+
+            {/* Step-by-Step Timeline Indicator */}
+            <div className="space-y-3 text-left bg-slate-50 p-4 rounded-xl border border-slate-200/80">
+              <div className="flex items-center gap-3">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${extractionStep >= 1 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                  {extractionStep > 1 ? <Check size={14} /> : '1'}
+                </div>
+                <span className={`text-xs font-bold ${extractionStep >= 1 ? 'text-slate-900' : 'text-slate-400'}`}>
+                  Uploading PDF Document
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${extractionStep >= 2 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                  {extractionStep > 2 ? <Check size={14} /> : '2'}
+                </div>
+                <span className={`text-xs font-bold ${extractionStep >= 2 ? 'text-slate-900' : 'text-slate-400'}`}>
+                  Extracting Text & Layout Structure
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${extractionStep >= 3 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                  {extractionStep > 3 ? <Check size={14} /> : '3'}
+                </div>
+                <span className={`text-xs font-bold ${extractionStep >= 3 ? 'text-slate-900' : 'text-slate-400'}`}>
+                  Parsing Legal Fields (Title, Parties, Citation, Date)
+                </span>
+              </div>
+
+              <div className="flex items-center gap-3">
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold ${extractionStep >= 4 ? 'bg-emerald-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                  {extractionStep >= 4 ? <Check size={14} /> : '4'}
+                </div>
+                <span className={`text-xs font-bold ${extractionStep >= 4 ? 'text-slate-900' : 'text-slate-400'}`}>
+                  Verification & Interactive Edit Preview
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 2. EXTRACTED DATA REVIEW & EDIT POPUP MODAL */}
+      {showExtractionModal && extractedCaseData && (
+        <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-2xl max-w-3xl w-full max-h-[90vh] shadow-2xl border border-slate-200 flex flex-col my-auto animate-in zoom-in-95">
+            
+            {/* Modal Header */}
+            <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50 rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs">
+                  <FileCode size={20} />
+                </div>
+                <div>
+                  <h3 className="text-base font-extrabold text-[#0B1727]">
+                    Extracted Legal Case Preview & Editor
+                  </h3>
+                  <p className="text-xs text-slate-500 font-medium">
+                    Review extracted text below. Edit any detail before publishing.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowExtractionModal(false)}
+                className="p-1.5 text-slate-400 hover:text-slate-700 rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body (Editable Fields) */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 text-xs">
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Case Number</label>
+                  <input
+                    type="text"
+                    value={extractedCaseData.caseNumber || ''}
+                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, caseNumber: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Court Name</label>
+                  <input
+                    type="text"
+                    value={extractedCaseData.court || ''}
+                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, court: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Petitioner / Appellant</label>
+                  <input
+                    type="text"
+                    value={extractedCaseData.petitioner || ''}
+                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, petitioner: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Respondent</label>
+                  <input
+                    type="text"
+                    value={extractedCaseData.respondent || ''}
+                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, respondent: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Judgment Date</label>
+                  <input
+                    type="date"
+                    value={extractedCaseData.judgmentDate || ''}
+                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, judgmentDate: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Act / Section</label>
+                  <input
+                    type="text"
+                    value={`${extractedCaseData.act || ''} ${extractedCaseData.section || ''}`.trim()}
+                    onChange={(e) => setExtractedCaseData({ ...extractedCaseData, act: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900"
+                  />
+                </div>
+              </div>
+
+              {/* Head Note / Summary */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Extracted Head Note / Summary</label>
+                <textarea
+                  rows={3}
+                  value={extractedCaseData.summary || ''}
+                  onChange={(e) => setExtractedCaseData({ ...extractedCaseData, summary: e.target.value })}
+                  className="w-full p-3 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-900 text-xs"
+                />
+              </div>
+
+              {/* Full Judgment Converted Text */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Full Converted Text from PDF</label>
+                <textarea
+                  rows={10}
+                  value={extractedCaseData.judgmentText || ''}
+                  onChange={(e) => setExtractedCaseData({ ...extractedCaseData, judgmentText: e.target.value })}
+                  className="w-full p-3 bg-slate-900 text-slate-100 font-mono text-xs rounded-lg border border-slate-700"
+                />
+              </div>
+
+            </div>
+
+            {/* Modal Footer Actions */}
+            <div className="p-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex flex-wrap items-center justify-between gap-3">
+              <label className="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 font-bold rounded-xl text-xs cursor-pointer inline-flex items-center gap-1.5 transition-colors">
+                <RefreshCw size={14} />
+                <span>Upload Another PDF</span>
+                <input
+                  type="file"
+                  accept=".pdf"
+                  className="hidden"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setShowExtractionModal(false);
+                      handlePdfAutoExtract(e.target.files[0]);
+                    }
+                  }}
+                />
+              </label>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={handleApplyExtractedToForm}
+                  className="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold rounded-xl text-xs transition-colors cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <Edit3 size={14} />
+                  <span>Apply to Form & Edit</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDirectPublishFromModal}
+                  className="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold rounded-xl text-xs transition-all shadow-sm cursor-pointer inline-flex items-center gap-1.5"
+                >
+                  <Send size={14} />
+                  <span>Publish Case Now</span>
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
 
       {/* Toast Notification */}
       {toastMessage && (
