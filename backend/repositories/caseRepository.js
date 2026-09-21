@@ -44,6 +44,8 @@ export const getCaseByIdFromDb = async (id) => {
 
 // Create new case precedent
 export const createCaseInDb = async (caseData) => {
+  // Always persist to localStore for dual-sync backup
+  const localResult = localStore.addCase(caseData);
   try {
     const {
       caseNumber, title, petitioner, respondent, court, judgmentDate,
@@ -61,21 +63,22 @@ export const createCaseInDb = async (caseData) => {
 
     const values = [
       caseNumber, title, petitioner, respondent, court || 'Supreme Court of India',
-      judgmentDate, parseInt(year || judgmentDate.substring(0, 4), 10),
+      judgmentDate, parseInt(year || (judgmentDate ? judgmentDate.substring(0, 4) : '2026'), 10),
       act, section, headNote, judgmentText, status || 'Published',
       JSON.stringify(citations || [])
     ];
 
     const res = await query(sql, values);
-    return res.rows[0];
+    return res.rows[0] || localResult;
   } catch (error) {
-    logger.warn('PostgreSQL offline for createCaseInDb, saving to localStore');
-    return localStore.addCase(caseData);
+    logger.warn('PostgreSQL offline for createCaseInDb, localStore fallback used');
+    return localResult;
   }
 };
 
 // Update case precedent
 export const updateCaseInDb = async (id, caseData) => {
+  const updatedLocal = localStore.updateCase(id, caseData);
   try {
     const {
       caseNumber, title, petitioner, respondent, court, judgmentDate,
@@ -102,19 +105,19 @@ export const updateCaseInDb = async (id, caseData) => {
     ];
 
     const res = await query(sql, values);
-    const updatedLocal = localStore.updateCase(id, caseData);
     if (res && res.rows && res.rows[0]) {
       return res.rows[0];
     }
     return updatedLocal;
   } catch (error) {
-    logger.warn(`PostgreSQL offline for updateCaseInDb, updating localStore ID ${id}`);
-    return localStore.updateCase(id, caseData);
+    logger.warn(`PostgreSQL offline for updateCaseInDb, localStore fallback used for ID ${id}`);
+    return updatedLocal;
   }
 };
 
 // Delete case permanently from database
 export const deleteCaseFromDb = async (id) => {
+  const localDeleted = localStore.deleteCase(id);
   try {
     const numericId = parseInt(id, 10);
     let res;
@@ -124,20 +127,21 @@ export const deleteCaseFromDb = async (id) => {
       res = await query(`DELETE FROM cases WHERE id::text = $1 RETURNING *`, [String(id)]);
     }
     if (res && res.rows && res.rows.length > 0) return res.rows[0];
-    return localStore.deleteCase(id);
+    return localDeleted;
   } catch (error) {
-    logger.warn(`PostgreSQL query error for deleteCaseFromDb, deleting from localStore ID ${id}`);
-    return localStore.deleteCase(id);
+    logger.warn(`PostgreSQL query error for deleteCaseFromDb, localStore fallback used for ID ${id}`);
+    return localDeleted;
   }
 };
 
 // Update case status
 export const updateCaseStatusInDb = async (id, status) => {
+  const localUpdated = localStore.updateCase(id, { status });
   try {
     const res = await query(`UPDATE cases SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 RETURNING *`, [status, id]);
-    return res.rows[0];
+    return res.rows[0] || localUpdated;
   } catch (error) {
-    logger.warn(`PostgreSQL offline for updateCaseStatusInDb, updating localStore ID ${id}`);
-    return localStore.updateCase(id, { status });
+    logger.warn(`PostgreSQL offline for updateCaseStatusInDb, localStore fallback used for ID ${id}`);
+    return localUpdated;
   }
 };

@@ -26,6 +26,7 @@ class UserRepository {
   }
 
   async createUser({ name, mobile, email }) {
+    const localUser = localStore.addUser({ name, mobile, email });
     try {
       const sql = `
         INSERT INTO users (name, mobile, email, status, joined_date, last_login) 
@@ -34,14 +35,15 @@ class UserRepository {
         RETURNING id, name, mobile, email, status, joined_date, last_login
       `;
       const { rows } = await query(sql, [name, mobile, email || null]);
-      return rows[0] || null; 
+      return rows[0] || localUser; 
     } catch (error) {
-      logger.warn('PostgreSQL offline for createUser, persisting to localStore');
-      return localStore.addUser({ name, mobile, email });
+      logger.warn('PostgreSQL offline for createUser, localStore fallback used');
+      return localUser;
     }
   }
 
   async updateUserLogin(mobile, name) {
+    const localUser = localStore.addUser({ name, mobile });
     try {
       const sql = `
         UPDATE users 
@@ -50,14 +52,15 @@ class UserRepository {
         RETURNING id, name, mobile, email, status, joined_date, last_login
       `;
       const { rows } = await query(sql, [name, mobile]);
-      return rows[0] || null;
+      return rows[0] || localUser;
     } catch (error) {
-      logger.warn('PostgreSQL offline for updateUserLogin, persisting to localStore');
-      return localStore.addUser({ name, mobile });
+      logger.warn('PostgreSQL offline for updateUserLogin, localStore fallback used');
+      return localUser;
     }
   }
 
   async createAdmin({ name, username, email, password, password_hash, role, created_by }) {
+    const localAdmin = localStore.addAdmin({ name, username: username || name.toLowerCase().replace(/\s+/g, ''), password, password_hash, role: role || 'EXTRA_ADMIN' });
     try {
       const fakeMobile = 'ADMIN_' + Date.now().toString().slice(-10);
       const sql = `
@@ -66,10 +69,10 @@ class UserRepository {
         RETURNING id, name, email, role, created_at
       `;
       const { rows } = await query(sql, [name, fakeMobile, email || `${username}@digilawreporter.in`, password_hash, role || 'EXTRA_ADMIN', created_by]);
-      return rows[0] || null; 
+      return rows[0] || localAdmin; 
     } catch (error) {
-      logger.warn('PostgreSQL offline for createAdmin, saving to localStore');
-      return localStore.addAdmin({ name, username: username || name.toLowerCase().replace(/\s+/g, ''), password, role: role || 'EXTRA_ADMIN' });
+      logger.warn('PostgreSQL offline for createAdmin, localStore fallback used');
+      return localAdmin;
     }
   }
 

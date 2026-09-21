@@ -23,6 +23,16 @@ export const pool = new Pool(poolConfig);
 
 export let isDbOnline = false;
 
+const checkDbHealth = async () => {
+  try {
+    const client = await pool.connect();
+    isDbOnline = true;
+    client.release();
+  } catch (err) {
+    isDbOnline = false;
+  }
+};
+
 pool.connect()
   .then(client => {
     isDbOnline = true;
@@ -34,16 +44,23 @@ pool.connect()
     logger.warn('PostgreSQL Offline: Instant localStore fallback activated.');
   });
 
+// Non-blocking background health check every 15s
+setInterval(checkDbHealth, 15000);
+
 pool.on('connect', () => {
   logger.debug('New connection established with PostgreSQL database.');
 });
 
 pool.on('error', (err) => {
+  isDbOnline = false;
   logger.error('PostgreSQL Connection Warning:', err.message);
 });
 
-// Helper for single queries
+// Helper for single queries with 0ms offline fast-fail
 export const query = async (text, params) => {
+  if (!isDbOnline) {
+    throw new Error('PostgreSQL Offline');
+  }
   const start = Date.now();
   try {
     const res = await pool.query(text, params);
@@ -51,7 +68,10 @@ export const query = async (text, params) => {
     logger.debug('Executed query', { text, duration, rows: res.rowCount });
     return res;
   } catch (err) {
-    logger.error(`Error executing query: ${text}`, err);
+    if (err.code === 'ECONNREFUSED' || err.code === '57P01' || err.code === 'ENOTFOUND') {
+      isDbOnline = false;
+    }
+    logger.error(`Error executing query: ${text}`, err.message);
     throw err;
   }
 };
