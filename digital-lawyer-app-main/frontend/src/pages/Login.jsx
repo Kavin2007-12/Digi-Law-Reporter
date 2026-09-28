@@ -29,13 +29,10 @@ export default function Login({ initialMode = 'login' }) {
     mobile: '',
     dob: '',
     mpin: '',
-    confirmMpin: '',
-    newMpin: '',
-    confirmNewMpin: ''
+    newMpin: ''
   });
 
   const [showMpin, setShowMpin] = useState(false);
-  const [showConfirmMpin, setShowConfirmMpin] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [successMsg, setSuccessMsg] = useState(null);
@@ -47,7 +44,6 @@ export default function Login({ initialMode = 'login' }) {
     setError(null);
     setSuccessMsg(null);
     setShowMpin(false);
-    setShowConfirmMpin(false);
     setMode(newMode);
   };
 
@@ -122,7 +118,6 @@ export default function Login({ initialMode = 'login' }) {
     const cleanMobile = formData.mobile.trim();
     const cleanDob = formData.dob.trim();
     const cleanMpin = formData.mpin.trim();
-    const cleanConfirm = formData.confirmMpin.trim();
 
     if (!cleanName) {
       return setError('Please enter your Full Name.');
@@ -135,9 +130,6 @@ export default function Login({ initialMode = 'login' }) {
     }
     if (!cleanMpin || !/^\d{4}$/.test(cleanMpin)) {
       return setError('MPIN must be exactly 4 digits.');
-    }
-    if (cleanMpin !== cleanConfirm) {
-      return setError('MPIN and Confirm MPIN do not match.');
     }
 
     setLoading(true);
@@ -176,7 +168,6 @@ export default function Login({ initialMode = 'login' }) {
     const cleanMobile = formData.mobile.trim();
     const cleanDob = formData.dob.trim();
     const cleanNewMpin = formData.newMpin.trim();
-    const cleanConfirmNewMpin = formData.confirmNewMpin.trim();
 
     if (!cleanMobile || !/^\d{10}$/.test(cleanMobile)) {
       return setError('Please enter your registered 10-digit mobile number.');
@@ -186,9 +177,6 @@ export default function Login({ initialMode = 'login' }) {
     }
     if (!cleanNewMpin || !/^\d{4}$/.test(cleanNewMpin)) {
       return setError('New MPIN must be exactly 4 digits.');
-    }
-    if (cleanNewMpin !== cleanConfirmNewMpin) {
-      return setError('New MPIN and Confirm MPIN do not match.');
     }
 
     setLoading(true);
@@ -438,50 +426,31 @@ export default function Login({ initialMode = 'login' }) {
                   </div>
                 </div>
 
-                {/* 4-Digit MPIN & Confirm MPIN (Side-by-side for compactness) */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1 truncate">
-                      4-Digit MPIN
-                    </label>
-                    <div className="relative">
-                      <Lock size={13} className="absolute left-2.5 top-2.5 text-slate-400" />
-                      <input 
-                        type={showMpin ? 'text' : 'password'} 
-                        required 
-                        maxLength={4}
-                        value={formData.mpin} 
-                        onChange={e => setFormData({ ...formData, mpin: e.target.value.replace(/\D/g, '') })} 
-                        className="w-full pl-7 pr-7 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs font-semibold text-slate-900 tracking-widest text-center placeholder:text-[10px] placeholder:font-normal placeholder:tracking-widest placeholder:text-slate-400" 
-                        placeholder="••••" 
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowMpin(!showMpin)}
-                        className="absolute right-2 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
-                        tabIndex={-1}
-                      >
-                        {showMpin ? <EyeOff size={13} /> : <Eye size={13} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1 truncate">
-                      Confirm MPIN
-                    </label>
-                    <div className="relative">
-                      <Lock size={13} className="absolute left-2.5 top-2.5 text-slate-400" />
-                      <input 
-                        type={showMpin ? 'text' : 'password'} 
-                        required 
-                        maxLength={4}
-                        value={formData.confirmMpin} 
-                        onChange={e => setFormData({ ...formData, confirmMpin: e.target.value.replace(/\D/g, '') })} 
-                        className="w-full pl-7 pr-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs font-semibold text-slate-900 tracking-widest text-center placeholder:text-[10px] placeholder:font-normal placeholder:tracking-widest placeholder:text-slate-400" 
-                        placeholder="••••" 
-                      />
-                    </div>
+                {/* Set 4-Digit MPIN */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Set 4-Digit MPIN
+                  </label>
+                  <div className="relative">
+                    <Lock size={15} className="absolute left-3 top-2.5 text-slate-400" />
+                    <input 
+                      type={showMpin ? 'text' : 'password'} 
+                      required 
+                      maxLength={4}
+                      value={formData.mpin} 
+                      onChange={e => setFormData({ ...formData, mpin: e.target.value.replace(/\D/g, '') })} 
+                      className="w-full pl-9 pr-10 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs sm:text-sm font-semibold text-slate-900 tracking-widest placeholder:text-[10px] sm:placeholder:text-xs placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400" 
+                      placeholder="Enter 4-digit MPIN" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowMpin(!showMpin)}
+                      className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                      tabIndex={-1}
+                      title={showMpin ? 'Hide MPIN' : 'Show MPIN'}
+                    >
+                      {showMpin ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
                 </div>
 
@@ -560,50 +529,31 @@ export default function Login({ initialMode = 'login' }) {
                   </div>
                 </div>
 
-                {/* New MPIN & Confirm New MPIN (Side-by-side) */}
-                <div className="grid grid-cols-2 gap-2">
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1 truncate">
-                      New 4-Digit MPIN
-                    </label>
-                    <div className="relative">
-                      <Lock size={13} className="absolute left-2.5 top-2.5 text-slate-400" />
-                      <input 
-                        type={showMpin ? 'text' : 'password'} 
-                        required 
-                        maxLength={4}
-                        value={formData.newMpin} 
-                        onChange={e => setFormData({ ...formData, newMpin: e.target.value.replace(/\D/g, '') })} 
-                        className="w-full pl-7 pr-7 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs font-semibold text-slate-900 tracking-widest text-center placeholder:text-[10px] placeholder:font-normal placeholder:tracking-widest placeholder:text-slate-400" 
-                        placeholder="••••" 
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowMpin(!showMpin)}
-                        className="absolute right-2 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
-                        tabIndex={-1}
-                      >
-                        {showMpin ? <EyeOff size={13} /> : <Eye size={13} />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-[10px] font-bold uppercase tracking-wider text-slate-700 mb-1 truncate">
-                      Confirm New MPIN
-                    </label>
-                    <div className="relative">
-                      <Lock size={13} className="absolute left-2.5 top-2.5 text-slate-400" />
-                      <input 
-                        type={showMpin ? 'text' : 'password'} 
-                        required 
-                        maxLength={4}
-                        value={formData.confirmNewMpin} 
-                        onChange={e => setFormData({ ...formData, confirmNewMpin: e.target.value.replace(/\D/g, '') })} 
-                        className="w-full pl-7 pr-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs font-semibold text-slate-900 tracking-widest text-center placeholder:text-[10px] placeholder:font-normal placeholder:tracking-widest placeholder:text-slate-400" 
-                        placeholder="••••" 
-                      />
-                    </div>
+                {/* Set New 4-Digit MPIN */}
+                <div>
+                  <label className="block text-[11px] font-bold uppercase tracking-wider text-slate-700 mb-1">
+                    Set New 4-Digit MPIN
+                  </label>
+                  <div className="relative">
+                    <Lock size={15} className="absolute left-3 top-2.5 text-slate-400" />
+                    <input 
+                      type={showMpin ? 'text' : 'password'} 
+                      required 
+                      maxLength={4}
+                      value={formData.newMpin} 
+                      onChange={e => setFormData({ ...formData, newMpin: e.target.value.replace(/\D/g, '') })} 
+                      className="w-full pl-9 pr-10 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs sm:text-sm font-semibold text-slate-900 tracking-widest placeholder:text-[10px] sm:placeholder:text-xs placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400" 
+                      placeholder="Enter new 4-digit MPIN" 
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowMpin(!showMpin)}
+                      className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                      tabIndex={-1}
+                      title={showMpin ? 'Hide MPIN' : 'Show MPIN'}
+                    >
+                      {showMpin ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
                   </div>
                 </div>
 
