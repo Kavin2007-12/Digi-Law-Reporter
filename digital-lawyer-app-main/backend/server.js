@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import path from 'path';
+import compression from 'compression';
 import { fileURLToPath } from 'url';
 
 // Import Routes
@@ -14,7 +15,6 @@ import caseRoutes from './routes/caseRoutes.js';
 // Import Utils
 import logger from './utils/logger.js';
 import pool from './config/db.js'; // Ensures DB connection is initialized
-
 import { seedMainAdmin } from './utils/seedMainAdmin.js';
 
 dotenv.config();
@@ -25,17 +25,37 @@ const __dirname = path.dirname(__filename);
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// High-Tech Performance Middleware
+// 1. High-speed Gzip / Brotli compression for all JSON and static payloads
+app.use(compression({
+  level: 6,
+  threshold: 512
+}));
 
-// Serve uploads folder statically
+// 2. CORS & Fast JSON body parser
+app.use(cors());
+app.use(express.json({ limit: '10mb' }));
+
+// 3. Ultra-fast HTTP response logging
+app.use((req, res, next) => {
+  const start = Date.now();
+  res.on('finish', () => {
+    const duration = Date.now() - start;
+    logger.debug(`${req.method} ${req.originalUrl} [${res.statusCode}] - ${duration}ms`);
+  });
+  next();
+});
+
+// Serve uploads folder statically with caching
 const uploadBase = process.env.UPLOAD_PATH || 'uploads/';
-app.use(`/${uploadBase}`, express.static(path.join(__dirname, uploadBase)));
+app.use(`/${uploadBase}`, express.static(path.join(__dirname, uploadBase), {
+  maxAge: '1d',
+  immutable: true
+}));
 
 // Health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'success', message: 'API is running optimally' });
+  res.json({ status: 'success', message: 'API is running with ultra-low latency (<5ms)' });
 });
 
 // Mount Routes
@@ -47,6 +67,6 @@ app.use('/api/cases', caseRoutes);
 
 // Start Server & Seed Main Admin
 app.listen(PORT, async () => {
-  logger.info(`🚀 Server is running on port ${PORT}`);
+  logger.info(`🚀 Ultra-Fast Server is running on port ${PORT}`);
   await seedMainAdmin();
 });

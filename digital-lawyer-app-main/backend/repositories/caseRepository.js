@@ -1,9 +1,21 @@
 import { query } from '../config/db.js';
 import logger from '../utils/logger.js';
+import { fastCache } from '../utils/cache.js';
 
 // Get all cases (with optional status filter & pagination) from PostgreSQL
 export const getAllCasesFromDb = async ({ status, limit = 50, offset = 0 }) => {
-  let sql = `SELECT * FROM cases`;
+  const cacheKey = `cases:list:${status || 'all'}:${limit}:${offset}`;
+  const cached = fastCache.get(cacheKey);
+  if (cached) return cached;
+
+  // Optimized column selection omitting heavy judgment_text and search_vector for ultra-fast transfer
+  let sql = `
+    SELECT 
+      id, case_number, title, petitioner, respondent, court, 
+      judgment_date, year, act, section, head_note, status, citations, 
+      created_at, updated_at 
+    FROM cases
+  `;
   const values = [];
 
   if (status) {
@@ -15,11 +27,17 @@ export const getAllCasesFromDb = async ({ status, limit = 50, offset = 0 }) => {
   values.push(parseInt(limit, 10), parseInt(offset, 10));
 
   const res = await query(sql, values);
-  return res.rows;
+  const data = res.rows;
+  fastCache.set(cacheKey, data, 45000); // 45s fast cache
+  return data;
 };
 
 // Get single case by ID from PostgreSQL
 export const getCaseByIdFromDb = async (id) => {
+  const cacheKey = `cases:single:${id}`;
+  const cached = fastCache.get(cacheKey);
+  if (cached) return cached;
+
   const numericId = parseInt(id, 10);
   let res;
   if (!isNaN(numericId)) {
@@ -27,7 +45,12 @@ export const getCaseByIdFromDb = async (id) => {
   } else {
     res = await query(`SELECT * FROM cases WHERE id::text = $1`, [String(id)]);
   }
-  return (res && res.rows && res.rows.length > 0) ? res.rows[0] : null;
+  
+  const caseItem = (res && res.rows && res.rows.length > 0) ? res.rows[0] : null;
+  if (caseItem) {
+    fastCache.set(cacheKey, caseItem, 60000);
+  }
+  return caseItem;
 };
 
 // Create new case precedent in PostgreSQL
@@ -68,6 +91,8 @@ export const createCaseInDb = async (caseData) => {
   ];
 
   const res = await query(sql, values);
+  fastCache.invalidatePrefix('cases:');
+  fastCache.invalidatePrefix('search:');
   return res.rows[0];
 };
 
@@ -114,6 +139,8 @@ export const updateCaseInDb = async (id, caseData) => {
   ];
 
   const res = await query(sql, values);
+  fastCache.invalidatePrefix('cases:');
+  fastCache.invalidatePrefix('search:');
   return (res && res.rows && res.rows.length > 0) ? res.rows[0] : null;
 };
 
@@ -126,6 +153,8 @@ export const deleteCaseFromDb = async (id) => {
   } else {
     res = await query(`DELETE FROM cases WHERE id::text = $1 RETURNING *`, [String(id)]);
   }
+  fastCache.invalidatePrefix('cases:');
+  fastCache.invalidatePrefix('search:');
   return (res && res.rows && res.rows.length > 0) ? res.rows[0] : null;
 };
 
@@ -136,5 +165,7 @@ export const updateCaseStatusInDb = async (id, status) => {
     ? await query(`UPDATE cases SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id = $2 OR id::text = $3 RETURNING *`, [status, numericId, String(id)])
     : await query(`UPDATE cases SET status = $1, updated_at = CURRENT_TIMESTAMP WHERE id::text = $2 RETURNING *`, [status, String(id)]);
 
+  fastCache.invalidatePrefix('cases:');
+  fastCache.invalidatePrefix('search:');
   return (res && res.rows && res.rows.length > 0) ? res.rows[0] : null;
 };

@@ -1,5 +1,6 @@
 import { query } from '../config/db.js';
 import logger from '../utils/logger.js';
+import { fastCache } from '../utils/cache.js';
 
 class JudgmentRepository {
   /**
@@ -52,6 +53,7 @@ class JudgmentRepository {
       ];
 
       const { rows } = await query(sql, values);
+      fastCache.invalidatePrefix('search:');
       return rows[0].id;
     } catch (error) {
       logger.error('JudgmentRepository.createJudgment failed', error);
@@ -132,6 +134,10 @@ class JudgmentRepository {
    */
   async searchJudgments(searchTerm = '', limit = 20, offset = 0) {
     const rawTerm = String(searchTerm || '').trim();
+    const cacheKey = `search:judgments:${rawTerm.toLowerCase()}:${limit}:${offset}`;
+    const cached = fastCache.get(cacheKey);
+    if (cached) return cached;
+
     const cleanTerm = rawTerm.replace(/[()#:&|\-!\\/]/g, ' ').trim();
     const terms = cleanTerm.split(/\s+/).filter(Boolean);
     
@@ -140,12 +146,13 @@ class JudgmentRepository {
         SELECT 
           id, title, court_name, judgment_date, citation, 
           petitioner_name, respondent_name, act_name, section_number, 
-          topics, head_note, content, pdf_file_path
+          topics, head_note, pdf_file_path
         FROM judgments 
         ORDER BY judgment_date DESC 
         LIMIT $1 OFFSET $2
       `;
       const { rows } = await query(sql, [limit, offset]);
+      fastCache.set(cacheKey, rows, 30000);
       return rows;
     }
 
@@ -155,7 +162,7 @@ class JudgmentRepository {
       SELECT 
         id, title, court_name, judgment_date, citation, 
         petitioner_name, respondent_name, act_name, section_number, 
-        topics, head_note, content, pdf_file_path
+        topics, head_note, pdf_file_path
       FROM judgments 
       WHERE search_vector @@ to_tsquery('simple', $1)
          OR title ILIKE $2
@@ -168,7 +175,10 @@ class JudgmentRepository {
 
     try {
       const { rows } = await query(sql, [formattedTerm, `%${cleanTerm}%`, limit, offset]);
-      if (rows && rows.length > 0) return rows;
+      if (rows && rows.length > 0) {
+        fastCache.set(cacheKey, rows, 30000);
+        return rows;
+      }
     } catch (tsErr) {
       logger.warn('tsquery search failed, attempting ILIKE fallback:', tsErr.message);
     }
@@ -177,7 +187,7 @@ class JudgmentRepository {
       SELECT 
         id, title, court_name, judgment_date, citation, 
         petitioner_name, respondent_name, act_name, section_number, 
-        topics, head_note, content, pdf_file_path
+        topics, head_note, pdf_file_path
       FROM judgments 
       WHERE title ILIKE $1 
          OR citation ILIKE $1 
@@ -189,6 +199,7 @@ class JudgmentRepository {
       LIMIT $2 OFFSET $3
     `;
     const { rows } = await query(fallbackSql, [`%${cleanTerm}%`, limit, offset]);
+    fastCache.set(cacheKey, rows, 30000);
     return rows;
   }
 }
