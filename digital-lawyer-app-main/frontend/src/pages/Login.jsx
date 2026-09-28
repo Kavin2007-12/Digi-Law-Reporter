@@ -288,8 +288,10 @@ export default function Login({ initialMode = 'login' }) {
                       type="tel" 
                       required 
                       maxLength={10}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={formData.mobile} 
-                      onChange={e => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '') })} 
+                      onChange={e => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })} 
                       className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs sm:text-sm font-semibold text-slate-900 tracking-wider placeholder:text-[11px] sm:placeholder:text-xs placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400" 
                       placeholder="10-digit mobile number" 
                     />
@@ -316,8 +318,10 @@ export default function Login({ initialMode = 'login' }) {
                       type={showMpin ? 'text' : 'password'} 
                       required 
                       maxLength={4}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={formData.mpin} 
-                      onChange={e => setFormData({ ...formData, mpin: e.target.value.replace(/\D/g, '') })} 
+                      onChange={e => setFormData({ ...formData, mpin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
                       className="w-full pl-9 pr-10 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs sm:text-sm font-semibold text-slate-900 tracking-widest placeholder:text-[10px] sm:placeholder:text-xs placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400" 
                       placeholder="••••" 
                     />
@@ -399,8 +403,10 @@ export default function Login({ initialMode = 'login' }) {
                       type="tel" 
                       required 
                       maxLength={10}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={formData.mobile} 
-                      onChange={e => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '') })} 
+                      onChange={e => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })} 
                       className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs sm:text-sm font-semibold text-slate-900 tracking-wider placeholder:text-[11px] sm:placeholder:text-xs placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400" 
                       placeholder="10-digit mobile number" 
                     />
@@ -418,6 +424,7 @@ export default function Login({ initialMode = 'login' }) {
                       type="text" 
                       required 
                       maxLength={10}
+                      inputMode="numeric"
                       value={formData.dob} 
                       onChange={handleDobChange} 
                       className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs sm:text-sm font-semibold text-slate-900 tracking-wider placeholder:text-[11px] sm:placeholder:text-xs placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400" 
@@ -437,8 +444,10 @@ export default function Login({ initialMode = 'login' }) {
                       type={showMpin ? 'text' : 'password'} 
                       required 
                       maxLength={4}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={formData.mpin} 
-                      onChange={e => setFormData({ ...formData, mpin: e.target.value.replace(/\D/g, '') })} 
+                      onChange={e => setFormData({ ...formData, mpin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
                       className="w-full pl-9 pr-10 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs sm:text-sm font-semibold text-slate-900 tracking-widest placeholder:text-[10px] sm:placeholder:text-xs placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400" 
                       placeholder="Enter 4-digit MPIN" 
                     />
@@ -502,8 +511,10 @@ export default function Login({ initialMode = 'login' }) {
                       type="tel" 
                       required 
                       maxLength={10}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={formData.mobile} 
-                      onChange={e => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '') })} 
+                      onChange={e => setFormData({ ...formData, mobile: e.target.value.replace(/\D/g, '').slice(0, 10) })} 
                       className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs sm:text-sm font-semibold text-slate-900 tracking-wider placeholder:text-[11px] sm:placeholder:text-xs placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400" 
                       placeholder="10-digit mobile number" 
                     />
@@ -521,6 +532,7 @@ export default function Login({ initialMode = 'login' }) {
                       type="text" 
                       required 
                       maxLength={10}
+                      inputMode="numeric"
                       value={formData.dob} 
                       onChange={handleDobChange} 
                       className="w-full pl-9 pr-3 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs sm:text-sm font-semibold text-slate-900 tracking-wider placeholder:text-[11px] sm:placeholder:text-xs placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400" 
@@ -540,8 +552,10 @@ export default function Login({ initialMode = 'login' }) {
                       type={showMpin ? 'text' : 'password'} 
                       required 
                       maxLength={4}
+                      inputMode="numeric"
+                      pattern="[0-9]*"
                       value={formData.newMpin} 
-                      onChange={e => setFormData({ ...formData, newMpin: e.target.value.replace(/\D/g, '') })} 
+                      onChange={e => setFormData({ ...formData, newMpin: e.target.value.replace(/\D/g, '').slice(0, 4) })} 
                       className="w-full pl-9 pr-10 py-2 rounded-xl border border-slate-200 focus:ring-2 focus:ring-primary-600 focus:border-primary-600 outline-none transition-all bg-slate-50 focus:bg-white text-xs sm:text-sm font-semibold text-slate-900 tracking-widest placeholder:text-[10px] sm:placeholder:text-xs placeholder:font-normal placeholder:tracking-normal placeholder:text-slate-400" 
                       placeholder="Enter new 4-digit MPIN" 
                     />
