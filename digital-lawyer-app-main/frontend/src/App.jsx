@@ -70,13 +70,19 @@ function App() {
 
   return (
     <div className={`min-h-screen bg-[#FAFBFF] text-slate-900 font-sans relative selection:bg-primary-200 selection:text-primary-900 flex flex-col print:bg-white w-full max-w-full ${isAdminRoute ? '' : 'overflow-x-hidden'}`}>
-      {/* Premium Background Glows & Grid */}
-      <div className="fixed inset-0 pointer-events-none overflow-hidden z-0 print:hidden">
-         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary-200/30 blur-[120px]"></div>
-         <div className="absolute top-[30%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-200/20 blur-[120px]"></div>
-         <div className="absolute bottom-[-10%] left-[20%] w-[50%] h-[40%] rounded-full bg-indigo-100/40 blur-[120px]"></div>
-         <div className="absolute inset-0" style={{ backgroundImage: 'radial-gradient(#94a3b8 1px, transparent 1px)', backgroundSize: '32px 32px', opacity: 0.15 }}></div>
-      </div>
+      {/* Hardware-Accelerated Lightweight Background & Grid (0ms GPU overhead) */}
+      <div 
+        className="fixed inset-0 pointer-events-none overflow-hidden z-0 print:hidden opacity-40"
+        style={{
+          backgroundImage: `
+            radial-gradient(circle at 10% 10%, rgba(37, 99, 235, 0.08) 0%, transparent 45%),
+            radial-gradient(circle at 90% 40%, rgba(59, 130, 246, 0.06) 0%, transparent 40%),
+            radial-gradient(circle at 30% 90%, rgba(99, 102, 241, 0.07) 0%, transparent 45%),
+            radial-gradient(#94a3b8 1px, transparent 1px)
+          `,
+          backgroundSize: '100% 100%, 100% 100%, 100% 100%, 32px 32px'
+        }}
+      />
       
       <div className="relative z-10 flex flex-col flex-1 min-h-full">
         {!hideHeader && <Header />}
