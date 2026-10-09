@@ -166,29 +166,6 @@ export default function Header() {
               );
             })}
 
-            {/* User Action Items when logged in */}
-            {user && (
-              <>
-                <span className="text-slate-300 font-light mx-0.5">•</span>
-                <div className="flex items-center gap-1.5 shrink-0">
-                  <Link
-                    to="/profile"
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-blue-50 text-blue-700 text-xs font-bold hover:bg-blue-100 transition-colors whitespace-nowrap"
-                  >
-                    <User size={13} />
-                    <span>Profile</span>
-                  </Link>
-                  <button
-                    type="button"
-                    onClick={handleLogout}
-                    className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 text-xs font-bold transition-colors cursor-pointer whitespace-nowrap"
-                  >
-                    <LogOut size={13} />
-                    <span>Logout</span>
-                  </button>
-                </div>
-              </>
-            )}
           </div>
         </motion.div>
       )}
