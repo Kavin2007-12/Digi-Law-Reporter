@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/search_provider.dart';
+import '../providers/auth_provider.dart';
+import '../providers/bookmark_provider.dart';
 import 'main_navigation_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -21,12 +23,21 @@ class _SplashScreenState extends State<SplashScreen> {
 
   Future<void> _initializeApp() async {
     final searchProvider = Provider.of<SearchProvider>(context, listen: false);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final bookmarkProvider = Provider.of<BookmarkProvider>(context, listen: false);
     
-    // Initial data fetch & minimum 1.5s delay for smooth brand logo display
+    // Initial data fetch, load saved user session, & minimum 1.5s delay for smooth brand logo display
     await Future.wait([
+      authProvider.loadSavedUser(),
       searchProvider.performSearch(),
       Future.delayed(const Duration(milliseconds: 1600)),
     ]);
+
+    if (authProvider.currentUser != null &&
+        authProvider.currentUser!.mobile.trim().isNotEmpty) {
+      await bookmarkProvider
+          .loadSavedCases(authProvider.currentUser!.mobile.trim());
+    }
 
     if (mounted) {
       Navigator.pushReplacement(
@@ -86,7 +97,7 @@ class _SplashScreenState extends State<SplashScreen> {
               ),
               const SizedBox(height: 24),
 
-              // 2. Official Brand Name: "Digi Law Reporter"
+              // 2. Official Brand Name: "Digital Law Reporter"
               RichText(
                 textAlign: TextAlign.center,
                 text: const TextSpan(
@@ -97,7 +108,7 @@ class _SplashScreenState extends State<SplashScreen> {
                   ),
                   children: [
                     TextSpan(
-                      text: 'Digi Law ',
+                      text: 'Digital Law ',
                       style: TextStyle(color: Color(0xFF0F172A)), // Crisp Slate 950
                     ),
                     TextSpan(

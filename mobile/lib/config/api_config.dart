@@ -1,17 +1,26 @@
 import 'package:flutter/foundation.dart';
 
 class ApiConfig {
+  // Allow build-time override via --dart-define=API_BASE_URL=...
+  static const String _envBaseUrl = String.fromEnvironment('API_BASE_URL');
+
   // Base URL for the Node.js Express backend API
-  // Android Emulator connects to Mac host via 10.0.2.2
-  // Web / iOS Simulator connects via localhost
   static String get baseUrl {
+    if (_envBaseUrl.isNotEmpty) {
+      return _envBaseUrl;
+    }
+    // In release mode or on physical devices, use the production backend
+    if (kReleaseMode) {
+      return 'https://law.gradixtech.com/api';
+    }
     if (kIsWeb) {
       return 'http://localhost:5000/api';
     }
     if (defaultTargetPlatform == TargetPlatform.android) {
-      return 'http://10.0.2.2:5000/api';
+      // Connects to live production server so APK works on physical Android phones
+      return 'https://law.gradixtech.com/api';
     }
-    return 'http://localhost:5000/api';
+    return 'https://law.gradixtech.com/api';
   }
 
   // Auth endpoints
@@ -28,4 +37,11 @@ class ApiConfig {
 
   // Public endpoints
   static String get healthUrl => '$baseUrl/health';
+
+  // Web Judgment Portal Base URL (for QR code scanning and direct PDF access)
+  static String get webBaseUrl => 'https://law.gradixtech.com';
+
+  static String getJudgmentWebUrl(String caseId) {
+    return '$webBaseUrl/judgment/$caseId?open_pdf=1';
+  }
 }

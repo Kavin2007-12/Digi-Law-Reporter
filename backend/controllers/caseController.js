@@ -1,9 +1,17 @@
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { 
   getAllCasesFromDb, getCaseByIdFromDb, createCaseInDb, updateCaseInDb, 
   deleteCaseFromDb, updateCaseStatusInDb 
 } from '../repositories/caseRepository.js';
 import judgmentRepository from '../repositories/judgmentRepository.js';
 import logger from '../utils/logger.js';
+import { notifyMobileAppNewJudgement } from '../services/fcmService.js';
+import { stampJudgmentPdf } from '../utils/pdfStamper.js';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // GET /api/cases
 export const getCases = async (req, res) => {
@@ -28,6 +36,36 @@ export const getCaseById = async (req, res) => {
   } catch (error) {
     logger.error(`Failed to fetch case ID ${req.params.id}:`, error);
     res.status(500).json({ success: false, message: 'Server error fetching case' });
+  }
+};
+
+// GET /api/cases/:id/pdf - Stream authentic PDF directly to client or redirect
+export const getCasePdf = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const caseItem = await getCaseByIdFromDb(id);
+    if (!caseItem) {
+      return res.status(404).json({ success: false, message: 'Case record not found' });
+    }
+
+    const pdfPath = caseItem.pdf_file_path || caseItem.pdf_file;
+    if (pdfPath) {
+      const cleanPath = String(pdfPath).replace(/^[\\\/]+/, '').replace(/^uploads[\\\/]/i, '').replace(/^[\\\/]+/, '');
+      const fullPath = path.join(__dirname, '../uploads', cleanPath);
+      if (fs.existsSync(fullPath)) {
+        // Stamp authentic scannable QR code on Page 1 top-left so camera scan opens the PDF
+        await stampJudgmentPdf(fullPath, caseItem.id);
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `inline; filename="DLR_Judgment_${caseItem.id}.pdf"`);
+        return fs.createReadStream(fullPath).pipe(res);
+      }
+    }
+
+    // Fallback: If no physical PDF file exists on server, redirect to web judgment route
+    return res.redirect(`/judgment/${id}`);
+  } catch (error) {
+    logger.error(`Failed to fetch PDF for case ID ${req.params.id}:`, error);
+    res.status(500).json({ success: false, message: 'Server error retrieving case PDF' });
   }
 };
 
@@ -84,6 +122,27 @@ export const createCase = async (req, res) => {
     }
 
     const newCase = await createCaseInDb(req.body);
+
+    // Stamp authentic scannable QR code on PDF so scanning immediately opens the PDF
+    if (newCase && (newCase.pdf_file || newCase.pdf_file_path)) {
+      const cleanPath = String(newCase.pdf_file_path || newCase.pdf_file).replace(/^[\\\/]+/, '').replace(/^uploads[\\\/]/i, '').replace(/^[\\\/]+/, '');
+      const fullPath = path.join(__dirname, '../uploads', cleanPath);
+      await stampJudgmentPdf(fullPath, newCase.id);
+    }
+
+    // Fire FCM push notification to Mobile App if Published
+    if (newCase && (newCase.status === 'Published' || req.body.status === 'Published')) {
+      notifyMobileAppNewJudgement({
+        id: newCase.id,
+        caseNumber: newCase.case_number || req.body.caseNumber,
+        title: newCase.title || req.body.title,
+        petitioner: newCase.petitioner || req.body.petitioner,
+        respondent: newCase.respondent || req.body.respondent,
+        court: newCase.court || req.body.court,
+        citation: newCase.citation || req.body.citation
+      }).catch(err => logger.error('FCM notification dispatch error:', err));
+    }
+
     res.status(201).json({ success: true, message: 'Case created successfully', data: newCase });
   } catch (error) {
     logger.error('Failed to create case:', error);
@@ -141,6 +200,27 @@ export const updateCase = async (req, res) => {
     if (!updatedCase) {
       return res.status(404).json({ success: false, message: 'Case record not found' });
     }
+
+    // Stamp authentic scannable QR code on PDF so scanning immediately opens the PDF
+    if (updatedCase && (updatedCase.pdf_file || updatedCase.pdf_file_path)) {
+      const cleanPath = String(updatedCase.pdf_file_path || updatedCase.pdf_file).replace(/^[\\\/]+/, '').replace(/^uploads[\\\/]/i, '').replace(/^[\\\/]+/, '');
+      const fullPath = path.join(__dirname, '../uploads', cleanPath);
+      await stampJudgmentPdf(fullPath, updatedCase.id);
+    }
+
+    // Fire FCM push notification if updated to Published
+    if (updatedCase && (updatedCase.status === 'Published' || status === 'Published')) {
+      notifyMobileAppNewJudgement({
+        id: updatedCase.id,
+        caseNumber: updatedCase.case_number || req.body.caseNumber,
+        title: updatedCase.title || req.body.title,
+        petitioner: updatedCase.petitioner || req.body.petitioner,
+        respondent: updatedCase.respondent || req.body.respondent,
+        court: updatedCase.court || req.body.court,
+        citation: updatedCase.citation || req.body.citation
+      }).catch(err => logger.error('FCM notification dispatch error:', err));
+    }
+
     res.json({ success: true, message: 'Case updated successfully', data: updatedCase });
   } catch (error) {
     logger.error(`Failed to update case ID ${req.params.id}:`, error);
@@ -169,6 +249,19 @@ export const toggleCaseStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
     const updated = await updateCaseStatusInDb(id, status);
+
+    if (updated && status === 'Published') {
+      notifyMobileAppNewJudgement({
+        id: updated.id,
+        caseNumber: updated.case_number,
+        title: updated.title,
+        petitioner: updated.petitioner,
+        respondent: updated.respondent,
+        court: updated.court,
+        citation: updated.citation
+      }).catch(err => logger.error('FCM notification dispatch error:', err));
+    }
+
     res.json({ success: true, message: `Case status updated to ${status}`, data: updated });
   } catch (error) {
     logger.error(`Failed to toggle status for case ID ${req.params.id}:`, error);

@@ -7,7 +7,6 @@ import '../widgets/app_header.dart';
 import '../widgets/app_toast.dart';
 import '../widgets/case_card.dart';
 import 'signup_screen.dart';
-import 'home_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -32,6 +31,91 @@ class _ProfileScreenState extends State<ProfileScreen>
       Provider.of<BookmarkProvider>(context, listen: false)
           .loadSavedCases(user.mobile);
     }
+  }
+
+  void _showDeleteConfirmationDialog(
+      BuildContext context, AuthProvider authProvider) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Row(
+          children: [
+            Icon(Icons.warning_amber_rounded,
+                color: AppColors.errorRed, size: 24),
+            SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'Delete Account Permanently?',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: const Text(
+          'Warning: This action is permanent and cannot be undone. All your personal data, saved judgments, and bookmarks will be completely erased from the database.',
+          style: TextStyle(
+            fontSize: 13,
+            color: AppColors.textSecondary,
+            height: 1.4,
+          ),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        actions: [
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.pop(ctx),
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text('Cancel',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () async {
+                    Navigator.pop(ctx);
+                    final success = await authProvider.deleteAccount();
+                    if (context.mounted) {
+                      if (success) {
+                        AppToast.showSuccess(context,
+                            'Your account has been permanently deleted.');
+                      } else {
+                        AppToast.showError(
+                            context,
+                            authProvider.errorMessage ??
+                                'Failed to delete account.');
+                      }
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.errorRed,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  child: const Text(
+                    'Delete Forever',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -136,6 +220,33 @@ class _ProfileScreenState extends State<ProfileScreen>
                       ),
                     ),
                   ),
+                  const SizedBox(height: 10),
+
+                  // Delete Account Action with Warning Confirmation
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      onPressed: () {
+                        _showDeleteConfirmationDialog(context, authProvider);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 10),
+                        side: const BorderSide(color: AppColors.errorRed),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                      icon: const Icon(Icons.delete_outline_rounded,
+                          color: AppColors.errorRed, size: 16),
+                      label: const Text(
+                        'Delete Account Permanently',
+                        style: TextStyle(
+                          color: AppColors.errorRed,
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -195,7 +306,8 @@ class _ProfileScreenState extends State<ProfileScreen>
                 ),
               )
             else
-              ...savedCases.map((c) => CaseCard(caseItem: c)),
+              ...savedCases
+                  .map((c) => CaseCard(caseItem: c, showUnsaveButton: true)),
 
             const SizedBox(height: 30),
             const Center(
@@ -247,10 +359,6 @@ class _DirectLoginFormState extends State<_DirectLoginForm> {
 
       if (success && mounted) {
         AppToast.showSuccess(context, 'Signed in successfully.');
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
       }
     }
   }
@@ -310,7 +418,7 @@ class _DirectLoginFormState extends State<_DirectLoginForm> {
                   ),
                   const SizedBox(height: 18),
                   const Text(
-                    'Welcome to Digi Law',
+                    'Welcome to Digital Law Reporter',
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 22,

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../widgets/app_toast.dart';
 import 'signup_screen.dart';
-import 'home_screen.dart';
+import 'main_navigation_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final Widget? targetScreen;
@@ -53,7 +53,7 @@ class _LoginScreenState extends State<LoginScreen> {
         } else {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
           );
         }
       }
@@ -140,7 +140,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                       // Title
                       const Text(
-                        'Welcome to Digi Law',
+                        'Welcome to Digital Law Reporter',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 22,

@@ -1,7 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import { Search, BookOpen, FileText, Users, ArrowLeft } from 'lucide-react';
+import { Search, BookOpen, FileText, Users } from 'lucide-react';
 
 export default function SearchDashboard() {
   const navigate = useNavigate();
@@ -20,7 +20,7 @@ export default function SearchDashboard() {
   };
 
   return (
-    <div className="relative flex-1 flex flex-col items-center justify-center py-8 sm:py-12 md:py-16 px-4 md:px-6 w-full font-jakarta bg-slate-50">
+    <div className="relative flex-1 flex flex-col items-center justify-center min-h-[calc(100vh-3.5rem)] px-4 md:px-6 w-full font-jakarta bg-slate-50 overflow-x-hidden">
       
       {/* Exact User Uploaded Legal Search Background Image */}
       <div 
@@ -28,22 +28,10 @@ export default function SearchDashboard() {
         style={{ backgroundImage: "url('/legal_search_bg.png')" }}
       ></div>
 
-      {/* Top Left Back to Home Button (Directly below logo & name) */}
-      <div className="absolute top-4 left-4 sm:left-6 lg:left-8 z-20">
-        <button
-          onClick={() => navigate('/')}
-          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-slate-200/90 bg-white/95 hover:bg-white text-slate-700 hover:text-blue-700 font-bold text-xs transition-all shadow-xs hover:shadow-md cursor-pointer backdrop-blur-xs"
-          title="Return to Home"
-        >
-          <ArrowLeft size={15} />
-          <span>Back to Home</span>
-        </button>
-      </div>
-
-      <div className="relative z-10 max-w-5xl mx-auto w-full flex flex-col items-center my-auto">
+      <div className="relative z-10 max-w-5xl mx-auto w-full flex flex-col items-center -mt-6 sm:-mt-10 md:-mt-14">
 
         {/* Dashboard Header */}
-        <div className="text-center mb-6 md:mb-8 w-full">
+        <div className="text-center mb-5 md:mb-7 w-full">
           <h1 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-slate-900 mb-1.5 tracking-tight font-cinzel">
             Legal Research Dashboard
           </h1>
@@ -53,7 +41,7 @@ export default function SearchDashboard() {
         </div>
 
         {/* Single Row 4-Card Grid Layout */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 w-full max-w-5xl mx-auto mt-2 sm:mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-5 w-full max-w-5xl mx-auto">
           {TILES.map((tile, index) => (
             <motion.div
               key={tile.id}

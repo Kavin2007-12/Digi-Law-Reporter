@@ -1517,6 +1517,9 @@ export default function AdminCaseForm() {
 
       if (res.ok && data.success !== false) {
         showToast(isEditing ? `Case record updated successfully!` : `Case precedent published successfully!`);
+        setTimeout(() => {
+          navigate('/admin/cases');
+        }, 1200);
       } else {
         setFormError(data.message || `Error saving case record (Status: ${res.status})`);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2119,15 +2122,6 @@ export default function AdminCaseForm() {
                 >
                   <CheckCircle2 size={14} />
                   <span>Save to Form</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleApplyAndPublish}
-                  className="inline-flex items-center gap-1.5 px-4 py-1.5 bg-[#0B1727] hover:bg-slate-800 text-white font-semibold text-xs rounded-lg transition-all shadow-xs cursor-pointer"
-                >
-                  <Check size={14} />
-                  <span>Save & Publish</span>
                 </button>
               </div>
             </div>
