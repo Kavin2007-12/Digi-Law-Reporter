@@ -1,7 +1,7 @@
 import { jsPDF } from 'jspdf';
 import html2pdf from 'html2pdf.js';
 import QRCode from 'qrcode';
-import { API_BASE_URL } from '../config/api';
+import { API_BASE_URL } from '../config/api.js';
 
 export const getOriginalPdfUrl = (caseItem) => {
   const pdfPath = caseItem?.pdf_file_path || caseItem?.pdf_file;
@@ -209,6 +209,25 @@ export const buildVectorLegalPDF = async (caseItem) => {
     }
   };
 
+  // Single-line text justification helper ensuring native PDF word spacing (Tw) is applied
+  const renderJustifiedLine = (text, x, y, targetWidth, isLastLine = false) => {
+    const clean = String(text || '').trim();
+    if (!clean) return;
+
+    // In legal typography, the final line of a paragraph is left-aligned.
+    // Also, if the line has no space or is significantly shorter than the line width (<50%),
+    // left-align to prevent unnaturally stretched words.
+    const naturalWidth = doc.getTextWidth(clean);
+    const canJustify = !isLastLine && clean.indexOf(' ') > 0 && naturalWidth >= (targetWidth * 0.50);
+
+    if (canJustify) {
+      // Passing [clean, ''] causes jsPDF to apply native word-spacing (Tw) to the line
+      doc.text([clean, ''], x, y, { align: 'justify', maxWidth: targetWidth });
+    } else {
+      doc.text(clean, x, y);
+    }
+  };
+
   // ==========================================
   // PAGE 1: PRECEDENT TITLE & HEADNOTE SHEET
   // ==========================================
@@ -348,6 +367,14 @@ export const buildVectorLegalPDF = async (caseItem) => {
     if (!str) return '';
     let text = String(str);
 
+    // 1. Remove running scraped headers & footers that break paragraph flow (e.g. Indian Kanoon, Page X of Y)
+    text = text
+      .replace(/<div[^>]*class="[^"]*dlr-page-running-footer[^"]*"[^>]*>[\s\S]*?<\/div>/gi, ' ')
+      .replace(/<div[^>]*class="[^"]*page-footer[^"]*"[^>]*>[\s\S]*?<\/div>/gi, ' ')
+      .replace(/Indian\s*Kanoon\s*(?:-\s*http[^\s<]*)?/gi, ' ')
+      .replace(/(?:Indian\s*Kanoon)?\s*Page\s*\d+\s*(?:of\s*\d+)?/gi, ' ')
+      .replace(/HCJ\s*&\s*RRR,\s*J/gi, ' ');
+
     text = text.replace(/<ol[^>]*>([\s\S]*?)<\/ol>/gi, (match, listContent) => {
       let itemIndex = 1;
       return listContent.replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (m, itemText) => {
@@ -378,7 +405,7 @@ export const buildVectorLegalPDF = async (caseItem) => {
       .replace(/Reason:[^\n<]*/gi, '')
       .replace(/Location:[^\n<]*/gi, '')
       .replace(/https?:\/\/[^\s]*\/qr\/[^\s<]*/gi, '')
-      .replace(/[\uFFFD\u200B\uFEFF]/g, '')
+      .replace(/[\uFFFD\u200B-\u200D\uFEFF]/g, '')
       .replace(/(?:^|\s)[\?？]\s*(?=[A-Z\.\s]{3,40},\s*J\.?|\.{3,}|…|Date|New Delhi|[A-Z][a-z]+)/gi, ' ')
       .replace(/(?:^|\s)[\?？]\s*(?:$|\s)/g, ' ')
       .replace(/\s*[\?？]\s*([A-Z\.\s]{3,40},\s*J\.?)/gi, ' $1')
@@ -397,8 +424,18 @@ export const buildVectorLegalPDF = async (caseItem) => {
       .replace(/&quot;/gi, '"')
       .replace(/&#39;/gi, "'")
       .replace(/&#x27;/gi, "'")
-      .replace(/&ndash;/gi, '–')
-      .replace(/&mdash;/gi, '—');
+      .replace(/&ndash;/gi, '-')
+      .replace(/&mdash;/gi, '-');
+
+    // CRITICAL: Normalize ALL Unicode dashes, curly quotes, bullets, and spaces to standard ASCII
+    // This prevents jsPDF from corrupting text into UTF-16 with null bytes (which causes spaced out letters like r e a d s)
+    text = text
+      .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-')
+      .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
+      .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
+      .replace(/[\u2022\u2023\u25E6\u2043\u2219]/g, '-')
+      .replace(/[\u2026]/g, '...')
+      .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
 
     return text.trim();
   };
@@ -411,20 +448,30 @@ export const buildVectorLegalPDF = async (caseItem) => {
     const textWidth = contentWidth - (boxInnerPadding * 2);
     doc.setFont("times", "normal");
     doc.setFontSize(10);
-    const allHnLines = doc.splitTextToSize(cleanHeadnote, textWidth);
+
+    // Normalize paragraphs and single newlines inside headnote so text flows naturally
+    const hParagraphs = cleanHeadnote.split(/\n\s*\n/).map(p => p.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim()).filter(Boolean);
+    const allHnLines = [];
+    const hnLineIsLast = [];
+    for (const hPara of hParagraphs) {
+      const pLines = doc.splitTextToSize(hPara, textWidth);
+      for (let i = 0; i < pLines.length; i++) {
+        allHnLines.push(pLines[i]);
+        hnLineIsLast.push(i === pLines.length - 1);
+      }
+    }
 
     const titleAreaHeight = 0.45;
-    const lineSpacing = 0.20;
+    const lineSpacing = 0.22;
     const bottomPadding = 0.18;
 
-    let hnRemaining = [...allHnLines];
+    let lineCursor = 0;
     let isFirstChunk = true;
 
-    while (hnRemaining.length > 0) {
+    while (lineCursor < allHnLines.length) {
       const spaceForText = maxY - yPos - titleAreaHeight - bottomPadding;
       const linesFit = Math.max(1, Math.floor(spaceForText / lineSpacing));
-      const chunk = hnRemaining.slice(0, linesFit);
-      hnRemaining = hnRemaining.slice(linesFit);
+      const chunk = allHnLines.slice(lineCursor, lineCursor + linesFit);
 
       const boxHeight = titleAreaHeight + (chunk.length * lineSpacing) + bottomPadding;
 
@@ -448,18 +495,16 @@ export const buildVectorLegalPDF = async (caseItem) => {
       const textStartY = yPos + titleAreaHeight;
       for (let k = 0; k < chunk.length; k++) {
         const hLine = chunk[k].trim();
-        const isLast = (k === chunk.length - 1 && hnRemaining.length === 0);
-        if (!isLast && hLine.indexOf(' ') > 0) {
-          doc.text(hLine, margin + boxInnerPadding, textStartY + (k * lineSpacing), { align: 'justify', maxWidth: textWidth });
-        } else {
-          doc.text(hLine, margin + boxInnerPadding, textStartY + (k * lineSpacing));
-        }
+        const globalIdx = lineCursor + k;
+        const isLast = hnLineIsLast[globalIdx] || (globalIdx === allHnLines.length - 1);
+        renderJustifiedLine(hLine, margin + boxInnerPadding, textStartY + (k * lineSpacing), textWidth, isLast);
       }
 
+      lineCursor += chunk.length;
       yPos += boxHeight + 0.30;
       isFirstChunk = false;
 
-      if (hnRemaining.length > 0) {
+      if (lineCursor < allHnLines.length) {
         doc.addPage();
         drawWatermark();
         yPos = 0.85;
@@ -511,19 +556,7 @@ export const buildVectorLegalPDF = async (caseItem) => {
         const innerMatch = cellHtml.match(/^<(?:th|td)[^>]*>([\s\S]*?)<\/(?:th|td)>$/i);
         const innerContent = innerMatch ? innerMatch[1] : cellHtml;
 
-        let cellText = innerContent
-          .replace(/<\/(p|div|h[1-6]|li|blockquote)>/gi, '\n\n')
-          .replace(/<br\s*\/?>/gi, '\n')
-          .replace(/<[^>]*>/g, '')
-          .replace(/&nbsp;/gi, ' ')
-          .replace(/&amp;/gi, '&')
-          .replace(/&lt;/gi, '<')
-          .replace(/&gt;/gi, '>')
-          .replace(/&quot;/gi, '"')
-          .replace(/&#39;/gi, "'")
-          .replace(/&#x27;/gi, "'")
-          .replace(/&ndash;/gi, '–')
-          .replace(/&mdash;/gi, '—');
+        let cellText = sanitizeText(innerContent);
 
         cellText = cellText
           .split('\n')
@@ -561,7 +594,7 @@ export const buildVectorLegalPDF = async (caseItem) => {
     const colWidth = contentWidth / maxCols;
     const cellPadding = 0.08;
     const cellTextWidth = colWidth - (cellPadding * 2);
-    const cellLineH = 0.17;
+    const cellLineH = 0.20;
 
     // Identify header row(s) so we can re-stamp them on continuation pages
     let headerRows = [];
@@ -591,11 +624,7 @@ export const buildVectorLegalPDF = async (caseItem) => {
         for (let l = 0; l < cell.lines.length; l++) {
           const lText = cell.lines[l];
           const isLast = l === cell.lines.length - 1;
-          if (!isLast && lText.indexOf(' ') > 0 && !isHeaderRow) {
-            doc.text(lText.trim(), cellX + cellPadding, textY, { align: 'justify', maxWidth: cellTextWidth });
-          } else {
-            doc.text(lText.trim(), cellX + cellPadding, textY);
-          }
+          renderJustifiedLine(lText, cellX + cellPadding, textY, cellTextWidth, isLast || isHeaderRow);
           textY += cellLineH;
         }
       }
@@ -675,10 +704,14 @@ export const buildVectorLegalPDF = async (caseItem) => {
     const cleanText = sanitizeText(rawHtmlChunk);
     if (!cleanText || !cleanText.trim()) return;
 
-    const paragraphs = cleanText.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
-    const lineSpacing = 0.21;
+    const rawParagraphs = cleanText.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+    const lineSpacing = 0.235;
 
-    for (const para of paragraphs) {
+    for (const rawPara of rawParagraphs) {
+      // Normalize internal single newlines to single space so sentences flow continuously into full justified lines
+      const para = rawPara.replace(/\r?\n/g, ' ').replace(/\s+/g, ' ').trim();
+      if (!para) continue;
+
       // Check if paragraph is an internal heading (e.g. short, all caps, or Roman numeral)
       const isShortHeading = para.length <= 60 && (/^(?:[I|V|X]+\.|\bORDER\b|\bCONCLUSION\b|\bDIRECTIONS\b|\bANALYSIS\b|\bISSUE\b)/i.test(para) || (para === para.toUpperCase() && !para.includes('.')));
       if (isShortHeading) {
@@ -691,7 +724,7 @@ export const buildVectorLegalPDF = async (caseItem) => {
         continue;
       }
 
-      const numMatch = para.match(/^(\d+[\.\)]|\[\d+\])\s*/);
+      const numMatch = para.match(/^(\d+[\.\)]|\[\d+\]|\([a-z0-9]+\)|[a-z]\))\s*/i);
 
       doc.setFont("times", "normal");
       doc.setFontSize(10.5);
@@ -727,24 +760,16 @@ export const buildVectorLegalPDF = async (caseItem) => {
           const restOfLine = lineText.substring(fullPrefix.length).trim();
           if (restOfLine) {
             const availWidth = contentWidth - prefixWidth;
-            if (!isLastLineOfPara && restOfLine.indexOf(' ') > 0) {
-              doc.text(restOfLine, margin + prefixWidth, yPos, { align: 'justify', maxWidth: availWidth });
-            } else {
-              doc.text(restOfLine, margin + prefixWidth, yPos);
-            }
+            renderJustifiedLine(restOfLine, margin + prefixWidth, yPos, availWidth, isLastLineOfPara);
           }
         } else {
-          if (!isLastLineOfPara && lineText.indexOf(' ') > 0) {
-            doc.text(lineText, margin, yPos, { align: 'justify', maxWidth: contentWidth });
-          } else {
-            doc.text(lineText, margin, yPos);
-          }
+          renderJustifiedLine(lineText, margin, yPos, contentWidth, isLastLineOfPara);
         }
 
         yPos += lineSpacing;
       }
 
-      yPos += 0.12; // paragraph spacing
+      yPos += 0.15; // paragraph spacing
     }
   };
 

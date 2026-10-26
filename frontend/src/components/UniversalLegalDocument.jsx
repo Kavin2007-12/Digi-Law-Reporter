@@ -124,6 +124,11 @@ export default function UniversalLegalDocument({
   const renderFormattedBlock = (textString, customStyle = {}, isItalic = false) => {
     if (!textString) return null;
     const cleanStr = String(textString).trim()
+      .replace(/<div[^>]*class="[^"]*dlr-page-running-footer[^"]*"[^>]*>[\s\S]*?<\/div>/gi, ' ')
+      .replace(/<div[^>]*class="[^"]*page-footer[^"]*"[^>]*>[\s\S]*?<\/div>/gi, ' ')
+      .replace(/Indian\s*Kanoon\s*(?:-\s*http[^\s<]*)?/gi, ' ')
+      .replace(/(?:Indian\s*Kanoon)?\s*Page\s*\d+\s*(?:of\s*\d+)?/gi, ' ')
+      .replace(/HCJ\s*&\s*RRR,\s*J/gi, ' ')
       .replace(/Digitally\s+signed\s+by[^\n<]*/gi, '')
       .replace(/Signature\s+Not\s+Verified[^\n<]*/gi, '')
       .replace(/Signature\s+Valid[^\n<]*/gi, '')
@@ -131,7 +136,7 @@ export default function UniversalLegalDocument({
       .replace(/Reason:[^\n<]*/gi, '')
       .replace(/Location:[^\n<]*/gi, '')
       .replace(/https?:\/\/[^\s]*\/qr\/[^\s<]*/gi, '')
-      .replace(/[\uFFFD\u200B\uFEFF]/g, '')
+      .replace(/[\uFFFD\u200B-\u200D\uFEFF]/g, '')
       .replace(/(?:^|\s)[\?？]\s*(?=[A-Z\.\s]{3,40},\s*J\.?|\.{3,}|…|Date|New Delhi|[A-Z][a-z]+)/gi, ' ')
       .replace(/(?:^|\s)[\?？]\s*(?:$|\s)/g, ' ')
       .replace(/\s*[\?？]\s*([A-Z\.\s]{3,40},\s*J\.?)/gi, ' $1')
@@ -143,16 +148,22 @@ export default function UniversalLegalDocument({
       .replace(/&lt;/gi, '<')
       .replace(/&gt;/gi, '>')
       .replace(/&quot;/gi, '"')
-      .replace(/&#39;/gi, "'");
+      .replace(/&#39;/gi, "'")
+      .replace(/[\u2010\u2011\u2012\u2013\u2014\u2015\u2212\uFE58\uFE63\uFF0D]/g, '-')
+      .replace(/[\u2018\u2019\u201A\u201B\u2032\u2035]/g, "'")
+      .replace(/[\u201C\u201D\u201E\u201F\u2033\u2036]/g, '"')
+      .replace(/[\u2022\u2023\u25E6\u2043\u2219]/g, '-')
+      .replace(/[\u2026]/g, '...')
+      .replace(/[\u00A0\u1680\u2000-\u200A\u202F\u205F\u3000]/g, ' ');
 
     const isHtml = /<[a-z][\s\S]*>/i.test(cleanStr);
-    const baseClasses = `text-slate-950 font-serif leading-[1.85] text-justify tracking-normal ${isItalic ? 'italic' : 'not-italic'}`;
+    const baseClasses = `text-slate-950 font-serif leading-[1.95] tracking-[0.012em] text-justify ${isItalic ? 'italic' : 'not-italic'}`;
 
     if (isHtml) {
       return (
         <div 
-          className={`court-html-content ${baseClasses} [&_p]:text-justify [&_p]:leading-[1.85] [&_p]:mb-4 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-400 [&_th]:p-3 [&_td]:border [&_td]:border-slate-300 [&_td]:p-3 [&_td]:align-top`}
-          style={{ ...customStyle, fontFamily: "'Times New Roman', Times, Georgia, serif", textAlign: 'justify', textJustify: 'inter-word' }}
+          className={`court-html-content ${baseClasses} [&_p]:text-justify [&_p]:leading-[1.95] [&_p]:mb-5 [&_table]:w-full [&_table]:border-collapse [&_th]:border [&_th]:border-slate-400 [&_th]:p-3 [&_td]:border [&_td]:border-slate-300 [&_td]:p-3 [&_td]:align-top`}
+          style={{ ...customStyle, fontFamily: "'Times New Roman', Times, Georgia, serif", textAlign: 'justify', textJustify: 'inter-word', letterSpacing: '0.15px' }}
           dangerouslySetInnerHTML={{ __html: highlightText(cleanStr) }}
         />
       );
@@ -165,12 +176,12 @@ export default function UniversalLegalDocument({
       .filter(Boolean);
 
     return (
-      <div className="space-y-4" style={{ ...customStyle, fontFamily: "'Times New Roman', Times, Georgia, serif", textAlign: 'justify', textJustify: 'inter-word' }}>
+      <div className="space-y-5" style={{ ...customStyle, fontFamily: "'Times New Roman', Times, Georgia, serif", textAlign: 'justify', textJustify: 'inter-word', letterSpacing: '0.15px' }}>
         {formattedParagraphs.map((para, idx) => (
           <p 
             key={idx} 
             className={`${baseClasses} text-justify`}
-            style={{ ...customStyle, fontFamily: "'Times New Roman', Times, Georgia, serif", textAlign: 'justify', textJustify: 'inter-word', lineHeight: '1.85' }}
+            style={{ ...customStyle, fontFamily: "'Times New Roman', Times, Georgia, serif", textAlign: 'justify', textJustify: 'inter-word', lineHeight: '1.95', letterSpacing: '0.15px' }}
             dangerouslySetInnerHTML={{ __html: highlightText(para) }}
           />
         ))}
@@ -181,7 +192,8 @@ export default function UniversalLegalDocument({
   const textInlineStyle = {
     fontFamily: "'Times New Roman', Times, Georgia, serif",
     fontSize: `${fontSize}px`,
-    lineHeight: '1.85'
+    lineHeight: '1.95',
+    letterSpacing: '0.15px'
   };
 
   return (
@@ -194,15 +206,28 @@ export default function UniversalLegalDocument({
       <style>{`
         #printable-judgment-document {
           font-family: 'Times New Roman', Times, Georgia, serif !important;
+          text-align: justify !important;
+          text-justify: inter-word !important;
+          text-align-last: left !important;
+          overflow-wrap: break-word !important;
         }
         #printable-judgment-document p,
         #printable-judgment-document li,
+        #printable-judgment-document blockquote,
+        #printable-judgment-document .court-page-sheet,
         #printable-judgment-document .court-html-content,
-        #printable-judgment-document .court-html-content p {
+        #printable-judgment-document .court-html-content p,
+        #printable-judgment-document .court-html-content div,
+        #printable-judgment-document .court-html-content span,
+        #printable-judgment-document .court-html-content li,
+        #printable-judgment-document .court-html-content blockquote {
           font-family: 'Times New Roman', Times, Georgia, serif !important;
           text-align: justify !important;
           text-justify: inter-word !important;
-          line-height: 1.85 !important;
+          text-align-last: left !important;
+          line-height: 1.95 !important;
+          letter-spacing: 0.15px !important;
+          overflow-wrap: break-word !important;
         }
         #printable-judgment-document table.dlr-extracted-table {
           width: 100% !important;
@@ -223,7 +248,8 @@ export default function UniversalLegalDocument({
           padding: 10px 14px !important;
           vertical-align: top !important;
           text-align: justify !important;
-          line-height: 1.65 !important;
+          line-height: 1.75 !important;
+          letter-spacing: 0.1px !important;
         }
       `}</style>
       

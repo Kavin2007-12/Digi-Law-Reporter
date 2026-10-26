@@ -1221,6 +1221,8 @@ export default function AdminCaseForm() {
         diaryNumber: ext.diaryNumber || prev.diaryNumber,
         act: ext.act || prev.act,
         section: ext.section || prev.section,
+        issues: ext.issues || prev.issues,
+        importantPoints: ext.importantPoints || prev.importantPoints,
         pdf_file: ext.pdf_file || prev.pdf_file || '',
         pdf_file_path: ext.pdf_file_path || prev.pdf_file_path || '',
         summary: stripHtml(ext.summary || prev.summary),
